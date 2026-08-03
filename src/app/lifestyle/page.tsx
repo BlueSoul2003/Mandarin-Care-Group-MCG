@@ -1,10 +1,20 @@
 import { LifestyleClient } from "./LifestyleClient"
-import { getLifestyleArticles } from "@/lib/notion"
+import { contentRepository } from "@/content"
 
-export const revalidate = 60 // ISR: Revalidate every 60 seconds
+export const revalidate = 3600
 
 export default async function LifestylePage() {
-  const articles = await getLifestyleArticles()
+  const repository = await contentRepository()
+  const content = await repository.listPublishedArticles("lifestyle")
+  const articles = content.map((article) => ({
+    slug: article.slug,
+    title: article.title,
+    excerpt: article.excerpt,
+    date: article.publishedAt,
+    author: article.authorName,
+    tags: article.tags,
+    category: "lifestyle" as const,
+  }))
   
   // Extract unique tags
   const tagsSet = new Set<string>()
@@ -18,7 +28,7 @@ export default async function LifestylePage() {
       <div className="mb-12 md:mb-16 text-center">
         <h1 className="text-4xl md:text-5xl font-heading font-bold text-foreground mb-6">Lifestyle</h1>
         <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-          全人成長與生活指南。裝備自己，將信仰落實於校園與職場的實用文章。
+          從信仰走進生活，分享大學生需要的實用知識與成長經驗。
         </p>
       </div>
 
