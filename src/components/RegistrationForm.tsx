@@ -15,10 +15,15 @@ export function RegistrationForm() {
     phone: "",
     majorYear: "",
     message: "",
+    consent: false,
+    website: "",
   })
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }))
+    const value = e.target instanceof HTMLInputElement && e.target.type === "checkbox"
+      ? e.target.checked
+      : e.target.value
+    setForm((prev) => ({ ...prev, [e.target.name]: value }))
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -39,9 +44,9 @@ export function RegistrationForm() {
       }
 
       setStatus("success")
-    } catch (err: any) {
+    } catch (err: unknown) {
       setStatus("error")
-      setErrorMsg(err.message)
+      setErrorMsg(err instanceof Error ? err.message : "送出失敗，請稍後再試。")
     }
   }
 
@@ -65,7 +70,7 @@ export function RegistrationForm() {
           <button
             onClick={() => {
               setStatus("idle")
-              setForm({ name: "", email: "", phone: "", majorYear: "", message: "" })
+              setForm({ name: "", email: "", phone: "", majorYear: "", message: "", consent: false, website: "" })
             }}
             className="mt-4 px-6 py-2 rounded-full border border-white/20 text-sm hover:bg-white/10 transition-colors"
           >
@@ -145,6 +150,32 @@ export function RegistrationForm() {
               className={`${inputClass} resize-none`}
             />
           </div>
+
+          <div className="absolute -left-[10000px] h-px w-px overflow-hidden" aria-hidden="true">
+            <label htmlFor="website">Website</label>
+            <input
+              id="website"
+              name="website"
+              tabIndex={-1}
+              autoComplete="off"
+              value={form.website}
+              onChange={handleChange}
+            />
+          </div>
+
+          <label className="flex items-start gap-3 text-sm leading-relaxed text-muted-foreground">
+            <input
+              name="consent"
+              type="checkbox"
+              required
+              checked={form.consent}
+              onChange={handleChange}
+              className="mt-1 h-4 w-4 rounded border-border accent-primary"
+            />
+            <span>
+              我同意 MCG 執委會使用以上資料與我聯絡；資料只供加入團體與活動聯繫使用。
+            </span>
+          </label>
 
           {status === "error" && (
             <motion.div

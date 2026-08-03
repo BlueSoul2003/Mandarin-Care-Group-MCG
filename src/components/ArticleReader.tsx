@@ -1,23 +1,35 @@
 import Link from "next/link"
 import { ArrowLeft, Calendar, User } from "lucide-react"
+import type { ArticleCategory } from "./ArticleCard"
 
 interface ArticleReaderProps {
   title: string
   date: string
   author: string
-  category: "lifestyle" | "spiritual"
+  category: ArticleCategory
   children: React.ReactNode
 }
 
 export function ArticleReader({ title, date, author, category, children }: ArticleReaderProps) {
+  const backLink =
+    category === "lifestyle" || category === "spiritual"
+      ? `/${category}`
+      : "/articles"
+  const backLabel =
+    category === "lifestyle"
+      ? "Lifestyle"
+      : category === "spiritual"
+        ? "Spiritual"
+        : "文章"
+
   return (
     <div className="container mx-auto px-4 py-12 md:py-20 max-w-3xl">
       <Link
-        href={`/${category}`}
+        href={backLink}
         className="inline-flex items-center text-sm font-medium text-muted-foreground hover:text-foreground transition-colors mb-10"
       >
         <ArrowLeft className="mr-2 w-4 h-4" />
-        Back to {category === "lifestyle" ? "Lifestyle" : "Spiritual"}
+        返回 {backLabel}
       </Link>
       
       <header className="mb-12">

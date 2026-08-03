@@ -1,17 +1,24 @@
 import Link from "next/link"
 import { ArrowRight, Calendar, User } from "lucide-react"
 
-interface ArticleCardProps {
+export type ArticleCategory = "lifestyle" | "spiritual" | "community" | "news"
+
+export interface ArticleCardProps {
   title: string
   excerpt: string
   date: string
   author: string
   tags: string[]
   slug: string
-  category: "lifestyle" | "spiritual"
+  category: ArticleCategory
 }
 
 export function ArticleCard({ title, excerpt, date, author, tags, slug, category }: ArticleCardProps) {
+  const href =
+    category === "lifestyle" || category === "spiritual"
+      ? `/${category}/${slug}`
+      : `/articles/${slug}`
+
   return (
     <article className="group relative flex flex-col items-start justify-between rounded-2xl bg-card p-6 md:p-8 shadow-sm border border-border/50 hover:shadow-md transition-all">
       <div className="flex items-center gap-x-4 text-xs mb-4">
@@ -30,7 +37,7 @@ export function ArticleCard({ title, excerpt, date, author, tags, slug, category
       </div>
       <div className="group relative max-w-xl">
         <h3 className="mt-3 text-xl md:text-2xl font-semibold leading-snug text-foreground group-hover:text-primary transition-colors">
-          <Link href={`/${category}/${slug}`}>
+          <Link href={href}>
             <span className="absolute inset-0" />
             {title}
           </Link>

@@ -1,14 +1,15 @@
 import { ArticleReader } from "@/components/ArticleReader"
-import { getArticleContent, getLifestyleArticles } from "@/lib/notion"
+import { contentRepository } from "@/content"
 import { notFound } from "next/navigation"
 import ReactMarkdown from "react-markdown"
 import remarkGfm from "remark-gfm"
 
-export const revalidate = 60 // ISR: Revalidate every 60 seconds
+export const revalidate = 3600
 
 // Generate static params for build time
 export async function generateStaticParams() {
-  const articles = await getLifestyleArticles()
+  const repository = await contentRepository()
+  const articles = await repository.listPublishedArticles("lifestyle")
   return articles.map((article) => ({
     slug: article.slug,
   }))
@@ -17,23 +18,22 @@ export async function generateStaticParams() {
 export default async function LifestyleArticlePage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params
   
-  const content = await getArticleContent(slug)
+  const repository = await contentRepository()
+  const content = await repository.getArticleBySlug(slug)
   
-  if (!content) {
+  if (!content || content.section !== "lifestyle") {
     notFound()
   }
-  
-  const { metadata, markdown } = content
 
   return (
     <ArticleReader
-      title={metadata.title}
-      date={metadata.date}
-      author={metadata.author}
+      title={content.title}
+      date={content.publishedAt}
+      author={content.authorName}
       category="lifestyle"
     >
       <ReactMarkdown remarkPlugins={[remarkGfm]}>
-        {markdown}
+        {content.contentMarkdown}
       </ReactMarkdown>
     </ArticleReader>
   )

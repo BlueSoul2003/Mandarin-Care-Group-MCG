@@ -1,10 +1,9 @@
 "use client"
 
 import * as React from "react"
-import { ArticleCard } from "@/components/ArticleCard"
-import { ArticleMeta } from "@/lib/notion"
+import { ArticleCard, type ArticleCardProps } from "@/components/ArticleCard"
 
-export function LifestyleClient({ articles, allTags }: { articles: ArticleMeta[], allTags: string[] }) {
+export function LifestyleClient({ articles, allTags }: { articles: ArticleCardProps[], allTags: string[] }) {
   const [selectedTag, setSelectedTag] = React.useState("All")
 
   const filteredArticles = selectedTag === "All" 
