@@ -4,9 +4,64 @@ import * as React from "react"
 import { Moon, Sun } from "lucide-react"
 import { useTheme } from "next-themes"
 import Link from "next/link"
+import { createClient } from "@/lib/supabase"
+import type { User } from "@supabase/supabase-js"
+
+function getInitials(name: string): string {
+  const parts = name.trim().split(/\s+/)
+  if (parts.length === 0 || !parts[0]) return "U"
+  if (parts.length === 1) return parts[0].substring(0, 2).toUpperCase()
+  return (parts[0][0] + parts[1][0]).toUpperCase()
+}
 
 export function Navbar() {
   const { setTheme, theme } = useTheme()
+  const [user, setUser] = React.useState<User | null>(null)
+  const [menuOpen, setMenuOpen] = React.useState(false)
+  const menuRef = React.useRef<HTMLDivElement>(null)
+
+  React.useEffect(() => {
+    const supabase = createClient()
+
+    // Get the current session on mount
+    supabase.auth.getUser().then(({ data }) => {
+      setUser(data.user)
+    })
+
+    // Listen for auth state changes (login / logout)
+    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null)
+    })
+
+    return () => {
+      listener.subscription.unsubscribe()
+    }
+  }, [])
+
+  // Close dropdown when clicking outside
+  React.useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setMenuOpen(false)
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside)
+    return () => document.removeEventListener("mousedown", handleClickOutside)
+  }, [])
+
+  const displayName: string =
+    user?.user_metadata?.full_name ||
+    user?.email?.split("@")[0] ||
+    "User"
+
+  const initials = getInitials(displayName)
+
+  const handleLogout = async () => {
+    const supabase = createClient()
+    await supabase.auth.signOut()
+    setUser(null)
+    setMenuOpen(false)
+  }
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -21,12 +76,49 @@ export function Navbar() {
             <Link href="/taize" className="transition-colors hover:text-primary text-foreground/60">Taizé</Link>
             <Link href="/rosary" className="transition-colors hover:text-primary text-foreground/60">Rosary</Link>
             <Link href="/lifestyle" className="transition-colors hover:text-foreground/80 text-foreground/60">Lifestyle</Link>
-            <Link
-              href="/join"
-              className="hidden md:inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-primary text-primary-foreground text-sm font-semibold hover:opacity-90 active:scale-[0.97] transition-all duration-200 shadow-sm"
-            >
-              加入我們
-            </Link>
+
+            {user ? (
+              <div className="relative" ref={menuRef}>
+                {/* Avatar Badge — click to open dropdown */}
+                <button
+                  onClick={() => setMenuOpen((prev) => !prev)}
+                  className="flex items-center justify-center w-8 h-8 rounded-full bg-primary text-primary-foreground font-bold text-xs shadow-md hover:opacity-90 active:scale-95 transition-all select-none"
+                  title={`Logged in as ${displayName}`}
+                >
+                  {initials}
+                </button>
+
+                {/* Dropdown Popout */}
+                {menuOpen && (
+                  <div className="absolute right-0 mt-2 w-52 rounded-xl border border-border bg-card shadow-xl z-50 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-150">
+                    {/* User Info */}
+                    <div className="px-4 py-3 border-b border-border/50">
+                      <p className="text-xs font-semibold text-foreground truncate">{displayName}</p>
+                      <p className="text-xs text-muted-foreground truncate">{user.email}</p>
+                    </div>
+                    {/* Actions */}
+                    <div className="py-1">
+                      <button
+                        onClick={handleLogout}
+                        className="w-full text-left px-4 py-2 text-sm text-destructive hover:bg-destructive/10 transition-colors"
+                      >
+                        登出 Sign out
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <>
+                <Link href="/login" className="transition-colors hover:text-primary text-foreground/60">登入 Login</Link>
+                <Link
+                  href="/join"
+                  className="hidden md:inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-primary text-primary-foreground text-sm font-semibold hover:opacity-90 active:scale-[0.97] transition-all duration-200 shadow-sm"
+                >
+                  加入我們
+                </Link>
+              </>
+            )}
           </nav>
           <div className="flex items-center">
             <button
