@@ -13,6 +13,7 @@ interface GalleryImage {
   date: string
   tags: string[]
   type: "image" | "video"
+  alt?: string
 }
 
 export function MasonryGrid({ images }: { images: GalleryImage[] }) {
@@ -50,20 +51,14 @@ export function MasonryGrid({ images }: { images: GalleryImage[] }) {
                 playsInline
                 className="w-full h-auto object-cover transition-transform duration-700 group-hover:scale-105"
               />
-            ) : img.url.includes("cloudinary.com") ? (
+            ) : (
               <CldImage
                 src={img.url}
-                alt={img.title}
+                alt={img.alt ?? img.title}
                 width={800}
                 height={800}
                 preserveTransformations
                 crop="limit"
-                className="w-full h-auto object-cover transition-transform duration-700 group-hover:scale-105"
-              />
-            ) : (
-              <img 
-                src={img.url} 
-                alt={img.title}
                 className="w-full h-auto object-cover transition-transform duration-700 group-hover:scale-105"
               />
             )}
@@ -114,20 +109,14 @@ export function MasonryGrid({ images }: { images: GalleryImage[] }) {
                   autoPlay
                   className="w-full h-full object-contain"
                 />
-              ) : selectedImage.url.includes("cloudinary.com") ? (
+              ) : (
                 <CldImage
                   src={selectedImage.url}
-                  alt={selectedImage.title}
+                  alt={selectedImage.alt ?? selectedImage.title}
                   width={1920}
                   height={1080}
                   preserveTransformations
                   crop="limit"
-                  className="w-full h-full object-contain"
-                />
-              ) : (
-                <img 
-                  src={selectedImage.url} 
-                  alt={selectedImage.title}
                   className="w-full h-full object-contain"
                 />
               )}

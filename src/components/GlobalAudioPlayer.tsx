@@ -2,11 +2,11 @@
 
 import * as React from "react"
 import { usePlayerStore } from "@/store/usePlayerStore"
-import { Play, Pause, X, Music, Volume2 } from "lucide-react"
+import { Play, Pause, X, Music } from "lucide-react"
 import { AnimatePresence, motion } from "framer-motion"
 
 export function GlobalAudioPlayer() {
-  const { isPlaying, currentTrack, togglePlay, setVolume, volume } = usePlayerStore()
+  const { isPlaying, currentTrack, togglePlay, volume } = usePlayerStore()
   const audioRef = React.useRef<HTMLAudioElement | null>(null)
 
   // Sync state with HTMLAudioElement
