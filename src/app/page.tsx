@@ -1,6 +1,6 @@
 import Image from "next/image"
 import Link from "next/link"
-import { ArrowRight } from "lucide-react"
+import { ArrowRight, LogIn, UserPlus } from "lucide-react"
 import { contentRepository } from "@/content"
 
 export const revalidate = 3600
@@ -38,6 +38,18 @@ export default async function Home() {
             className="inline-flex items-center rounded-full border border-border px-6 py-3 text-sm font-semibold transition-colors hover:bg-muted"
           >
             加入我們
+          </Link>
+          <Link
+            href="/login"
+            className="inline-flex items-center rounded-full border border-border px-6 py-3 text-sm font-semibold transition-colors hover:bg-muted"
+          >
+            <LogIn className="mr-2 h-4 w-4" /> 登入
+          </Link>
+          <Link
+            href="/register"
+            className="inline-flex items-center rounded-full border border-border px-6 py-3 text-sm font-semibold transition-colors hover:bg-muted"
+          >
+            <UserPlus className="mr-2 h-4 w-4" /> 註冊
           </Link>
         </div>
 
@@ -83,5 +95,5 @@ export default async function Home() {
         ))}
       </section>
     </div>
-  );
+  )
 }
