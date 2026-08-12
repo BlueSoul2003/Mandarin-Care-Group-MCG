@@ -1,9 +1,11 @@
 import { contentRepository } from "@/content"
 import { EventCard } from "@/components/EventCard"
+import { getTranslations } from "next-intl/server"
 
 export const revalidate = 3600
 
 export default async function EventsPage() {
+  const t = await getTranslations("PastEvents")
   const repository = await contentRepository()
   const [events, snapshot] = await Promise.all([
     repository.listPublishedEvents(),
@@ -16,9 +18,9 @@ export default async function EventsPage() {
         <p className="mb-4 text-sm font-medium uppercase tracking-widest text-primary">
           MCG Archive
         </p>
-        <h1 className="font-heading text-4xl font-bold md:text-5xl">歷年活動</h1>
+        <h1 className="font-heading text-4xl font-bold md:text-5xl">{t("title")}</h1>
         <p className="mx-auto mt-6 max-w-2xl text-lg leading-relaxed text-muted-foreground">
-          以每一次真實的相聚為單位，保存活動故事、精選照片與延續至今的傳統。
+          {t("desc")}
         </p>
       </header>
 

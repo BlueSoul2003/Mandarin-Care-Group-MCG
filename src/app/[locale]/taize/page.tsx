@@ -3,7 +3,7 @@
 import { usePlayerStore } from "@/store/usePlayerStore"
 import { Play, Pause, Disc3 } from "lucide-react"
 import { motion } from "framer-motion"
-
+import { useTranslations } from "next-intl"
 const TAIZE_TRACKS = [
   {
     id: "1",
@@ -19,6 +19,7 @@ const TAIZE_TRACKS = [
 ]
 
 export default function TaizePage() {
+  const t = useTranslations("Taize")
   const { currentTrack, isPlaying, play, togglePlay } = usePlayerStore()
 
   return (
@@ -33,9 +34,9 @@ export default function TaizePage() {
       )}
 
       <div className="mb-16 text-center">
-        <h1 className="text-4xl md:text-5xl font-heading font-bold text-foreground mb-6">Taizé Room</h1>
+        <h1 className="text-4xl md:text-5xl font-heading font-bold text-foreground mb-6">{t("title")}</h1>
         <p className="text-lg text-muted-foreground max-w-2xl mx-auto leading-relaxed">
-          在靜默與不斷重複的短頌中，進入內心的寧靜。點擊播放，讓音樂伴隨你在各個頁面中穿梭祈禱。
+          {t("desc")}
         </p>
       </div>
 

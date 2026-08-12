@@ -1,9 +1,11 @@
 import Image from "next/image"
 import { contentRepository } from "@/content"
+import { getTranslations } from "next-intl/server"
 
 export const revalidate = 3600
 
 export default async function HistoryPage() {
+  const t = await getTranslations("PastCommittees")
   const repository = await contentRepository()
   const terms = await repository.listTermsWithCommittees()
 
@@ -13,9 +15,9 @@ export default async function HistoryPage() {
         <p className="mb-4 text-sm font-medium uppercase tracking-widest text-primary">
           People & Service
         </p>
-        <h1 className="font-heading text-4xl font-bold md:text-5xl">歷屆執委</h1>
+        <h1 className="font-heading text-4xl font-bold md:text-5xl">{t("title")}</h1>
         <p className="mx-auto mt-6 max-w-2xl text-lg leading-relaxed text-muted-foreground">
-          感謝每一屆願意以時間與心力服務團體的伙伴。此處只公開本人同意的正式職務資料。
+          {t("desc")}
         </p>
       </header>
 

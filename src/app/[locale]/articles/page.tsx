@@ -1,9 +1,11 @@
 import { contentRepository } from "@/content"
 import { ArticleCard } from "@/components/ArticleCard"
+import { getTranslations } from "next-intl/server"
 
 export const revalidate = 3600
 
 export default async function ArticlesPage() {
+  const t = await getTranslations("Articles")
   const repository = await contentRepository()
   const articles = await repository.listPublishedArticles()
 
@@ -11,9 +13,9 @@ export default async function ArticlesPage() {
     <div className="container mx-auto max-w-5xl px-4 py-12 md:py-20">
       <header className="mb-14 text-center">
         <p className="mb-4 text-sm font-medium uppercase tracking-widest text-primary">MCG Journal</p>
-        <h1 className="font-heading text-4xl font-bold md:text-5xl">文章與故事</h1>
+        <h1 className="font-heading text-4xl font-bold md:text-5xl">{t("title")}</h1>
         <p className="mx-auto mt-6 max-w-2xl text-lg text-muted-foreground">
-          收錄信仰反思、活動故事與大學生活內容，逐步建立屬於 MCG 的長期刊物。
+          {t("desc")}
         </p>
       </header>
 

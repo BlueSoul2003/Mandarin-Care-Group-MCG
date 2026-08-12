@@ -1,18 +1,20 @@
 import { ArticleCard } from "@/components/ArticleCard"
 import { contentRepository } from "@/content"
+import { getTranslations } from "next-intl/server"
 
 export const revalidate = 3600
 
 export default async function SpiritualPage() {
   const repository = await contentRepository()
   const articles = await repository.listPublishedArticles("spiritual")
+  const t = await getTranslations("Spiritual")
 
   return (
     <div className="container mx-auto px-4 py-12 md:py-20 max-w-5xl">
       <div className="mb-12 md:mb-16 text-center">
-        <h1 className="text-4xl md:text-5xl font-heading font-bold text-foreground mb-6">Spiritual</h1>
+        <h1 className="text-4xl md:text-5xl font-heading font-bold text-foreground mb-6">{t("title")}</h1>
         <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-          在祈禱、聖言與團體陪伴中，為大學生活留一處安靜的心靈空間。
+          {t("desc")}
         </p>
       </div>
 

@@ -1,9 +1,11 @@
 import { LifestyleClient } from "./LifestyleClient"
 import { contentRepository } from "@/content"
+import { getTranslations } from "next-intl/server"
 
 export const revalidate = 3600
 
 export default async function LifestylePage() {
+  const t = await getTranslations("Lifestyle")
   const repository = await contentRepository()
   const content = await repository.listPublishedArticles("lifestyle")
   const articles = content.map((article) => ({
@@ -26,9 +28,9 @@ export default async function LifestylePage() {
   return (
     <div className="container mx-auto px-4 py-12 md:py-20 max-w-5xl">
       <div className="mb-12 md:mb-16 text-center">
-        <h1 className="text-4xl md:text-5xl font-heading font-bold text-foreground mb-6">Lifestyle</h1>
+        <h1 className="text-4xl md:text-5xl font-heading font-bold text-foreground mb-6">{t("title")}</h1>
         <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-          從信仰走進生活，分享大學生需要的實用知識與成長經驗。
+          {t("desc")}
         </p>
       </div>
 
