@@ -127,7 +127,7 @@
       "email": "電子信箱",
       "password": "密碼",
       "confirmPassword": "確認密碼",
-      "phone": "聯絡電話（選填）",
+      "phone": "聯絡電話",
       "majorYear": "科系與年級（選填）",
       "majorPlaceholder": "例：資工大一 / CS Year 1",
       "message": "給我們的話（選填）",
@@ -152,5 +152,17 @@
   "PastCommittees": {
     "title": "歷屆執委",
     "desc": "感謝每一屆願意以時間與心力服務團體的伙伴。此處只公開本人同意的正式職務資料。"
+  },
+  "ForgotPassword": {
+    "title": "忘記密碼",
+    "description": "輸入您的電子郵件以重設密碼",
+    "emailLabel": "電子郵件",
+    "sendButton": "發送重設連結",
+    "sending": "發送中...",
+    "successTitle": "請查看您的收件匣！",
+    "successDesc": "我們已向以下地址發送了一封密碼重設郵件",
+    "successHint": "沒有收到？請檢查您的垃圾郵件資料夾。",
+    "backToLogin": "返回登入",
+    "noEmail": "無法發送重設連結，請檢查網路後再試。"
   }
 }

@@ -127,7 +127,7 @@
       "email": "Email Address",
       "password": "Password",
       "confirmPassword": "Confirm Password",
-      "phone": "Phone Number (Optional)",
+      "phone": "Phone Number",
       "majorYear": "Major & Year (Optional)",
       "majorPlaceholder": "e.g., CS Year 1",
       "message": "Message for us (Optional)",
@@ -152,5 +152,17 @@
   "PastCommittees": {
     "title": "Past Committees",
     "desc": "Thanks to every member who has served the community with time and heart. Only the official positions agreed to by the person will be published here."
+  },
+  "ForgotPassword": {
+    "title": "Forgot Password",
+    "description": "Enter your email address to reset your password",
+    "emailLabel": "Email",
+    "sendButton": "Send Reset Link",
+    "sending": "Sending...",
+    "successTitle": "Check your inbox!",
+    "successDesc": "We've sent a password reset email to",
+    "successHint": "Didn't receive it? Check your spam folder.",
+    "backToLogin": "Back to Login",
+    "noEmail": "Unable to send the reset link. Please check your connection and try again."
   }
 }

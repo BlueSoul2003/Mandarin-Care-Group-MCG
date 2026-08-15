@@ -51,9 +51,12 @@ export function ArticleCard({ title, excerpt, date, author, tags, slug, category
           <User className="w-4 h-4" />
           <span className="font-semibold">{author}</span>
         </div>
-        <div className="flex items-center text-primary text-sm font-medium opacity-0 -translate-x-4 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-300">
+        <Link
+          href={href}
+          className="flex items-center text-primary text-sm font-medium opacity-0 -translate-x-4 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-300"
+        >
           Read more <ArrowRight className="ml-1 w-4 h-4" />
-        </div>
+        </Link>
       </div>
     </article>
   )

@@ -198,10 +198,11 @@ export function RegistrationForm() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-1.5">
-              <label className="text-xs font-semibold uppercase tracking-wider text-foreground/80">{t("phone")}</label>
+              <label className="text-xs font-semibold uppercase tracking-wider text-foreground/80">{t("phone")} <span className="text-red-400">*</span></label>
               <input
                 name="phone"
                 type="tel"
+                required
                 value={form.phone}
                 onChange={handleChange}
                 placeholder="+60 12-345 6789"
