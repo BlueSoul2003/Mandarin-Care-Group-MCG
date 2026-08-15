@@ -2,16 +2,22 @@
 
 import * as React from "react"
 import { motion, AnimatePresence } from "framer-motion"
-import { Send, CheckCircle, AlertCircle, Loader2 } from "lucide-react"
+import { Send, CheckCircle, AlertCircle, Loader2, Lock, Eye, EyeOff, Check, X } from "lucide-react"
+import { createClient } from "@/lib/supabase"
+import { useTranslations } from "next-intl"
 
 type Status = "idle" | "loading" | "success" | "error"
 
 export function RegistrationForm() {
+  const t = useTranslations("JoinPage.form")
   const [status, setStatus] = React.useState<Status>("idle")
   const [errorMsg, setErrorMsg] = React.useState("")
+  const [showPassword, setShowPassword] = React.useState(false)
   const [form, setForm] = React.useState({
     name: "",
     email: "",
+    password: "",
+    confirmPassword: "",
     phone: "",
     majorYear: "",
     message: "",
@@ -31,27 +37,58 @@ export function RegistrationForm() {
     setStatus("loading")
     setErrorMsg("")
 
+    if (form.password !== form.confirmPassword) {
+      setStatus("error")
+      setErrorMsg(t("passwordMismatch"))
+      return
+    }
+
     try {
+      // 1. Create Supabase Auth Account
+      const supabase = createClient()
+      const { error: signUpError } = await supabase.auth.signUp({
+        email: form.email,
+        password: form.password,
+        options: {
+          data: {
+            full_name: form.name,
+          },
+        },
+      })
+
+      if (signUpError) {
+        throw new Error(signUpError.message)
+      }
+
+      // 2. Push profile details to Notion via /api/register
       const res = await fetch("/api/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
+        body: JSON.stringify({
+          name: form.name,
+          email: form.email,
+          phone: form.phone,
+          majorYear: form.majorYear,
+          message: form.message,
+          consent: form.consent,
+          website: form.website
+        }),
       })
 
       if (!res.ok) {
         const data = await res.json()
-        throw new Error(data.error || "送出失敗，請稍後再試。")
+        throw new Error(data.error || "Failed to submit. Please try again.")
       }
 
       setStatus("success")
-    } catch (err: unknown) {
+    } catch (err: any) {
       setStatus("error")
-      setErrorMsg(err instanceof Error ? err.message : "送出失敗，請稍後再試。")
+      setErrorMsg(err.message || "Failed to submit. Please try again.")
     }
   }
 
   const inputClass =
-    "w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary/50 transition-all duration-200"
+    "w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary/50 transition-all duration-200"
 
   return (
     <AnimatePresence mode="wait">
@@ -62,20 +99,11 @@ export function RegistrationForm() {
           animate={{ opacity: 1, scale: 1 }}
           className="flex flex-col items-center justify-center gap-4 py-16 text-center"
         >
-          <CheckCircle className="w-16 h-16 text-green-400" />
-          <h2 className="text-2xl font-bold font-heading text-foreground">感謝您的報名！</h2>
-          <p className="text-muted-foreground max-w-sm">
-            我們已收到您的資料，執委會將盡快與您聯繫。主佑您！🙏
+          <CheckCircle className="w-16 h-16 text-emerald-400" />
+          <h2 className="text-2xl font-bold font-heading text-foreground">{t("successTitle")}</h2>
+          <p className="text-muted-foreground max-w-sm text-sm">
+            {t("successDesc")}
           </p>
-          <button
-            onClick={() => {
-              setStatus("idle")
-              setForm({ name: "", email: "", phone: "", majorYear: "", message: "", consent: false, website: "" })
-            }}
-            className="mt-4 px-6 py-2 rounded-full border border-white/20 text-sm hover:bg-white/10 transition-colors"
-          >
-            再填一份
-          </button>
         </motion.div>
       ) : (
         <motion.form
@@ -83,25 +111,25 @@ export function RegistrationForm() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           onSubmit={handleSubmit}
-          className="space-y-5"
+          className="space-y-4"
         >
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-foreground/80">
-                姓名 <span className="text-red-400">*</span>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-1.5">
+              <label className="text-xs font-semibold uppercase tracking-wider text-foreground/80">
+                {t("name")} <span className="text-red-400">*</span>
               </label>
               <input
                 name="name"
                 required
                 value={form.name}
                 onChange={handleChange}
-                placeholder="您的中文或英文名字"
+                placeholder="John Doe"
                 className={inputClass}
               />
             </div>
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-foreground/80">
-                電子信箱 <span className="text-red-400">*</span>
+            <div className="space-y-1.5">
+              <label className="text-xs font-semibold uppercase tracking-wider text-foreground/80">
+                {t("email")} <span className="text-red-400">*</span>
               </label>
               <input
                 name="email"
@@ -109,44 +137,97 @@ export function RegistrationForm() {
                 required
                 value={form.email}
                 onChange={handleChange}
-                placeholder="your@email.com"
+                placeholder="john@example.com"
                 className={inputClass}
               />
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-foreground/80">聯絡電話（選填）</label>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-1.5">
+              <label className="text-xs font-semibold uppercase tracking-wider text-foreground/80">
+                {t("password")} <span className="text-red-400">*</span>
+              </label>
+              <div className="relative">
+                <input
+                  type={showPassword ? "text" : "password"}
+                  name="password"
+                  required
+                  value={form.password}
+                  onChange={handleChange}
+                  placeholder="••••••••"
+                  className={inputClass}
+                />
+              </div>
+            </div>
+
+            <div className="space-y-1.5">
+              <label className="text-xs font-semibold uppercase tracking-wider text-foreground/80">
+                {t("confirmPassword")} <span className="text-red-400">*</span>
+              </label>
+              <div className="relative">
+                <input
+                  type={showPassword ? "text" : "password"}
+                  name="confirmPassword"
+                  required
+                  value={form.confirmPassword}
+                  onChange={handleChange}
+                  placeholder="••••••••"
+                  className={inputClass + " pr-10"}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div className="h-5 -mt-2">
+            {form.confirmPassword && (
+              <p className={`text-xs flex items-center gap-1 ${form.password === form.confirmPassword ? "text-emerald-400" : "text-red-400"}`}>
+                {form.password === form.confirmPassword
+                  ? <><Check className="w-3 h-3" /> {t("passwordMatch")}</>
+                  : <><X className="w-3 h-3" /> {t("passwordMismatch")}</>}
+              </p>
+            )}
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-1.5">
+              <label className="text-xs font-semibold uppercase tracking-wider text-foreground/80">{t("phone")}</label>
               <input
                 name="phone"
                 type="tel"
                 value={form.phone}
                 onChange={handleChange}
-                placeholder="例：+60 12-345 6789"
+                placeholder="+60 12-345 6789"
                 className={inputClass}
               />
             </div>
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-foreground/80">科系與年級（選填）</label>
+            <div className="space-y-1.5">
+              <label className="text-xs font-semibold uppercase tracking-wider text-foreground/80">{t("majorYear")}</label>
               <input
                 name="majorYear"
                 value={form.majorYear}
                 onChange={handleChange}
-                placeholder="例：資工大一 / CS Year 1"
+                placeholder={t("majorPlaceholder")}
                 className={inputClass}
               />
             </div>
           </div>
 
-          <div className="space-y-2">
-            <label className="text-sm font-medium text-foreground/80">給我們的話（選填）</label>
+          <div className="space-y-1.5">
+            <label className="text-xs font-semibold uppercase tracking-wider text-foreground/80">{t("message")}</label>
             <textarea
               name="message"
-              rows={4}
+              rows={3}
               value={form.message}
               onChange={handleChange}
-              placeholder="有什麼想說的、想加入的原因，或對我們的期待…"
+              placeholder={t("messagePlaceholder")}
               className={`${inputClass} resize-none`}
             />
           </div>
@@ -163,17 +244,17 @@ export function RegistrationForm() {
             />
           </div>
 
-          <label className="flex items-start gap-3 text-sm leading-relaxed text-muted-foreground">
+          <label className="flex items-start gap-3 text-xs leading-relaxed text-muted-foreground pt-2">
             <input
               name="consent"
               type="checkbox"
               required
               checked={form.consent}
               onChange={handleChange}
-              className="mt-1 h-4 w-4 rounded border-border accent-primary"
+              className="mt-0.5 h-4 w-4 rounded border-border accent-primary"
             />
             <span>
-              我同意 MCG 執委會使用以上資料與我聯絡；資料只供加入團體與活動聯繫使用。
+              {t("consent")}
             </span>
           </label>
 
@@ -190,18 +271,18 @@ export function RegistrationForm() {
 
           <button
             type="submit"
-            disabled={status === "loading"}
-            className="w-full flex items-center justify-center gap-2 bg-foreground text-background font-semibold py-3.5 rounded-xl hover:opacity-90 active:scale-[0.99] transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+            disabled={status === "loading" || (form.password !== form.confirmPassword && form.confirmPassword.length > 0)}
+            className="w-full flex items-center justify-center gap-2 bg-foreground text-background font-semibold py-3.5 rounded-xl hover:opacity-90 active:scale-[0.99] transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed mt-2"
           >
             {status === "loading" ? (
               <>
                 <Loader2 className="w-5 h-5 animate-spin" />
-                送出中…
+                {t("loading")}
               </>
             ) : (
               <>
-                <Send className="w-5 h-5" />
-                送出報名資料
+                <Send className="w-4 h-4" />
+                {t("submit")}
               </>
             )}
           </button>

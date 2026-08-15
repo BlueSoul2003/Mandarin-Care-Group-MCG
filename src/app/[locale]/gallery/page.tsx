@@ -1,5 +1,6 @@
 import { MasonryGrid } from "@/components/MasonryGrid"
 import { contentRepository } from "@/content"
+import { getTranslations } from "next-intl/server"
 
 export const revalidate = 3600
 
@@ -15,13 +16,13 @@ export default async function GalleryPage() {
     type: item.type,
     alt: item.alt,
   }))
-
+  const t = await getTranslations("Gallery")
   return (
     <div className="container mx-auto px-4 py-12 md:py-20 max-w-7xl">
       <div className="mb-12 md:mb-16 text-center">
-        <h1 className="text-4xl md:text-5xl font-heading font-bold text-foreground mb-6">Gallery</h1>
+        <h1 className="text-4xl md:text-5xl font-heading font-bold text-foreground mb-6">{t('title')}</h1>
         <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-          從歷屆活動中精選的共同回憶，每一張都屬於 MCG 的故事。
+          {t('desc')}
         </p>
       </div>
 

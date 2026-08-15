@@ -1,0 +1,156 @@
+{
+  "Navbar": {
+    "gallery": "相簿",
+    "spiritual": "靈修",
+    "taize": "泰澤",
+    "rosary": "玫瑰經",
+    "lifestyle": "生活",
+    "login": "登入",
+    "join": "加入我們",
+    "signOut": "登出",
+    "loggedInAs": "已登入為 {name}"
+  },
+  "Home": {
+    "title": "MCG UTM",
+    "description": "UTM 華語天主教大學生的團體、回憶與共同成長空間。",
+    "exploreEvents": "歷年活動",
+    "joinUs": "加入我們",
+    "login": "登入",
+    "register": "註冊",
+    "featuredMemory": "精選回憶",
+    "communityArchive": "MCG 社群檔案庫",
+    "pastEvents": "歷年活動",
+    "pastEventsDesc": "依屆期與系列瀏覽 MCG 的共同回憶",
+    "articlesAndStories": "文章與故事",
+    "articlesAndStoriesDesc": "信仰反思、活動故事與大學生活內容",
+    "pastCommittees": "歷屆執委",
+    "pastCommitteesDesc": "記錄每一屆正式職務與服務傳承"
+  },
+  "Footer": {
+    "desc": "為 MCG UTM 打造的空間，讓大家得以在信仰中成長。",
+    "events": "歷年活動",
+    "articles": "文章",
+    "committee": "歷屆執委"
+  },
+  "Gallery": {
+    "title": "相簿",
+    "desc": "從歷屆活動中精選的共同回憶，每一張都屬於 MCG 的故事。"
+  },
+  "Spiritual": {
+    "title": "靈修",
+    "desc": "在祈禱、聖言與團體陪伴中，為大學生活留一處安靜的心靈空間。"
+  },
+  "Taize": {
+    "title": "泰澤",
+    "desc": "在靜默與不斷重複的短頌中，進入內心的寧靜。點擊播放，讓音樂伴隨你在各個頁面中穿梭祈禱。"
+  },
+  "RosaryPage": {
+    "title": "玫瑰經",
+    "description": "專為手機單手操作設計的互動玫瑰經。滑動螢幕即可切換經文，跟著虛擬念珠的進度，專注於祈禱之中。"
+  },
+  "Lifestyle": {
+    "title": "生活",
+    "desc": "從信仰走進生活，分享大學生需要的實用知識與成長經驗。"
+  },
+  "RosaryGuide": {
+    "swipe": "滑動",
+    "prayers": [
+      {
+        "id": 0,
+        "title": "十字聖號",
+        "content": "因父，及子，及聖神之名，阿們。"
+      },
+      {
+        "id": 1,
+        "title": "信經",
+        "content": "我信全能的天主父，天地萬物的創造者。我信父的唯一子，我們的主耶穌基督..."
+      },
+      {
+        "id": 2,
+        "title": "天主經",
+        "content": "我們的天父，願你的名受顯揚；願你的國來臨；願你的旨意奉行在人間，如同在天上..."
+      },
+      {
+        "id": 3,
+        "title": "聖母經 (為信德)",
+        "content": "萬福瑪利亞，滿被聖寵者，主與妳同在。妳在婦女中受讚美，妳的親子耶穌同受讚美..."
+      },
+      {
+        "id": 4,
+        "title": "聖母經 (為望德)",
+        "content": "萬福瑪利亞，滿被聖寵者..."
+      },
+      {
+        "id": 5,
+        "title": "聖母經 (為愛德)",
+        "content": "萬福瑪利亞，滿被聖寵者..."
+      },
+      {
+        "id": 6,
+        "title": "聖三光榮頌",
+        "content": "願光榮歸於父、及子、及聖神。起初如何，今日亦然，直到永遠。阿們。"
+      },
+      {
+        "id": 7,
+        "title": "歡喜一端",
+        "content": "天使報喜 (領報)\n瑪利亞，妳充滿恩寵，主與妳同在... (開始十遍聖母經)"
+      }
+    ]
+  },
+  "LoginPage": {
+    "title": "歡迎回來",
+    "description": "請登入您的帳號",
+    "email": "電子郵件",
+    "password": "密碼",
+    "login": "登入",
+    "loading": "登入中...",
+    "remember": "記住我",
+    "forgot": "忘記密碼？",
+    "signUp": "沒有帳號？",
+    "register": "立即註冊",
+    "loginSuccess": "登入成功",
+    "redirecting": "歡迎回到 Mandarin Care Group。正在跳轉..."
+  },
+  "JoinPage": {
+    "title": "歡迎加入我們的大家庭",
+    "description": "無論您是剛入學的新生、尋找信仰群體的你，還是想了解我們的朋友，填寫以下表單，我們的執委會將在最短時間內與您聯繫！",
+    "highlightsTitle": "加入 MCG，您將獲得…",
+    "highlights": [
+      { "label": "靈修陪伴", "desc": "泰澤音樂、玫瑰經與每週祈禱聚會" },
+      { "label": "青年社群", "desc": "一個充滿溫度的華語天主教大家庭" },
+      { "label": "豐富活動", "desc": "退省、慶典、生活技能工作坊" },
+      { "label": "全人成長", "desc": "從信仰到財商，陪你走過大學四年" }
+    ],
+    "formTitle": "填寫您的資料",
+    "form": {
+      "name": "姓名",
+      "email": "電子信箱",
+      "password": "密碼",
+      "confirmPassword": "確認密碼",
+      "phone": "聯絡電話（選填）",
+      "majorYear": "科系與年級（選填）",
+      "majorPlaceholder": "例：資工大一 / CS Year 1",
+      "message": "給我們的話（選填）",
+      "messagePlaceholder": "有什麼想說的、想加入的原因，或對我們的期待…",
+      "consent": "我同意 MCG 執委會使用以上資料與我聯絡；資料只供加入團體與活動聯繫使用。",
+      "submit": "送出報名資料",
+      "loading": "送出中…",
+      "successTitle": "感謝您的報名！",
+      "successDesc": "請去信箱點擊驗證信，執委會也將盡快與您聯繫。主佑您！🙏",
+      "passwordMismatch": "密碼不一致！",
+      "passwordMatch": "密碼相符"
+    }
+  },
+  "PastEvents": {
+    "title": "歷年活動",
+    "desc": "以每一次真實的相聚為單位，保存活動故事、精選照片與延續至今的傳統。"
+  },
+  "Articles": {
+    "title": "文章與故事",
+    "desc": "收錄信仰反思、活動故事與大學生活內容，逐步建立屬於 MCG 的長期刊物。"
+  },
+  "PastCommittees": {
+    "title": "歷屆執委",
+    "desc": "感謝每一屆願意以時間與心力服務團體的伙伴。此處只公開本人同意的正式職務資料。"
+  }
+}

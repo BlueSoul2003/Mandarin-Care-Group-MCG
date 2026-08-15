@@ -6,8 +6,10 @@ import { useRouter } from "next/navigation"
 import { motion } from "framer-motion"
 import { Mail, Lock, Eye, EyeOff, LogIn, CheckCircle, AlertCircle, Loader2 } from "lucide-react"
 import { createClient } from "@/lib/supabase"
+import { useTranslations } from "next-intl"
 
 export default function LoginPage() {
+  const t = useTranslations("LoginPage")
   const router = useRouter()
   const [showPassword, setShowPassword] = React.useState(false)
   const [rememberMe, setRememberMe] = React.useState(false)
@@ -61,10 +63,10 @@ export default function LoginPage() {
               Mandarin Care Group
             </span>
             <h1 className="text-3xl font-bold tracking-tight text-card-foreground mb-2">
-              歡迎回來
+              {t("title")}
             </h1>
             <p className="text-sm text-muted-foreground">
-              Welcome Back · 請登入您的帳號
+              {t("description")}
             </p>
           </div>
 
@@ -75,8 +77,8 @@ export default function LoginPage() {
               className="flex flex-col items-center justify-center gap-4 py-8 text-center"
             >
               <CheckCircle className="w-14 h-14 text-emerald-500" />
-              <h2 className="text-xl font-bold text-card-foreground">登入成功！</h2>
-              <p className="text-sm text-muted-foreground">歡迎回到 Mandarin Care Group。正在跳轉...</p>
+              <h2 className="text-xl font-bold text-card-foreground">{t("loginSuccess")}</h2>
+              <p className="text-sm text-muted-foreground">{t("redirecting")}</p>
             </motion.div>
           ) : (
             <form onSubmit={handleSubmit} className="space-y-5">
@@ -90,7 +92,7 @@ export default function LoginPage() {
               {/* Email */}
               <div className="space-y-1.5">
                 <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground block">
-                  電子郵件 Email
+                  {t("email")}
                 </label>
                 <div className="relative">
                   <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
@@ -109,7 +111,7 @@ export default function LoginPage() {
               {/* Password */}
               <div className="space-y-1.5">
                 <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground block">
-                  密碼 Password
+                  {t("password")}
                 </label>
                 <div className="relative">
                   <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
@@ -141,10 +143,10 @@ export default function LoginPage() {
                     onChange={(e) => setRememberMe(e.target.checked)}
                     className="rounded border-input text-primary focus:ring-primary/50"
                   />
-                  <span>記住我 Remember Me</span>
+                  {t("remember")}
                 </label>
                 <Link href="/forgot-password" className="text-primary hover:underline font-medium">
-                  忘記密碼？
+                  {t("forgot")}
                 </Link>
               </div>
 
@@ -157,21 +159,21 @@ export default function LoginPage() {
                 {status === "loading" ? (
                   <>
                     <Loader2 className="w-4 h-4 animate-spin" />
-                    <span>登入中...</span>
+                    <span>{t("loading")}</span>
                   </>
                 ) : (
                   <>
                     <LogIn className="w-4 h-4" />
-                    <span>登入 Login</span>
+                    <span>{t("login")}</span>
                   </>
                 )}
               </button>
 
               {/* Redirect to Register */}
               <div className="pt-4 text-center border-t border-border/50 text-sm text-muted-foreground">
-                還沒有帳號？{" "}
-                <Link href="/register" className="text-primary font-semibold hover:underline">
-                  立即註冊 Register
+                {t("signUp")} {" "}
+                <Link href="/join" className="text-primary font-semibold hover:underline">
+                  {t("register")}
                 </Link>
               </div>
             </form>

@@ -1,55 +1,57 @@
 import Image from "next/image"
-import Link from "next/link"
+import { Link } from "@/i18n/routing"
 import { ArrowRight, LogIn, UserPlus } from "lucide-react"
 import { contentRepository } from "@/content"
+import { getTranslations } from "next-intl/server"
 
 export const revalidate = 3600
 
-const LANDING_LINKS = [
-  { href: "/events", label: "歷年活動", description: "依屆期與系列瀏覽 MCG 的共同回憶" },
-  { href: "/articles", label: "文章與故事", description: "信仰反思、活動故事與大學生活內容" },
-  { href: "/history", label: "歷屆執委", description: "記錄每一屆正式職務與服務傳承" },
-]
-
 export default async function Home() {
+  const t = await getTranslations("Home")
   const repository = await contentRepository()
   const events = await repository.listPublishedEvents()
   const featuredEvent = events.find((event) => event.featured) ?? events[0]
   const hasCloudinaryCover = featuredEvent?.coverImageUrl?.includes("res.cloudinary.com")
 
+  const LANDING_LINKS = [
+    { href: "/events", label: t("pastEvents"), description: t("pastEventsDesc") },
+    { href: "/articles", label: t("articlesAndStories"), description: t("articlesAndStoriesDesc") },
+    { href: "/history", label: t("pastCommittees"), description: t("pastCommitteesDesc") },
+  ]
+
   return (
     <div className="container mx-auto max-w-6xl px-4 py-20 text-center">
       <section className="flex flex-col items-center justify-center min-h-[calc(100vh-14rem)]">
         <h1 className="text-4xl md:text-6xl font-bold tracking-tight mb-6 text-foreground font-heading">
-          MCG UTM
+          {t("title")}
         </h1>
         <p className="text-xl md:text-2xl text-muted-foreground max-w-[800px] mb-8 leading-relaxed">
-          UTM 華語天主教大學生的團體、回憶與共同成長空間。
+          {t("description")}
         </p>
         <div className="mb-10 flex flex-wrap justify-center gap-3">
           <Link
             href="/events"
             className="inline-flex items-center rounded-full bg-foreground px-6 py-3 text-sm font-semibold text-background transition-opacity hover:opacity-90"
           >
-            探索歷年活動 <ArrowRight className="ml-2 h-4 w-4" />
+            {t("exploreEvents")} <ArrowRight className="ml-2 h-4 w-4" />
           </Link>
           <Link
             href="/join"
             className="inline-flex items-center rounded-full border border-border px-6 py-3 text-sm font-semibold transition-colors hover:bg-muted"
           >
-            加入我們
+            {t("joinUs")}
           </Link>
           <Link
             href="/login"
             className="inline-flex items-center rounded-full border border-border px-6 py-3 text-sm font-semibold transition-colors hover:bg-muted"
           >
-            <LogIn className="mr-2 h-4 w-4" /> 登入
+            <LogIn className="mr-2 h-4 w-4" /> {t("login")}
           </Link>
           <Link
             href="/register"
             className="inline-flex items-center rounded-full border border-border px-6 py-3 text-sm font-semibold transition-colors hover:bg-muted"
           >
-            <UserPlus className="mr-2 h-4 w-4" /> 註冊
+            <UserPlus className="mr-2 h-4 w-4" /> {t("register")}
           </Link>
         </div>
 
@@ -68,13 +70,13 @@ export default async function Home() {
                 href={`/events/${featuredEvent.slug}`}
                 className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 to-transparent p-8 text-left text-white"
               >
-                <span className="text-xs uppercase tracking-widest text-white/70">Featured memory</span>
+                <span className="text-xs uppercase tracking-widest text-white/70">{t("featuredMemory")}</span>
                 <span className="mt-2 block font-heading text-2xl font-semibold">{featuredEvent.title}</span>
               </Link>
             </>
           ) : (
             <span className="text-muted-foreground text-sm uppercase tracking-widest">
-              MCG Community Archive
+              {t("communityArchive")}
             </span>
           )}
         </div>

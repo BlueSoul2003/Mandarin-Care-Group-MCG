@@ -3,23 +3,18 @@
 import * as React from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { ChevronLeft, ChevronRight } from "lucide-react"
-
-// A simplified sequence for demonstration (e.g. Joyful Mysteries Decades)
-const ROSARY_STEPS = [
-  { id: 0, title: "十字聖號", content: "因父，及子，及聖神之名，阿們。" },
-  { id: 1, title: "信經", content: "我信全能的天主父，天地萬物的創造者。我信父的唯一子，我們的主耶穌基督..." },
-  { id: 2, title: "天主經", content: "我們的天父，願你的名受顯揚；願你的國來臨；願你的旨意奉行在人間，如同在天上..." },
-  { id: 3, title: "聖母經 (為信德)", content: "萬福瑪利亞，滿被聖寵者，主與妳同在。妳在婦女中受讚美，妳的親子耶穌同受讚美..." },
-  { id: 4, title: "聖母經 (為望德)", content: "萬福瑪利亞，滿被聖寵者..." },
-  { id: 5, title: "聖母經 (為愛德)", content: "萬福瑪利亞，滿被聖寵者..." },
-  { id: 6, title: "聖三光榮頌", content: "願光榮歸於父、及子、及聖神。起初如何，今日亦然，直到永遠。阿們。" },
-  { id: 7, title: "歡喜一端", content: "天使報喜 (The Annunciation)\n瑪利亞，妳充滿恩寵，主與妳同在... (開始十遍聖母經)" },
-  // Normally this would be 50+ steps. We keep it brief for testing.
-]
+import { useTranslations } from "next-intl"
 
 export function RosaryGuide() {
+  const t = useTranslations("RosaryGuide")
   const [step, setStep] = React.useState(0)
   const [direction, setDirection] = React.useState(0) // -1 for left, 1 for right
+
+   const ROSARY_STEPS = t.raw("prayers") as {
+    id: number
+    title: string
+    content: string
+  }[]
 
   const paginate = (newDirection: number) => {
     const newStep = step + newDirection
@@ -119,7 +114,8 @@ export function RosaryGuide() {
           <ChevronLeft className="w-6 h-6" />
         </button>
         <div className="flex flex-col items-center justify-center">
-          <span className="text-xs text-muted-foreground uppercase tracking-widest font-semibold">Swipe</span>
+          <span className="text-xs text-muted-foreground uppercase tracking-widest font-semibold">{t("swipe")}</span>
+          <span className="text-xs text-muted-foreground uppercase tracking-widest font-semibold">{step + 1}/{ROSARY_STEPS.length}</span>
         </div>
         <button
           onClick={() => paginate(1)}

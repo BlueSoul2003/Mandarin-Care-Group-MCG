@@ -3,9 +3,11 @@
 import * as React from "react"
 import { Moon, Sun } from "lucide-react"
 import { useTheme } from "next-themes"
-import Link from "next/link"
+import { Link } from "@/i18n/routing"
 import { createClient } from "@/lib/supabase"
 import type { User } from "@supabase/supabase-js"
+import { useTranslations } from "next-intl"
+import { LanguageSwitcher } from "./LanguageSwitcher"
 
 function getInitials(name: string): string {
   const parts = name.trim().split(/\s+/)
@@ -19,6 +21,7 @@ export function Navbar() {
   const [user, setUser] = React.useState<User | null>(null)
   const [menuOpen, setMenuOpen] = React.useState(false)
   const menuRef = React.useRef<HTMLDivElement>(null)
+  const t = useTranslations("Navbar")
 
   React.useEffect(() => {
     const supabase = createClient()
@@ -71,11 +74,11 @@ export function Navbar() {
             <span className="font-bold text-xl tracking-wider text-primary">MCG UTM</span>
           </Link>
           <nav className="flex items-center space-x-6 text-sm font-medium">
-            <Link href="/gallery" className="transition-colors hover:text-foreground/80 text-foreground/60">Gallery</Link>
-            <Link href="/spiritual" className="transition-colors hover:text-foreground/80 text-foreground/60">Spiritual</Link>
-            <Link href="/taize" className="transition-colors hover:text-primary text-foreground/60">Taizé</Link>
-            <Link href="/rosary" className="transition-colors hover:text-primary text-foreground/60">Rosary</Link>
-            <Link href="/lifestyle" className="transition-colors hover:text-foreground/80 text-foreground/60">Lifestyle</Link>
+            <Link href="/gallery" className="transition-colors hover:text-foreground/80 text-foreground/60">{t("gallery")}</Link>
+            <Link href="/spiritual" className="transition-colors hover:text-foreground/80 text-foreground/60">{t("spiritual")}</Link>
+            <Link href="/taize" className="transition-colors hover:text-primary text-foreground/60">{t("taize")}</Link>
+            <Link href="/rosary" className="transition-colors hover:text-primary text-foreground/60">{t("rosary")}</Link>
+            <Link href="/lifestyle" className="transition-colors hover:text-foreground/80 text-foreground/60">{t("lifestyle")}</Link>
 
             {user ? (
               <div className="relative" ref={menuRef}>
@@ -83,7 +86,7 @@ export function Navbar() {
                 <button
                   onClick={() => setMenuOpen((prev) => !prev)}
                   className="flex items-center justify-center w-8 h-8 rounded-full bg-primary text-primary-foreground font-bold text-xs shadow-md hover:opacity-90 active:scale-95 transition-all select-none"
-                  title={`Logged in as ${displayName}`}
+                  title={t("loggedInAs", { name: displayName })}
                 >
                   {initials}
                 </button>
@@ -102,7 +105,7 @@ export function Navbar() {
                         onClick={handleLogout}
                         className="w-full text-left px-4 py-2 text-sm text-destructive hover:bg-destructive/10 transition-colors"
                       >
-                        登出 Sign out
+                        {t("signOut")}
                       </button>
                     </div>
                   </div>
@@ -110,17 +113,18 @@ export function Navbar() {
               </div>
             ) : (
               <>
-                <Link href="/login" className="transition-colors hover:text-primary text-foreground/60">登入 Login</Link>
+                <Link href="/login" className="transition-colors hover:text-primary text-foreground/60">{t("login")}</Link>
                 <Link
                   href="/join"
                   className="hidden md:inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-primary text-primary-foreground text-sm font-semibold hover:opacity-90 active:scale-[0.97] transition-all duration-200 shadow-sm"
                 >
-                  加入我們
+                  {t("join")}
                 </Link>
               </>
             )}
           </nav>
-          <div className="flex items-center">
+          <div className="flex items-center gap-1">
+            <LanguageSwitcher />
             <button
               onClick={() => setTheme(theme === "light" ? "dark" : "light")}
               className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 hover:bg-accent hover:text-accent-foreground h-10 w-10"

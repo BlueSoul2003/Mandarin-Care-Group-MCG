@@ -1,0 +1,156 @@
+{
+  "Navbar": {
+    "gallery": "Gallery",
+    "spiritual": "Spiritual",
+    "taize": "Taizé",
+    "rosary": "Rosary",
+    "lifestyle": "Lifestyle",
+    "login": "Login",
+    "join": "Join Us",
+    "signOut": "Sign out",
+    "loggedInAs": "Logged in as {name}"
+  },
+  "Home": {
+    "title": "MCG UTM",
+    "description": "UTM Mandarin-speaking Catholic university students' community, memories, and shared space for growth.",
+    "exploreEvents": "Explore past events",
+    "joinUs": "Join Us",
+    "login": "Login",
+    "register": "Register",
+    "featuredMemory": "Featured memory",
+    "communityArchive": "MCG Community Archive",
+    "pastEvents": "Past Events",
+    "pastEventsDesc": "Browse MCG's shared memories by term and series",
+    "articlesAndStories": "Articles & Stories",
+    "articlesAndStoriesDesc": "Faith reflections, event stories, and university life content",
+    "pastCommittees": "Past Committees",
+    "pastCommitteesDesc": "Record of official roles and service legacy for each term"
+  },
+  "Footer": {
+    "desc": "Built for the Mandarin Care Group, UTM. A digital sanctuary for holistic growth.",
+    "events": "Past Events",
+    "articles": "Articles",
+    "committee": "Past Committees"
+  },
+  "Gallery": {
+    "title": "Gallery",
+    "desc": "Selected memories from past events, where stories are told."
+  },
+  "Spiritual": {
+    "title": "Spiritual",
+    "desc": "Finding a quiet space for your heart amid university life in prayer, Scripture, and the companionship of community."
+  },
+  "Taize": {
+    "title": "Taizé",
+    "desc": "Amid silence and the gentle repetition of short prayers, enter into a place of inner peace. Press play and let the music accompany you as you move through each page in prayer."
+  },
+  "RosaryPage": {
+    "title": "Rosary",
+    "description": "Designed specifically for comfortable one-handed use on mobile. Swipe the screen to switch between prayers, follow the progress of the virtual rosary beads, and stay focused on prayer."
+  },
+  "Lifestyle": {
+    "title": "Lifestyle",
+    "desc": "From faith to everyday life, sharing practical knowledge and experiences to support university students in their growth."
+  },
+  "RosaryGuide": {
+    "swipe": "Swipe",
+    "prayers": [
+      {
+        "id": 0,
+        "title": "Sign of the Cross",
+        "content": "In the name of the Father, and of the Son, and of the Holy Spirit. Amen."
+      },
+      {
+        "id": 1,
+        "title": "Apostles' Creed",
+        "content": "I believe in God, the Father almighty, Creator of heaven and earth. I believe in Jesus Christ, his only Son, our Lord..."
+      },
+      {
+        "id": 2,
+        "title": "The Lord's Prayer",
+        "content": "Our Father, who art in heaven, hallowed be thy name; thy kingdom come; thy will be done on earth as it is in heaven..."
+      },
+      {
+        "id": 3,
+        "title": "Hail Mary (Faith)",
+        "content": "Hail Mary, full of grace, the Lord is with thee..."
+      },
+      {
+        "id": 4,
+        "title": "Hail Mary (Hope)",
+        "content": "Hail Mary, full of grace..."
+      },
+      {
+        "id": 5,
+        "title": "Hail Mary (Charity)",
+        "content": "Hail Mary, full of grace..."
+      },
+      {
+        "id": 6,
+        "title": "Glory Be",
+        "content": "Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be. Amen."
+      },
+      {
+        "id": 7,
+        "title": "First Joyful Mystery",
+        "content": "The Annunciation\nMary, you are full of grace, the Lord is with you... (Begin ten Hail Marys)"
+      }
+    ]
+  },
+  "LoginPage": {
+    "title": "Welcome Back",
+    "description": "Sign in to continue",
+    "email": "EMAIL",
+    "password": "PASSWORD",
+    "login": "Login",
+    "loading": "Logging In...",
+    "remember": "Remember Me",
+    "forgot": "Forgot Password?",
+    "signUp": "Don't have an account?",
+    "register": "Register",
+    "loginSuccess": "Login Success!",
+    "redirecting": "Welcome back! Redirecting..."
+  },
+  "JoinPage": {
+    "title": "Welcome to our Family",
+    "description": "Whether you are a freshman, seeking a faith community, or just want to know more about us, fill out the form below and we'll reach out to you shortly!",
+    "highlightsTitle": "By joining MCG, you'll experience...",
+    "highlights": [
+      { "label": "Spiritual Companionship", "desc": "Taizé music, Rosary, and weekly prayer gatherings" },
+      { "label": "Youth Community", "desc": "A warm, Mandarin-speaking Catholic family" },
+      { "label": "Rich Activities", "desc": "Retreats, celebrations, and life skills workshops" },
+      { "label": "Holistic Growth", "desc": "From faith to financial literacy, we accompany you through university" }
+    ],
+    "formTitle": "Registration Form",
+    "form": {
+      "name": "Full Name",
+      "email": "Email Address",
+      "password": "Password",
+      "confirmPassword": "Confirm Password",
+      "phone": "Phone Number (Optional)",
+      "majorYear": "Major & Year (Optional)",
+      "majorPlaceholder": "e.g., CS Year 1",
+      "message": "Message for us (Optional)",
+      "messagePlaceholder": "Why you want to join, what you expect...",
+      "consent": "I agree that MCG committee can use this data to contact me regarding activities.",
+      "submit": "Submit Registration",
+      "loading": "Submitting...",
+      "successTitle": "Thank you for registering!",
+      "successDesc": "We've sent a verification email to you, and our committee will contact you shortly. God bless! 🙏",
+      "passwordMismatch": "Passwords do not match!",
+      "passwordMatch": "Passwords match"
+    }
+  },
+  "PastEvents": {
+    "title": "Past Events",
+    "desc": "Selected memories for each gathering, preserving the stories, selected photos, and traditions that continue to this day."
+  },
+  "Articles": {
+    "title": "Articles and Stories",
+    "desc": "Featuring faith reflections, activity stories, and university life, gradually building a lasting publication for MCG."
+  },
+  "PastCommittees": {
+    "title": "Past Committees",
+    "desc": "Thanks to every member who has served the community with time and heart. Only the official positions agreed to by the person will be published here."
+  }
+}
