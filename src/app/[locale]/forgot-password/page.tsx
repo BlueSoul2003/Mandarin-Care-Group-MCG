@@ -5,8 +5,10 @@ import Link from "next/link"
 import { motion } from "framer-motion"
 import { Mail, Send, CheckCircle, AlertCircle, Loader2, ArrowLeft } from "lucide-react"
 import { createRecoveryClient } from "@/lib/supabase"
+import { useTranslations } from "next-intl"
 
 export default function ForgotPasswordPage() {
+  const t = useTranslations("ForgotPassword")
   const [email, setEmail] = React.useState("")
   const [status, setStatus] = React.useState<"idle" | "loading" | "success" | "error">("idle")
   const [errorMsg, setErrorMsg] = React.useState("")
@@ -31,7 +33,7 @@ export default function ForgotPasswordPage() {
       setStatus("success")
     } catch {
       setStatus("error")
-      setErrorMsg("Unable to send the reset link. Please check your connection and try again.")
+      setErrorMsg(t("noEmail"))
     }
   }
 
@@ -55,10 +57,10 @@ export default function ForgotPasswordPage() {
               Mandarin Care Group
             </span>
             <h1 className="text-3xl font-bold tracking-tight text-card-foreground mb-2">
-              忘記密碼
+              {t("title")}
             </h1>
             <p className="text-sm text-muted-foreground">
-              Forgot Password · 輸入您的電子郵件以重設密碼
+              {t("description")}
             </p>
           </div>
 
@@ -69,20 +71,19 @@ export default function ForgotPasswordPage() {
               className="flex flex-col items-center justify-center gap-4 py-8 text-center"
             >
               <CheckCircle className="w-14 h-14 text-emerald-500" />
-              <h2 className="text-xl font-bold text-card-foreground">請查看您的收件匣！</h2>
+              <h2 className="text-xl font-bold text-card-foreground">{t("successTitle")}</h2>
               <p className="text-sm text-muted-foreground max-w-xs">
-                我們已向{" "}
-                <span className="font-semibold text-foreground">{email}</span>{" "}
-                發送了一封密碼重設郵件。請點擊郵件中的連結。
+                {t("successDesc")}{" "}
+                <span className="font-semibold text-foreground">{email}</span>.
               </p>
               <p className="text-xs text-muted-foreground mt-1">
-                沒有收到？請檢查您的垃圾郵件資料夾。
+                {t("successHint")}
               </p>
               <Link
                 href="/login"
                 className="mt-4 px-6 py-2.5 rounded-full bg-primary text-primary-foreground text-sm font-semibold hover:opacity-90 transition-all"
               >
-                返回登入 Back to Login
+                {t("backToLogin")}
               </Link>
             </motion.div>
           ) : (
@@ -97,7 +98,7 @@ export default function ForgotPasswordPage() {
               {/* Email */}
               <div className="space-y-1.5">
                 <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground block">
-                  電子郵件 Email
+                  {t("emailLabel")}
                 </label>
                 <div className="relative">
                   <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
@@ -121,12 +122,12 @@ export default function ForgotPasswordPage() {
                 {status === "loading" ? (
                   <>
                     <Loader2 className="w-4 h-4 animate-spin" />
-                    <span>發送中...</span>
+                    <span>{t("sending")}</span>
                   </>
                 ) : (
                   <>
                     <Send className="w-4 h-4" />
-                    <span>發送重設連結 Send Reset Link</span>
+                    <span>{t("sendButton")}</span>
                   </>
                 )}
               </button>
@@ -138,7 +139,7 @@ export default function ForgotPasswordPage() {
                   className="text-sm text-muted-foreground hover:text-foreground transition-colors inline-flex items-center gap-1.5"
                 >
                   <ArrowLeft className="w-3.5 h-3.5" />
-                  返回登入 Back to Login
+                  {t("backToLogin")}
                 </Link>
               </div>
             </form>
