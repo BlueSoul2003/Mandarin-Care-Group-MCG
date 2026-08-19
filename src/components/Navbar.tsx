@@ -153,7 +153,7 @@ export function Navbar() {
             )}
           </nav>
 
-          <div className="hidden md:flex items-center gap-1">
+          <div className="flex items-center gap-1 md:gap-2 z-[60]">
             <LanguageSwitcher />
             <button
               onClick={() => setTheme(theme === "light" ? "dark" : "light")}
@@ -164,14 +164,11 @@ export function Navbar() {
               <Moon className="absolute h-[1.2rem] w-[1.2rem] rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
               <span className="sr-only">{t("toggleTheme")}</span>
             </button>
-          </div>
 
-          {/* Mobile Hamburger Button */}
-          <div className="flex md:hidden items-center gap-2 z-[60]">
-            <LanguageSwitcher />
+            {/* Mobile Hamburger Button */}
             <button
               onClick={() => setMobileMenuOpen(true)}
-              className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 hover:bg-accent hover:text-accent-foreground h-10 w-10"
+              className="md:hidden inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 hover:bg-accent hover:text-accent-foreground h-10 w-10"
               aria-label={t("openMenu")}
             >
               <Menu className="h-5 w-5" />
@@ -196,7 +193,7 @@ export function Navbar() {
               animate={{ x: 0 }}
               exit={{ x: "100%" }}
               transition={{ type: "spring", bounce: 0, duration: 0.3 }}
-              className="fixed inset-y-0 right-0 z-[70] w-3/4 max-w-sm border-l border-border bg-card p-6 shadow-2xl md:hidden overflow-y-auto flex flex-col"
+              className="fixed inset-y-0 right-0 z-[70] w-3/4 max-w-sm border-l border-border bg-card p-6 shadow-2xl md:hidden overflow-y-auto flex flex-col h-[100dvh]"
             >
               <div className="flex items-center justify-between mb-8">
                 <span className="font-bold text-xl tracking-wider text-primary">MCG UTM</span>
@@ -258,17 +255,7 @@ export function Navbar() {
                 )}
               </div>
 
-              <div className="mt-auto pt-8 flex items-center justify-between">
-                <span className="text-sm font-medium">{t("toggleTheme")}</span>
-                <button
-                  onClick={() => setTheme(theme === "light" ? "dark" : "light")}
-                  className="inline-flex items-center justify-center rounded-full p-2 bg-muted hover:bg-accent transition-colors"
-                  aria-label={t("toggleTheme")}
-                >
-                  <Sun className="h-5 w-5 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
-                  <Moon className="absolute h-5 w-5 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
-                </button>
-              </div>
+
             </motion.div>
           </>
         )}
