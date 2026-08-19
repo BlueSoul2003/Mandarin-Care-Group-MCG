@@ -10,7 +10,9 @@
     "signOut": "Sign out",
     "loggedInAs": "Logged in as {name}",
     "toggleTheme": "Toggle theme",
-    "toggleLanguage": "Change Language"
+    "toggleLanguage": "Change Language",
+    "openMenu": "Open Menu",
+    "closeMenu": "Close Menu"
   },
   "Home": {
     "title": "MCG UTM",
