@@ -1,14 +1,15 @@
 "use client"
 
 import * as React from "react"
-import Link from "next/link"
+import { Link } from "@/i18n/routing"
 import { motion } from "framer-motion"
 import { Mail, Send, CheckCircle, AlertCircle, Loader2, ArrowLeft } from "lucide-react"
 import { createRecoveryClient } from "@/lib/supabase"
-import { useTranslations } from "next-intl"
+import { useTranslations, useLocale } from "next-intl"
 
 export default function ForgotPasswordPage() {
   const t = useTranslations("ForgotPassword")
+  const locale = useLocale()
   const [email, setEmail] = React.useState("")
   const [status, setStatus] = React.useState<"idle" | "loading" | "success" | "error">("idle")
   const [errorMsg, setErrorMsg] = React.useState("")
@@ -21,7 +22,8 @@ export default function ForgotPasswordPage() {
     try {
       const supabase = createRecoveryClient()
       const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
-        redirectTo: `${window.location.origin}/reset-password`,
+        // Include the active locale so the reset page loads in the same language
+        redirectTo: `${window.location.origin}/${locale}/reset-password`,
       })
 
       if (error) {

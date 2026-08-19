@@ -13,7 +13,7 @@ export default async function HistoryPage() {
     <div className="container mx-auto max-w-5xl px-4 py-12 md:py-20">
       <header className="mb-14 text-center">
         <p className="mb-4 text-sm font-medium uppercase tracking-widest text-primary">
-          People & Service
+          {t("tag")}
         </p>
         <h1 className="font-heading text-4xl font-bold md:text-5xl">{t("title")}</h1>
         <p className="mx-auto mt-6 max-w-2xl text-lg leading-relaxed text-muted-foreground">
@@ -45,7 +45,7 @@ export default async function HistoryPage() {
                         {person.portraitUrl?.includes("res.cloudinary.com") && (
                           <Image
                             src={person.portraitUrl}
-                            alt={`${person.name} 的公開頭像`}
+                            alt={t("portraitAlt", { name: person.name })}
                             fill
                             sizes="56px"
                             className="object-cover"
@@ -60,14 +60,14 @@ export default async function HistoryPage() {
                   ))}
                 </div>
               ) : (
-                <p className="text-muted-foreground">此屆公開名單仍在整理中。</p>
+                <p className="text-muted-foreground">{t("emptyTerm")}</p>
               )}
             </section>
           ))}
         </div>
       ) : (
         <div className="rounded-2xl border border-border/50 bg-muted/20 px-6 py-20 text-center text-muted-foreground">
-          歷屆執委資料正在取得同意並逐屆整理。
+          {t("emptyAll")}
         </div>
       )}
     </div>

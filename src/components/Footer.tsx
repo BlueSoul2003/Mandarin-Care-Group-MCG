@@ -1,4 +1,4 @@
-import Link from "next/link"
+import { Link } from "@/i18n/routing"
 import { useTranslations } from "next-intl"
 
 export function Footer() {
@@ -9,7 +9,7 @@ export function Footer() {
         <p className="text-balance text-center text-sm leading-loose text-muted-foreground md:text-left">
           {t('desc')}
         </p>
-        <nav className="flex flex-wrap justify-center gap-4 text-sm text-muted-foreground" aria-label="頁尾導覽">
+        <nav className="flex flex-wrap justify-center gap-4 text-sm text-muted-foreground" aria-label={t('footerNavigation')}>
           <Link href="/events" className="hover:text-foreground">{t('events')}</Link>
           <Link href="/articles" className="hover:text-foreground">{t('articles')}</Link>
           <Link href="/history" className="hover:text-foreground">{t('committee')}</Link>

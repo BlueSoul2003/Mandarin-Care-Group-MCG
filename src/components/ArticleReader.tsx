@@ -1,5 +1,6 @@
-import Link from "next/link"
+import { Link } from "@/i18n/routing"
 import { ArrowLeft, Calendar, User } from "lucide-react"
+import { useTranslations } from "next-intl"
 import type { ArticleCategory } from "./ArticleCard"
 
 interface ArticleReaderProps {
@@ -11,16 +12,19 @@ interface ArticleReaderProps {
 }
 
 export function ArticleReader({ title, date, author, category, children }: ArticleReaderProps) {
+  const t = useTranslations("Articles")
+
   const backLink =
     category === "lifestyle" || category === "spiritual"
       ? `/${category}`
       : "/articles"
-  const backLabel =
+
+  const categoryName =
     category === "lifestyle"
-      ? "Lifestyle"
+      ? t("categories.lifestyle")
       : category === "spiritual"
-        ? "Spiritual"
-        : "文章"
+        ? t("categories.spiritual")
+        : t("categories.articles")
 
   return (
     <div className="container mx-auto px-4 py-12 md:py-20 max-w-3xl">
@@ -29,7 +33,7 @@ export function ArticleReader({ title, date, author, category, children }: Artic
         className="inline-flex items-center text-sm font-medium text-muted-foreground hover:text-foreground transition-colors mb-10"
       >
         <ArrowLeft className="mr-2 w-4 h-4" />
-        返回 {backLabel}
+        {t("backTo", { category: categoryName })}
       </Link>
       
       <header className="mb-12">
@@ -54,10 +58,10 @@ export function ArticleReader({ title, date, author, category, children }: Artic
 
       {category === "lifestyle" && (
         <div className="mt-16 bg-muted/30 rounded-2xl p-8 border border-border/50">
-          <h3 className="font-bold text-lg mb-2">Discussion Prompts</h3>
+          <h3 className="font-bold text-lg mb-2">{t("discussionTitle")}</h3>
           <ul className="list-disc pl-5 space-y-2 text-muted-foreground">
-            <li>What is the biggest challenge you face regarding this topic?</li>
-            <li>How can you apply one principle from this article this week?</li>
+            <li>{t("discussionPrompt1")}</li>
+            <li>{t("discussionPrompt2")}</li>
           </ul>
         </div>
       )}

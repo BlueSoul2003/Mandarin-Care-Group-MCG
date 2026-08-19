@@ -2,10 +2,11 @@
 
 import * as React from "react"
 import { Languages } from "lucide-react"
-import { useLocale } from "next-intl"
+import { useLocale, useTranslations } from "next-intl"
 import { usePathname, useRouter } from "@/i18n/routing"
 
 export function LanguageSwitcher() {
+  const t = useTranslations("Navbar")
   const locale = useLocale()
   const router = useRouter()
   const pathname = usePathname()
@@ -32,10 +33,10 @@ export function LanguageSwitcher() {
       <button
         onClick={() => setIsOpen(!isOpen)}
         className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 hover:bg-accent hover:text-accent-foreground h-10 w-10"
-        title="Change Language"
+        title={t("toggleLanguage")}
       >
         <Languages className="h-[1.2rem] w-[1.2rem]" />
-        <span className="sr-only">Toggle Language</span>
+        <span className="sr-only">{t("toggleLanguage")}</span>
       </button>
 
       {isOpen && (

@@ -48,7 +48,7 @@ export default async function Home() {
             <LogIn className="mr-2 h-4 w-4" /> {t("login")}
           </Link>
           <Link
-            href="/register"
+            href="/join"
             className="inline-flex items-center rounded-full border border-border px-6 py-3 text-sm font-semibold transition-colors hover:bg-muted"
           >
             <UserPlus className="mr-2 h-4 w-4" /> {t("register")}
@@ -60,7 +60,7 @@ export default async function Home() {
             <>
               <Image
                 src={featuredEvent.coverImageUrl}
-                alt={`${featuredEvent.title} 活動封面`}
+                alt={t("eventCoverAlt", { title: featuredEvent.title })}
                 fill
                 priority
                 sizes="(max-width: 1024px) 100vw, 1024px"
@@ -82,7 +82,7 @@ export default async function Home() {
         </div>
       </section>
 
-      <section className="grid grid-cols-1 gap-5 py-12 text-left md:grid-cols-3" aria-label="網站內容入口">
+      <section className="grid grid-cols-1 gap-5 py-12 text-left md:grid-cols-3" aria-label={t("contentNavigation")}>
         {LANDING_LINKS.map((item) => (
           <Link
             key={item.href}

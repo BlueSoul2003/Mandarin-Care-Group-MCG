@@ -1,6 +1,7 @@
 import Image from "next/image"
-import Link from "next/link"
+import { Link } from "@/i18n/routing"
 import { ArrowRight, Calendar, MapPin } from "lucide-react"
+import { useTranslations } from "next-intl"
 import type { Event, Series, Term } from "@/content"
 
 export function EventCard({
@@ -12,6 +13,7 @@ export function EventCard({
   term?: Term
   series?: Series
 }) {
+  const t = useTranslations("PastEvents")
   const hasCloudinaryCover = event.coverImageUrl?.includes("res.cloudinary.com")
 
   return (
@@ -20,7 +22,7 @@ export function EventCard({
         {hasCloudinaryCover && event.coverImageUrl ? (
           <Image
             src={event.coverImageUrl}
-            alt={`${event.title} 活動封面`}
+            alt={t("eventCoverAlt", { title: event.title })}
             fill
             sizes="(max-width: 768px) 100vw, 50vw"
             className="object-cover transition-transform duration-700 group-hover:scale-105"
@@ -64,7 +66,7 @@ export function EventCard({
           href={`/events/${event.slug}`}
           className="mt-6 inline-flex items-center text-sm font-medium text-primary"
         >
-          查看活動紀錄 <ArrowRight className="ml-1.5 h-4 w-4" />
+          {t("viewRecord")} <ArrowRight className="ml-1.5 h-4 w-4" />
         </Link>
       </div>
     </article>

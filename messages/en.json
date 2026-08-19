@@ -8,7 +8,9 @@
     "login": "Login",
     "join": "Join Us",
     "signOut": "Sign out",
-    "loggedInAs": "Logged in as {name}"
+    "loggedInAs": "Logged in as {name}",
+    "toggleTheme": "Toggle theme",
+    "toggleLanguage": "Change Language"
   },
   "Home": {
     "title": "MCG UTM",
@@ -24,25 +26,32 @@
     "articlesAndStories": "Articles & Stories",
     "articlesAndStoriesDesc": "Faith reflections, event stories, and university life content",
     "pastCommittees": "Past Committees",
-    "pastCommitteesDesc": "Record of official roles and service legacy for each term"
+    "pastCommitteesDesc": "Record of official roles and service legacy for each term",
+    "eventCoverAlt": "{title} event cover",
+    "contentNavigation": "Website Content"
   },
   "Footer": {
     "desc": "Built for the Mandarin Care Group, UTM. A digital sanctuary for holistic growth.",
     "events": "Past Events",
     "articles": "Articles",
-    "committee": "Past Committees"
+    "committee": "Past Committees",
+    "footerNavigation": "Footer Navigation"
   },
   "Gallery": {
     "title": "Gallery",
-    "desc": "Selected memories from past events, where stories are told."
+    "desc": "Selected memories from past events, where stories are told.",
+    "empty": "No photos or videos in the gallery yet. Add them in Notion!"
   },
   "Spiritual": {
     "title": "Spiritual",
-    "desc": "Finding a quiet space for your heart amid university life in prayer, Scripture, and the companionship of community."
+    "desc": "Finding a quiet space for your heart amid university life in prayer, Scripture, and the companionship of community.",
+    "noArticles": "No articles yet"
   },
   "Taize": {
     "title": "Taizé",
-    "desc": "Amid silence and the gentle repetition of short prayers, enter into a place of inner peace. Press play and let the music accompany you as you move through each page in prayer."
+    "desc": "Amid silence and the gentle repetition of short prayers, enter into a place of inner peace. Press play and let the music accompany you as you move through each page in prayer.",
+    "community": "Taizé Community",
+    "prayer": "Taizé Prayer"
   },
   "RosaryPage": {
     "title": "Rosary",
@@ -50,7 +59,9 @@
   },
   "Lifestyle": {
     "title": "Lifestyle",
-    "desc": "From faith to everyday life, sharing practical knowledge and experiences to support university students in their growth."
+    "desc": "From faith to everyday life, sharing practical knowledge and experiences to support university students in their growth.",
+    "all": "All",
+    "noArticles": "No articles yet"
   },
   "RosaryGuide": {
     "swipe": "Swipe",
@@ -128,6 +139,8 @@
       "password": "Password",
       "confirmPassword": "Confirm Password",
       "phone": "Phone Number",
+      "birthday": "Date of Birth",
+      "birthdayPlaceholder": "YYYY-MM-DD",
       "majorYear": "Major & Year (Optional)",
       "majorPlaceholder": "e.g., CS Year 1",
       "message": "Message for us (Optional)",
@@ -143,15 +156,43 @@
   },
   "PastEvents": {
     "title": "Past Events",
-    "desc": "Selected memories for each gathering, preserving the stories, selected photos, and traditions that continue to this day."
+    "desc": "Selected memories for each gathering, preserving the stories, selected photos, and traditions that continue to this day.",
+    "tag": "MCG Archive",
+    "emptyTitle": "History is being organized",
+    "emptyDesc": "Once the first batch of Notion event data is synced, past events will appear here by date.",
+    "viewRecord": "View Event Record",
+    "eventCoverAlt": "{title} event cover",
+    "backToEvents": "Back to Past Events",
+    "featuredMemories": "Featured Memories",
+    "memoriesNote": "Original full archives are preserved by MCG; the website displays curated selections.",
+    "relatedArticles": "Related Articles"
+  },
+  "Series": {
+    "tag": "Event Series"
   },
   "Articles": {
     "title": "Articles and Stories",
-    "desc": "Featuring faith reflections, activity stories, and university life, gradually building a lasting publication for MCG."
+    "desc": "Featuring faith reflections, activity stories, and university life, gradually building a lasting publication for MCG.",
+    "tag": "MCG Journal",
+    "readMore": "Read more",
+    "noArticles": "No articles yet",
+    "backTo": "Back to {category}",
+    "categories": {
+      "lifestyle": "Lifestyle",
+      "spiritual": "Spiritual",
+      "articles": "Articles"
+    },
+    "discussionTitle": "Discussion Prompts",
+    "discussionPrompt1": "What is the biggest challenge you face regarding this topic?",
+    "discussionPrompt2": "How can you apply one principle from this article this week?"
   },
   "PastCommittees": {
     "title": "Past Committees",
-    "desc": "Thanks to every member who has served the community with time and heart. Only the official positions agreed to by the person will be published here."
+    "desc": "Thanks to every member who has served the community with time and heart. Only the official positions agreed to by the person will be published here.",
+    "tag": "People & Service",
+    "portraitAlt": "{name}'s public portrait",
+    "emptyTerm": "The public roster for this term is being organized.",
+    "emptyAll": "Past committee records are being compiled with permission."
   },
   "ForgotPassword": {
     "title": "Forgot Password",
@@ -164,5 +205,23 @@
     "successHint": "Didn't receive it? Check your spam folder.",
     "backToLogin": "Back to Login",
     "noEmail": "Unable to send the reset link. Please check your connection and try again."
+  },
+  "ResetPassword": {
+    "title": "Reset Password",
+    "description": "Enter your new password below",
+    "newPassword": "New Password",
+    "confirmPassword": "Confirm New Password",
+    "passwordMatch": "Passwords match",
+    "passwordMismatch": "Passwords do not match",
+    "submit": "Update Password",
+    "loading": "Updating...",
+    "successTitle": "Password Updated!",
+    "successDesc": "Your password has been reset. Please log in with your new password.",
+    "backToLogin": "Go to Login",
+    "invalidTitle": "Link Expired or Invalid",
+    "invalidDesc": "This reset link has expired or is invalid (links are valid for 1 hour). Please request a new one.",
+    "tryAgain": "Request New Link",
+    "verifying": "Verifying reset link…",
+    "mismatchError": "Passwords do not match!"
   }
 }

@@ -8,7 +8,9 @@
     "login": "登入",
     "join": "加入我們",
     "signOut": "登出",
-    "loggedInAs": "已登入為 {name}"
+    "loggedInAs": "已登入為 {name}",
+    "toggleTheme": "切換外觀主題",
+    "toggleLanguage": "切換語言"
   },
   "Home": {
     "title": "MCG UTM",
@@ -24,25 +26,32 @@
     "articlesAndStories": "文章與故事",
     "articlesAndStoriesDesc": "信仰反思、活動故事與大學生活內容",
     "pastCommittees": "歷屆執委",
-    "pastCommitteesDesc": "記錄每一屆正式職務與服務傳承"
+    "pastCommitteesDesc": "記錄每一屆正式職務與服務傳承",
+    "eventCoverAlt": "{title} 活動封面",
+    "contentNavigation": "網站內容導覽"
   },
   "Footer": {
     "desc": "為 MCG UTM 打造的空間，讓大家得以在信仰中成長。",
     "events": "歷年活動",
     "articles": "文章",
-    "committee": "歷屆執委"
+    "committee": "歷屆執委",
+    "footerNavigation": "頁尾導覽"
   },
   "Gallery": {
     "title": "相簿",
-    "desc": "從歷屆活動中精選的共同回憶，每一張都屬於 MCG 的故事。"
+    "desc": "從歷屆活動中精選的共同回憶，每一張都屬於 MCG 的故事。",
+    "empty": "相簿中還沒有照片或影片喔！快去 Notion 新增吧。"
   },
   "Spiritual": {
     "title": "靈修",
-    "desc": "在祈禱、聖言與團體陪伴中，為大學生活留一處安靜的心靈空間。"
+    "desc": "在祈禱、聖言與團體陪伴中，為大學生活留一處安靜的心靈空間。",
+    "noArticles": "尚無文章"
   },
   "Taize": {
     "title": "泰澤",
-    "desc": "在靜默與不斷重複的短頌中，進入內心的寧靜。點擊播放，讓音樂伴隨你在各個頁面中穿梭祈禱。"
+    "desc": "在靜默與不斷重複的短頌中，進入內心的寧靜。點擊播放，讓音樂伴隨你在各個頁面中穿梭祈禱。",
+    "community": "泰澤團體",
+    "prayer": "泰澤祈禱"
   },
   "RosaryPage": {
     "title": "玫瑰經",
@@ -50,7 +59,9 @@
   },
   "Lifestyle": {
     "title": "生活",
-    "desc": "從信仰走進生活，分享大學生需要的實用知識與成長經驗。"
+    "desc": "從信仰走進生活，分享大學生需要的實用知識與成長經驗。",
+    "all": "全部",
+    "noArticles": "尚無文章"
   },
   "RosaryGuide": {
     "swipe": "滑動",
@@ -128,6 +139,8 @@
       "password": "密碼",
       "confirmPassword": "確認密碼",
       "phone": "聯絡電話",
+      "birthday": "出生年月日",
+      "birthdayPlaceholder": "年 / 月 / 日",
       "majorYear": "科系與年級（選填）",
       "majorPlaceholder": "例：資工大一 / CS Year 1",
       "message": "給我們的話（選填）",
@@ -143,15 +156,43 @@
   },
   "PastEvents": {
     "title": "歷年活動",
-    "desc": "以每一次真實的相聚為單位，保存活動故事、精選照片與延續至今的傳統。"
+    "desc": "以每一次真實的相聚為單位，保存活動故事、精選照片與延續至今的傳統。",
+    "tag": "MCG 檔案庫",
+    "emptyTitle": "歷史正在整理中",
+    "emptyDesc": "完成第一批 Notion 活動資料並同步後，歷屆活動會在這裡依日期呈現。",
+    "viewRecord": "查看活動紀錄",
+    "eventCoverAlt": "{title} 活動封面",
+    "backToEvents": "返回歷年活動",
+    "featuredMemories": "精選回憶",
+    "memoriesNote": "完整原檔由 MCG 保存，網站展示策展精選。",
+    "relatedArticles": "相關文章"
+  },
+  "Series": {
+    "tag": "活動系列"
   },
   "Articles": {
     "title": "文章與故事",
-    "desc": "收錄信仰反思、活動故事與大學生活內容，逐步建立屬於 MCG 的長期刊物。"
+    "desc": "收錄信仰反思、活動故事與大學生活內容，逐步建立屬於 MCG 的長期刊物。",
+    "tag": "MCG 刊物",
+    "readMore": "閱讀更多",
+    "noArticles": "尚無文章",
+    "backTo": "返回 {category}",
+    "categories": {
+      "lifestyle": "生活",
+      "spiritual": "靈修",
+      "articles": "文章"
+    },
+    "discussionTitle": "討論與反思",
+    "discussionPrompt1": "面對這個主題，你目前最大的挑戰是什麼？",
+    "discussionPrompt2": "這週你可以如何在生活中實踐這篇文章的一個原則？"
   },
   "PastCommittees": {
     "title": "歷屆執委",
-    "desc": "感謝每一屆願意以時間與心力服務團體的伙伴。此處只公開本人同意的正式職務資料。"
+    "desc": "感謝每一屆願意以時間與心力服務團體的伙伴。此處只公開本人同意的正式職務資料。",
+    "tag": "歷屆執委與服務",
+    "portraitAlt": "{name} 的公開頭像",
+    "emptyTerm": "此屆公開名單仍在整理中。",
+    "emptyAll": "歷屆執委資料正在取得同意並逐屆整理。"
   },
   "ForgotPassword": {
     "title": "忘記密碼",
@@ -164,5 +205,23 @@
     "successHint": "沒有收到？請檢查您的垃圾郵件資料夾。",
     "backToLogin": "返回登入",
     "noEmail": "無法發送重設連結，請檢查網路後再試。"
+  },
+  "ResetPassword": {
+    "title": "重設密碼",
+    "description": "請輸入您的新密碼",
+    "newPassword": "新密碼",
+    "confirmPassword": "確認新密碼",
+    "passwordMatch": "密碼相符",
+    "passwordMismatch": "密碼不符",
+    "submit": "更新密碼",
+    "loading": "更新中...",
+    "successTitle": "密碼已更新！",
+    "successDesc": "您的密碼已成功重設，請使用新密碼登入。",
+    "backToLogin": "前往登入",
+    "invalidTitle": "連結已失效",
+    "invalidDesc": "此重設連結已過期或無效（連結有效期為 1 小時），請重新申請。",
+    "tryAgain": "重新申請",
+    "verifying": "正在驗證重設連結…",
+    "mismatchError": "二次輸入密碼不一致！"
   }
 }
