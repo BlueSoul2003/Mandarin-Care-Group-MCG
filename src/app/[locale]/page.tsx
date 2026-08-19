@@ -20,8 +20,8 @@ export default async function Home() {
   ]
 
   return (
-    <div className="container mx-auto max-w-6xl px-4 py-20 text-center">
-      <section className="flex flex-col items-center justify-center min-h-[calc(100vh-14rem)]">
+    <div className="container mx-auto max-w-6xl px-4 py-10 md:py-20 text-center">
+      <section className="flex flex-col items-center justify-center min-h-[calc(100vh-8rem)] md:min-h-[calc(100vh-14rem)]">
         <h1 className="text-4xl md:text-6xl font-bold tracking-tight mb-6 text-foreground font-heading">
           {t("title")}
         </h1>
@@ -39,19 +39,13 @@ export default async function Home() {
             href="/join"
             className="inline-flex items-center rounded-full border border-border px-6 py-3 text-sm font-semibold transition-colors hover:bg-muted"
           >
-            {t("joinUs")}
+            <UserPlus className="mr-2 h-4 w-4" /> {t("register")}
           </Link>
           <Link
             href="/login"
             className="inline-flex items-center rounded-full border border-border px-6 py-3 text-sm font-semibold transition-colors hover:bg-muted"
           >
             <LogIn className="mr-2 h-4 w-4" /> {t("login")}
-          </Link>
-          <Link
-            href="/join"
-            className="inline-flex items-center rounded-full border border-border px-6 py-3 text-sm font-semibold transition-colors hover:bg-muted"
-          >
-            <UserPlus className="mr-2 h-4 w-4" /> {t("register")}
           </Link>
         </div>
 

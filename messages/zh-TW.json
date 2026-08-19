@@ -10,7 +10,9 @@
     "signOut": "登出",
     "loggedInAs": "已登入為 {name}",
     "toggleTheme": "切換外觀主題",
-    "toggleLanguage": "切換語言"
+    "toggleLanguage": "切換語言",
+    "openMenu": "開啟選單",
+    "closeMenu": "關閉選單"
   },
   "Home": {
     "title": "MCG UTM",

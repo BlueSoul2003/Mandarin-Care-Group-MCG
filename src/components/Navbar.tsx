@@ -1,13 +1,14 @@
 "use client"
 
 import * as React from "react"
-import { Moon, Sun } from "lucide-react"
+import { Moon, Sun, Menu, X } from "lucide-react"
 import { useTheme } from "next-themes"
-import { Link } from "@/i18n/routing"
+import { Link, usePathname } from "@/i18n/routing"
 import { createClient } from "@/lib/supabase"
 import type { User } from "@supabase/supabase-js"
 import { useTranslations } from "next-intl"
 import { LanguageSwitcher } from "./LanguageSwitcher"
+import { motion, AnimatePresence } from "framer-motion"
 
 function getInitials(name: string): string {
   const parts = name.trim().split(/\s+/)
@@ -20,8 +21,27 @@ export function Navbar() {
   const { setTheme, theme } = useTheme()
   const [user, setUser] = React.useState<User | null>(null)
   const [menuOpen, setMenuOpen] = React.useState(false)
+  const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false)
   const menuRef = React.useRef<HTMLDivElement>(null)
   const t = useTranslations("Navbar")
+  const pathname = usePathname()
+
+  // Close mobile menu on route change
+  React.useEffect(() => {
+    setMobileMenuOpen(false)
+  }, [pathname])
+
+  // Prevent background scrolling when mobile menu is open
+  React.useEffect(() => {
+    if (mobileMenuOpen) {
+      document.body.style.overflow = "hidden"
+    } else {
+      document.body.style.overflow = ""
+    }
+    return () => {
+      document.body.style.overflow = ""
+    }
+  }, [mobileMenuOpen])
 
   React.useEffect(() => {
     const supabase = createClient()
@@ -64,21 +84,32 @@ export function Navbar() {
     await supabase.auth.signOut()
     setUser(null)
     setMenuOpen(false)
+    setMobileMenuOpen(false)
   }
+
+  const navLinks = [
+    { href: "/gallery", label: t("gallery") },
+    { href: "/spiritual", label: t("spiritual") },
+    { href: "/taize", label: t("taize") },
+    { href: "/rosary", label: t("rosary") },
+    { href: "/lifestyle", label: t("lifestyle") },
+  ]
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container flex h-16 max-w-screen-2xl items-center px-4 md:px-8 mx-auto">
         <div className="flex flex-1 items-center justify-between">
-          <Link href="/" className="flex items-center space-x-2">
+          <Link href="/" className="flex items-center space-x-2 z-[60]">
             <span className="font-bold text-xl tracking-wider text-primary">MCG UTM</span>
           </Link>
-          <nav className="flex items-center space-x-6 text-sm font-medium">
-            <Link href="/gallery" className="transition-colors hover:text-foreground/80 text-foreground/60">{t("gallery")}</Link>
-            <Link href="/spiritual" className="transition-colors hover:text-foreground/80 text-foreground/60">{t("spiritual")}</Link>
-            <Link href="/taize" className="transition-colors hover:text-primary text-foreground/60">{t("taize")}</Link>
-            <Link href="/rosary" className="transition-colors hover:text-primary text-foreground/60">{t("rosary")}</Link>
-            <Link href="/lifestyle" className="transition-colors hover:text-foreground/80 text-foreground/60">{t("lifestyle")}</Link>
+          
+          {/* Desktop Navigation */}
+          <nav className="hidden md:flex items-center space-x-6 text-sm font-medium">
+            {navLinks.map((link) => (
+              <Link key={link.href} href={link.href} className="transition-colors hover:text-foreground/80 text-foreground/60">
+                {link.label}
+              </Link>
+            ))}
 
             {user ? (
               <div className="relative" ref={menuRef}>
@@ -94,12 +125,10 @@ export function Navbar() {
                 {/* Dropdown Popout */}
                 {menuOpen && (
                   <div className="absolute right-0 mt-2 w-52 rounded-xl border border-border bg-card shadow-xl z-50 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-150">
-                    {/* User Info */}
                     <div className="px-4 py-3 border-b border-border/50">
                       <p className="text-xs font-semibold text-foreground truncate">{displayName}</p>
                       <p className="text-xs text-muted-foreground truncate">{user.email}</p>
                     </div>
-                    {/* Actions */}
                     <div className="py-1">
                       <button
                         onClick={handleLogout}
@@ -116,14 +145,15 @@ export function Navbar() {
                 <Link href="/login" className="transition-colors hover:text-primary text-foreground/60">{t("login")}</Link>
                 <Link
                   href="/join"
-                  className="hidden md:inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-primary text-primary-foreground text-sm font-semibold hover:opacity-90 active:scale-[0.97] transition-all duration-200 shadow-sm"
+                  className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-primary text-primary-foreground text-sm font-semibold hover:opacity-90 active:scale-[0.97] transition-all duration-200 shadow-sm"
                 >
                   {t("join")}
                 </Link>
               </>
             )}
           </nav>
-          <div className="flex items-center gap-1">
+
+          <div className="hidden md:flex items-center gap-1">
             <LanguageSwitcher />
             <button
               onClick={() => setTheme(theme === "light" ? "dark" : "light")}
@@ -135,8 +165,114 @@ export function Navbar() {
               <span className="sr-only">{t("toggleTheme")}</span>
             </button>
           </div>
+
+          {/* Mobile Hamburger Button */}
+          <div className="flex md:hidden items-center gap-2 z-[60]">
+            <LanguageSwitcher />
+            <button
+              onClick={() => setMobileMenuOpen(true)}
+              className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 hover:bg-accent hover:text-accent-foreground h-10 w-10"
+              aria-label={t("openMenu")}
+            >
+              <Menu className="h-5 w-5" />
+            </button>
+          </div>
         </div>
       </div>
+
+      {/* Mobile Menu Drawer Overlay */}
+      <AnimatePresence>
+        {mobileMenuOpen && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setMobileMenuOpen(false)}
+              className="fixed inset-0 z-[60] bg-background/80 backdrop-blur-sm md:hidden"
+            />
+            <motion.div
+              initial={{ x: "100%" }}
+              animate={{ x: 0 }}
+              exit={{ x: "100%" }}
+              transition={{ type: "spring", bounce: 0, duration: 0.3 }}
+              className="fixed inset-y-0 right-0 z-[70] w-3/4 max-w-sm border-l border-border bg-card p-6 shadow-2xl md:hidden overflow-y-auto flex flex-col"
+            >
+              <div className="flex items-center justify-between mb-8">
+                <span className="font-bold text-xl tracking-wider text-primary">MCG UTM</span>
+                <button
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="rounded-md p-2 hover:bg-accent hover:text-accent-foreground transition-colors"
+                  aria-label={t("closeMenu")}
+                >
+                  <X className="h-5 w-5" />
+                </button>
+              </div>
+
+              <div className="flex flex-col space-y-4">
+                {navLinks.map((link) => (
+                  <Link
+                    key={link.href}
+                    href={link.href}
+                    className="text-lg font-medium text-foreground hover:text-primary transition-colors py-2"
+                  >
+                    {link.label}
+                  </Link>
+                ))}
+              </div>
+
+              <div className="mt-8 pt-8 border-t border-border/50 flex flex-col space-y-4">
+                {user ? (
+                  <>
+                    <div className="flex items-center gap-3 mb-4">
+                      <div className="flex items-center justify-center w-10 h-10 rounded-full bg-primary text-primary-foreground font-bold text-sm">
+                        {initials}
+                      </div>
+                      <div className="flex flex-col overflow-hidden">
+                        <span className="text-sm font-semibold truncate">{displayName}</span>
+                        <span className="text-xs text-muted-foreground truncate">{user.email}</span>
+                      </div>
+                    </div>
+                    <button
+                      onClick={handleLogout}
+                      className="w-full text-left text-destructive font-medium py-2 hover:bg-destructive/10 rounded-md transition-colors px-2 -mx-2"
+                    >
+                      {t("signOut")}
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <Link
+                      href="/login"
+                      className="text-lg font-medium text-foreground hover:text-primary transition-colors py-2"
+                    >
+                      {t("login")}
+                    </Link>
+                    <Link
+                      href="/join"
+                      className="text-lg font-medium text-foreground hover:text-primary transition-colors py-2"
+                    >
+                      {t("join")}
+                    </Link>
+                  </>
+                )}
+              </div>
+
+              <div className="mt-auto pt-8 flex items-center justify-between">
+                <span className="text-sm font-medium">{t("toggleTheme")}</span>
+                <button
+                  onClick={() => setTheme(theme === "light" ? "dark" : "light")}
+                  className="inline-flex items-center justify-center rounded-full p-2 bg-muted hover:bg-accent transition-colors"
+                  aria-label={t("toggleTheme")}
+                >
+                  <Sun className="h-5 w-5 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
+                  <Moon className="absolute h-5 w-5 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
+                </button>
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
     </header>
   )
 }
