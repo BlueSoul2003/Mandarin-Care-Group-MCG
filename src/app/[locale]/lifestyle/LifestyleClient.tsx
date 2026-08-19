@@ -2,8 +2,10 @@
 
 import * as React from "react"
 import { ArticleCard, type ArticleCardProps } from "@/components/ArticleCard"
+import { useTranslations } from "next-intl"
 
 export function LifestyleClient({ articles, allTags }: { articles: ArticleCardProps[], allTags: string[] }) {
+  const t = useTranslations("Lifestyle")
   const [selectedTag, setSelectedTag] = React.useState("All")
 
   const filteredArticles = selectedTag === "All" 
@@ -24,7 +26,7 @@ export function LifestyleClient({ articles, allTags }: { articles: ArticleCardPr
                 : "bg-muted text-muted-foreground hover:bg-muted/80"
             }`}
           >
-            {tag}
+            {tag === "All" ? t("all") : tag}
           </button>
         ))}
       </div>
@@ -35,7 +37,7 @@ export function LifestyleClient({ articles, allTags }: { articles: ArticleCardPr
             <ArticleCard key={article.slug} {...article} />
           ))
         ) : (
-          <p className="text-center col-span-2 text-muted-foreground py-10">尚無文章</p>
+          <p className="text-center col-span-2 text-muted-foreground py-10">{t("noArticles")}</p>
         )}
       </div>
     </>

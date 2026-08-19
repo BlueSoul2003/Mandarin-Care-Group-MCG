@@ -4,12 +4,13 @@ import * as React from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { Send, CheckCircle, AlertCircle, Loader2, Lock, Eye, EyeOff, Check, X } from "lucide-react"
 import { createClient } from "@/lib/supabase"
-import { useTranslations } from "next-intl"
+import { useTranslations, useLocale } from "next-intl"
 
 type Status = "idle" | "loading" | "success" | "error"
 
 export function RegistrationForm() {
   const t = useTranslations("JoinPage.form")
+  const locale = useLocale()
   const [status, setStatus] = React.useState<Status>("idle")
   const [errorMsg, setErrorMsg] = React.useState("")
   const [showPassword, setShowPassword] = React.useState(false)
@@ -19,6 +20,7 @@ export function RegistrationForm() {
     password: "",
     confirmPassword: "",
     phone: "",
+    birthday: "",
     majorYear: "",
     message: "",
     consent: false,
@@ -52,12 +54,27 @@ export function RegistrationForm() {
         options: {
           data: {
             full_name: form.name,
+            birthday: form.birthday,
           },
+          // Redirect the user back to our site (not localhost) after they
+          // click the confirmation link in the email Supabase sends them.
+          emailRedirectTo: `${window.location.origin}/${locale}/login`,
         },
       })
 
       if (signUpError) {
-        throw new Error(signUpError.message)
+        console.error("Supabase signup error:", signUpError)
+        console.error("Supabase signup error details:", {
+          message: signUpError.message,
+          status: signUpError.status,
+          name: signUpError.name,
+        })
+
+        setStatus("error")
+        setErrorMsg(
+          signUpError.message || "Supabase registration failed."
+        )
+        return
       }
 
       // 2. Push profile details to Notion via /api/register
@@ -68,6 +85,7 @@ export function RegistrationForm() {
           name: form.name,
           email: form.email,
           phone: form.phone,
+          birthday: form.birthday,
           majorYear: form.majorYear,
           message: form.message,
           consent: form.consent,
@@ -77,13 +95,30 @@ export function RegistrationForm() {
 
       if (!res.ok) {
         const data = await res.json()
-        throw new Error(data.error || "Failed to submit. Please try again.")
+
+        console.error("Registration API error:", data)
+
+        const message =
+          typeof data.error === "string"
+            ? data.error
+            : data.message
+              ? String(data.message)
+              : "Failed to submit. Please try again."
+
+        throw new Error(message)
       }
 
       setStatus("success")
-    } catch (err: any) {
+    } catch (err) {
+      console.error("Registration failed:", err)
+
       setStatus("error")
-      setErrorMsg(err.message || "Failed to submit. Please try again.")
+
+      if (err instanceof Error) {
+        setErrorMsg(err.message || "Failed to submit. Please try again.")
+      } else {
+        setErrorMsg("An unexpected error occurred. Please try again.")
+      }
     }
   }
 
@@ -198,7 +233,9 @@ export function RegistrationForm() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-1.5">
-              <label className="text-xs font-semibold uppercase tracking-wider text-foreground/80">{t("phone")} <span className="text-red-400">*</span></label>
+              <label className="text-xs font-semibold uppercase tracking-wider text-foreground/80">
+                {t("phone")} <span className="text-red-400">*</span>
+              </label>
               <input
                 name="phone"
                 type="tel"
@@ -210,19 +247,37 @@ export function RegistrationForm() {
               />
             </div>
             <div className="space-y-1.5">
-              <label className="text-xs font-semibold uppercase tracking-wider text-foreground/80">{t("majorYear")}</label>
+              <label className="text-xs font-semibold uppercase tracking-wider text-foreground/80">
+                {t("birthday")} <span className="text-red-400">*</span>
+              </label>
               <input
-                name="majorYear"
-                value={form.majorYear}
+                name="birthday"
+                type="date"
+                required
+                value={form.birthday}
                 onChange={handleChange}
-                placeholder={t("majorPlaceholder")}
                 className={inputClass}
               />
             </div>
           </div>
 
           <div className="space-y-1.5">
-            <label className="text-xs font-semibold uppercase tracking-wider text-foreground/80">{t("message")}</label>
+            <label className="text-xs font-semibold uppercase tracking-wider text-foreground/80">
+              {t("majorYear")}
+            </label>
+            <input
+              name="majorYear"
+              value={form.majorYear}
+              onChange={handleChange}
+              placeholder={t("majorPlaceholder")}
+              className={inputClass}
+            />
+          </div>
+
+          <div className="space-y-1.5">
+            <label className="text-xs font-semibold uppercase tracking-wider text-foreground/80">
+              {t("message")}
+            </label>
             <textarea
               name="message"
               rows={3}

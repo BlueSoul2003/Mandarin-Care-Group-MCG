@@ -5,6 +5,7 @@ import { useState } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { CldImage } from "next-cloudinary"
 import { X, PlayCircle } from "lucide-react"
+import { useTranslations } from "next-intl"
 
 interface GalleryImage {
   id: string
@@ -17,11 +18,12 @@ interface GalleryImage {
 }
 
 export function MasonryGrid({ images }: { images: GalleryImage[] }) {
+  const t = useTranslations("Gallery")
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [hoveredId, setHoveredId] = useState<string | null>(null)
 
   if (!images || images.length === 0) {
-    return <p className="text-center text-muted-foreground py-20">相簿中還沒有照片或影片喔！快去 Notion 新增吧。</p>
+    return <p className="text-center text-muted-foreground py-20">{t("empty")}</p>
   }
 
   const selectedImage = images.find((img) => img.id === selectedId)
@@ -100,7 +102,7 @@ export function MasonryGrid({ images }: { images: GalleryImage[] }) {
             <motion.div
               layoutId={`photo-${selectedId}`}
               className="relative w-full h-full max-w-6xl max-h-[80vh] overflow-hidden rounded-xl shadow-2xl flex justify-center items-center"
-              onClick={(e) => e.stopPropagation()} // Prevent clicking video/image from closing lightbox
+              onClick={(e) => e.stopPropagation()}
             >
               {selectedImage.type === "video" ? (
                 <video

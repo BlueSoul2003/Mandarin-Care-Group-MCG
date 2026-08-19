@@ -1,12 +1,14 @@
 "use client"
 
 import * as React from "react"
-import Link from "next/link"
+import { Link } from "@/i18n/routing"
 import { motion } from "framer-motion"
 import { Lock, Eye, EyeOff, CheckCircle, AlertCircle, Loader2, Check, X, ShieldCheck } from "lucide-react"
 import { createRecoveryClient } from "@/lib/supabase"
+import { useTranslations } from "next-intl"
 
 export default function ResetPasswordPage() {
+  const t = useTranslations("ResetPassword")
   const [showPassword, setShowPassword] = React.useState(false)
   const [form, setForm] = React.useState({ password: "", confirmPassword: "" })
   const [status, setStatus] = React.useState<"idle" | "loading" | "success" | "error">("idle")
@@ -53,7 +55,7 @@ export default function ResetPasswordPage() {
     e.preventDefault()
     if (form.password !== form.confirmPassword) {
       setStatus("error")
-      setErrorMsg("二次輸入密碼不一致！")
+      setErrorMsg(t("mismatchError"))
       return
     }
 
@@ -91,10 +93,10 @@ export default function ResetPasswordPage() {
               Mandarin Care Group
             </span>
             <h1 className="text-3xl font-bold tracking-tight text-card-foreground mb-2">
-              重設密碼
+              {t("title")}
             </h1>
             <p className="text-sm text-muted-foreground">
-              Reset Password · 請輸入您的新密碼
+              {t("description")}
             </p>
           </div>
 
@@ -105,21 +107,21 @@ export default function ResetPasswordPage() {
               className="flex flex-col items-center justify-center gap-4 py-8 text-center"
             >
               <CheckCircle className="w-14 h-14 text-emerald-500" />
-              <h2 className="text-xl font-bold text-card-foreground">密碼已更新！</h2>
+              <h2 className="text-xl font-bold text-card-foreground">{t("successTitle")}</h2>
               <p className="text-sm text-muted-foreground">
-                您的密碼已成功重設。請使用新密碼登入。
+                {t("successDesc")}
               </p>
               <Link
                 href="/login"
                 className="mt-4 px-6 py-2.5 rounded-full bg-primary text-primary-foreground text-sm font-semibold hover:opacity-90 transition-all"
               >
-                前往登入 Login
+                {t("backToLogin")}
               </Link>
             </motion.div>
           ) : recoveryState === "checking" ? (
             <div className="flex flex-col items-center justify-center gap-4 py-8 text-center">
               <Loader2 className="w-10 h-10 animate-spin text-primary" />
-              <p className="text-sm text-muted-foreground">正在驗證重設連結…</p>
+              <p className="text-sm text-muted-foreground">{t("verifying")}</p>
             </div>
           ) : recoveryState === "invalid" ? (
             <motion.div
@@ -128,15 +130,15 @@ export default function ResetPasswordPage() {
               className="flex flex-col items-center justify-center gap-4 py-8 text-center"
             >
               <AlertCircle className="w-14 h-14 text-destructive" />
-              <h2 className="text-xl font-bold text-card-foreground">連結已失效</h2>
+              <h2 className="text-xl font-bold text-card-foreground">{t("invalidTitle")}</h2>
               <p className="text-sm text-muted-foreground max-w-xs">
-                此重設連結已過期或無效（連結有效期為 1 小時）。請重新申請。
+                {t("invalidDesc")}
               </p>
               <Link
                 href="/forgot-password"
                 className="mt-4 px-6 py-2.5 rounded-full bg-primary text-primary-foreground text-sm font-semibold hover:opacity-90 transition-all"
               >
-                重新申請 Try Again
+                {t("tryAgain")}
               </Link>
             </motion.div>
           ) : (
@@ -151,7 +153,7 @@ export default function ResetPasswordPage() {
               {/* New Password */}
               <div className="space-y-1.5">
                 <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground block">
-                  新密碼 New Password
+                  {t("newPassword")}
                 </label>
                 <div className="relative">
                   <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
@@ -177,7 +179,7 @@ export default function ResetPasswordPage() {
               {/* Confirm New Password */}
               <div className="space-y-1.5">
                 <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground block">
-                  確認新密碼 Confirm New Password
+                  {t("confirmPassword")}
                 </label>
                 <div className="relative">
                   <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
@@ -198,8 +200,8 @@ export default function ResetPasswordPage() {
                 {form.confirmPassword && (
                   <p className={`text-xs flex items-center gap-1 ${form.password === form.confirmPassword ? "text-emerald-500" : "text-destructive"}`}>
                     {form.password === form.confirmPassword
-                      ? <><Check className="w-3 h-3" /> 密碼相符</>
-                      : <><X className="w-3 h-3" /> 密碼不符</>}
+                      ? <><Check className="w-3 h-3" /> {t("passwordMatch")}</>
+                      : <><X className="w-3 h-3" /> {t("passwordMismatch")}</>}
                   </p>
                 )}
               </div>
@@ -213,12 +215,12 @@ export default function ResetPasswordPage() {
                 {status === "loading" ? (
                   <>
                     <Loader2 className="w-4 h-4 animate-spin" />
-                    <span>更新中...</span>
+                    <span>{t("loading")}</span>
                   </>
                 ) : (
                   <>
                     <ShieldCheck className="w-4 h-4" />
-                    <span>更新密碼 Update Password</span>
+                    <span>{t("submit")}</span>
                   </>
                 )}
               </button>

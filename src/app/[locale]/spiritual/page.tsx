@@ -33,7 +33,7 @@ export default async function SpiritualPage() {
             />
           ))
         ) : (
-          <p className="text-center col-span-2 text-muted-foreground py-10">尚無文章</p>
+          <p className="text-center col-span-2 text-muted-foreground py-10">{t("noArticles")}</p>
         )}
       </div>
     </div>

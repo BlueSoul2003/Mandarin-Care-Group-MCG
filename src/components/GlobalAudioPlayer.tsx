@@ -4,8 +4,10 @@ import * as React from "react"
 import { usePlayerStore } from "@/store/usePlayerStore"
 import { Play, Pause, X, Music } from "lucide-react"
 import { AnimatePresence, motion } from "framer-motion"
+import { useTranslations } from "next-intl"
 
 export function GlobalAudioPlayer() {
+  const t = useTranslations("Taize")
   const { isPlaying, currentTrack, togglePlay, volume } = usePlayerStore()
   const audioRef = React.useRef<HTMLAudioElement | null>(null)
 
@@ -68,7 +70,7 @@ export function GlobalAudioPlayer() {
                 <p className="text-sm font-semibold text-foreground truncate">
                   {currentTrack.title}
                 </p>
-                <p className="text-xs text-muted-foreground">Taizé Prayer</p>
+                <p className="text-xs text-muted-foreground">{t("prayer")}</p>
               </div>
               <button
                 onClick={togglePlay}

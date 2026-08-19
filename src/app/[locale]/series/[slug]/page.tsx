@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation"
 import { contentRepository } from "@/content"
 import { EventCard } from "@/components/EventCard"
+import { getTranslations } from "next-intl/server"
 
 export const revalidate = 3600
 
@@ -16,6 +17,7 @@ export default async function SeriesPage({
   params: Promise<{ slug: string }>
 }) {
   const { slug } = await params
+  const t = await getTranslations("Series")
   const repository = await contentRepository()
   const [series, events, snapshot] = await Promise.all([
     repository.getSeriesBySlug(slug),
@@ -31,7 +33,7 @@ export default async function SeriesPage({
     <div className="container mx-auto max-w-6xl px-4 py-12 md:py-20">
       <header className="mx-auto mb-14 max-w-3xl text-center">
         <p className="mb-4 text-sm font-medium uppercase tracking-widest text-primary">
-          活動系列
+          {t("tag")}
         </p>
         <h1 className="font-heading text-4xl font-bold md:text-5xl">{series.name}</h1>
         {series.summary && (

@@ -12,6 +12,7 @@ interface RegistrationPayload {
   name: string
   email: string
   phone: string
+  birthday: string
   majorYear: string
   message: string
   consent: boolean
@@ -30,6 +31,7 @@ function parseRegistration(value: unknown): RegistrationPayload | null {
     name: text("name", 100),
     email: text("email", 200).toLowerCase(),
     phone: text("phone", 50),
+    birthday: text("birthday", 20),
     majorYear: text("majorYear", 100),
     message: text("message", 1000),
     consent: input.consent === true,
@@ -60,53 +62,107 @@ export async function POST(req: NextRequest) {
     }
 
     if (isRateLimited(req)) {
-      return NextResponse.json({ error: "提交次數過多，請稍後再試。" }, { status: 429 })
+      return NextResponse.json({ error: "Too many requests. Please try again later." }, { status: 429 })
     }
 
     const payload = parseRegistration(await req.json())
     if (!payload) {
-      return NextResponse.json({ error: "請確認姓名、email 與資料使用同意。" }, { status: 400 })
+      return NextResponse.json({ error: "Please provide your name, valid email, and consent." }, { status: 400 })
     }
 
     // Honeypot fields are invisible to people but commonly filled by bots.
     if (payload.website) return NextResponse.json({ success: true })
 
-    await notion.pages.create({
-      parent: {
-        type: "data_source_id",
-        data_source_id: REGISTRATION_DATA_SOURCE_ID,
-      },
-      properties: {
-        Name: {
-          type: "title",
-          title: [{ type: "text", text: { content: payload.name } }],
+    const formattedMessage = payload.birthday
+      ? `[Date of Birth: ${payload.birthday}]\n${payload.message}`.trim()
+      : payload.message
+
+    // Try creating Notion page with Birthday property (if configured as Date in Notion)
+    try {
+      await notion.pages.create({
+        parent: {
+          type: "data_source_id",
+          data_source_id: REGISTRATION_DATA_SOURCE_ID,
         },
-        Email: {
-          type: "email",
-          email: payload.email,
+        properties: {
+          Name: {
+            type: "title",
+            title: [{ type: "text", text: { content: payload.name } }],
+          },
+          Email: {
+            type: "email",
+            email: payload.email,
+          },
+          Phone: {
+            type: "phone_number",
+            phone_number: payload.phone || null,
+          },
+          ...(payload.birthday
+            ? {
+                Birthday: {
+                  type: "date",
+                  date: { start: payload.birthday },
+                },
+              }
+            : {}),
+          MajorYear: {
+            type: "rich_text",
+            rich_text: payload.majorYear
+              ? [{ type: "text", text: { content: payload.majorYear } }]
+              : [],
+          },
+          Message: {
+            type: "rich_text",
+            rich_text: payload.message
+              ? [{ type: "text", text: { content: payload.message } }]
+              : [],
+          },
+          Consent: {
+            type: "checkbox",
+            checkbox: true,
+          },
+        } as any,
+      })
+    } catch (notionErr) {
+      // Fallback: If Notion doesn't have the 'Birthday' property configured, append Birthday to Message
+      console.warn("[Notion create warning, retrying with fallback format]:", notionErr)
+      await notion.pages.create({
+        parent: {
+          type: "data_source_id",
+          data_source_id: REGISTRATION_DATA_SOURCE_ID,
         },
-        Phone: {
-          type: "phone_number",
-          phone_number: payload.phone || null,
+        properties: {
+          Name: {
+            type: "title",
+            title: [{ type: "text", text: { content: payload.name } }],
+          },
+          Email: {
+            type: "email",
+            email: payload.email,
+          },
+          Phone: {
+            type: "phone_number",
+            phone_number: payload.phone || null,
+          },
+          MajorYear: {
+            type: "rich_text",
+            rich_text: payload.majorYear
+              ? [{ type: "text", text: { content: payload.majorYear } }]
+              : [],
+          },
+          Message: {
+            type: "rich_text",
+            rich_text: formattedMessage
+              ? [{ type: "text", text: { content: formattedMessage } }]
+              : [],
+          },
+          Consent: {
+            type: "checkbox",
+            checkbox: true,
+          },
         },
-        MajorYear: {
-          type: "rich_text",
-          rich_text: payload.majorYear
-            ? [{ type: "text", text: { content: payload.majorYear } }]
-            : [],
-        },
-        Message: {
-          type: "rich_text",
-          rich_text: payload.message
-            ? [{ type: "text", text: { content: payload.message } }]
-            : [],
-        },
-        Consent: {
-          type: "checkbox",
-          checkbox: true,
-        },
-      },
-    })
+      })
+    }
 
     return NextResponse.json({ success: true })
   } catch (error: unknown) {

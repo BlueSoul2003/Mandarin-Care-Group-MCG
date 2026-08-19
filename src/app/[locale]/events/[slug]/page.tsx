@@ -1,10 +1,11 @@
 import Image from "next/image"
-import Link from "next/link"
+import { Link } from "@/i18n/routing"
 import { notFound } from "next/navigation"
 import { ArrowLeft, Calendar, MapPin } from "lucide-react"
 import { contentRepository } from "@/content"
 import { ArticleCard } from "@/components/ArticleCard"
 import { MasonryGrid } from "@/components/MasonryGrid"
+import { getTranslations } from "next-intl/server"
 
 export const revalidate = 3600
 
@@ -25,6 +26,7 @@ export default async function EventPage({
 
   if (!detail) notFound()
 
+  const t = await getTranslations("PastEvents")
   const { event, term, series, media, articles } = detail
   const hasCloudinaryCover = event.coverImageUrl?.includes("res.cloudinary.com")
 
@@ -34,7 +36,7 @@ export default async function EventPage({
         href="/events"
         className="mb-10 inline-flex items-center text-sm font-medium text-muted-foreground hover:text-foreground"
       >
-        <ArrowLeft className="mr-2 h-4 w-4" /> 返回歷年活動
+        <ArrowLeft className="mr-2 h-4 w-4" /> {t("backToEvents")}
       </Link>
 
       <header className="mx-auto mb-12 max-w-4xl text-center">
@@ -71,7 +73,7 @@ export default async function EventPage({
         {hasCloudinaryCover && event.coverImageUrl ? (
           <Image
             src={event.coverImageUrl}
-            alt={`${event.title} 活動封面`}
+            alt={t("eventCoverAlt", { title: event.title })}
             fill
             priority
             sizes="(max-width: 1200px) 100vw, 1152px"
@@ -85,9 +87,9 @@ export default async function EventPage({
       <section aria-labelledby="event-gallery-title">
         <div className="mb-8">
           <h2 id="event-gallery-title" className="font-heading text-3xl font-bold">
-            精選回憶
+            {t("featuredMemories")}
           </h2>
-          <p className="mt-2 text-muted-foreground">完整原檔由 MCG 保存，網站展示策展精選。</p>
+          <p className="mt-2 text-muted-foreground">{t("memoriesNote")}</p>
         </div>
         <MasonryGrid
           images={media.map((item) => ({
@@ -105,7 +107,7 @@ export default async function EventPage({
       {articles.length > 0 && (
         <section className="mt-20" aria-labelledby="related-articles-title">
           <h2 id="related-articles-title" className="mb-8 font-heading text-3xl font-bold">
-            相關文章
+            {t("relatedArticles")}
           </h2>
           <div className="grid grid-cols-1 gap-8 md:grid-cols-2">
             {articles.map((article) => (

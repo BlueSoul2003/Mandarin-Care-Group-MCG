@@ -1,5 +1,6 @@
-import Link from "next/link"
+import { Link } from "@/i18n/routing"
 import { ArrowRight, Calendar, User } from "lucide-react"
+import { useTranslations } from "next-intl"
 
 export type ArticleCategory = "lifestyle" | "spiritual" | "community" | "news"
 
@@ -14,6 +15,7 @@ export interface ArticleCardProps {
 }
 
 export function ArticleCard({ title, excerpt, date, author, tags, slug, category }: ArticleCardProps) {
+  const t = useTranslations("Articles")
   const href =
     category === "lifestyle" || category === "spiritual"
       ? `/${category}/${slug}`
@@ -55,7 +57,7 @@ export function ArticleCard({ title, excerpt, date, author, tags, slug, category
           href={href}
           className="flex items-center text-primary text-sm font-medium opacity-0 -translate-x-4 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-300"
         >
-          Read more <ArrowRight className="ml-1 w-4 h-4" />
+          {t("readMore")} <ArrowRight className="ml-1 w-4 h-4" />
         </Link>
       </div>
     </article>
