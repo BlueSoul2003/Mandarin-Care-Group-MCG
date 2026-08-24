@@ -1,7 +1,19 @@
 import { describe, expect, it } from "vitest"
 import { ResilientContentRepository } from "../src/content"
 import type { PublishedContentSnapshot } from "../src/content/model"
-import type { ContentRepository } from "../src/content/repository"
+import { SnapshotContentRepository } from "../src/content/repository"
+
+class TestContentRepository extends SnapshotContentRepository {
+  constructor(
+    private readonly loader: () => Promise<PublishedContentSnapshot>,
+  ) {
+    super()
+  }
+
+  getPublishedSnapshot() {
+    return this.loader()
+  }
+}
 
 describe("resilient content repository", () => {
   it("serves the Git snapshot when the primary source fails", async () => {
@@ -30,14 +42,10 @@ describe("resilient content repository", () => {
         },
       ],
     } satisfies PublishedContentSnapshot
-    const fallback = {
-      getPublishedSnapshot: async () => fallbackSnapshot,
-    } as ContentRepository
-    const failingPrimary = {
-      getPublishedSnapshot: async () => {
+    const fallback = new TestContentRepository(async () => fallbackSnapshot)
+    const failingPrimary = new TestContentRepository(async () => {
         throw new Error("Notion unavailable")
-      },
-    } as ContentRepository
+    })
 
     const repository = new ResilientContentRepository(
       failingPrimary,

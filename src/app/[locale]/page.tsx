@@ -4,7 +4,7 @@ import { ArrowRight, LogIn, UserPlus } from "lucide-react"
 import { contentRepository } from "@/content"
 import { getTranslations } from "next-intl/server"
 
-export const revalidate = 3600
+export const revalidate = 300
 
 export default async function Home() {
   const t = await getTranslations("Home")

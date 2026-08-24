@@ -4,7 +4,7 @@ import remarkGfm from "remark-gfm"
 import { contentRepository } from "@/content"
 import { ArticleReader } from "@/components/ArticleReader"
 
-export const revalidate = 3600
+export const revalidate = 300
 
 export async function generateStaticParams() {
   const repository = await contentRepository()

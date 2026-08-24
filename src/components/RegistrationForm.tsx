@@ -2,7 +2,7 @@
 
 import * as React from "react"
 import { motion, AnimatePresence } from "framer-motion"
-import { Send, CheckCircle, AlertCircle, Loader2, Lock, Eye, EyeOff, Check, X } from "lucide-react"
+import { Send, CheckCircle, AlertCircle, Loader2, Eye, EyeOff, Check, X } from "lucide-react"
 import { createClient } from "@/lib/supabase"
 import { useTranslations, useLocale } from "next-intl"
 

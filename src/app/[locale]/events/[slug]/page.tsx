@@ -7,7 +7,7 @@ import { ArticleCard } from "@/components/ArticleCard"
 import { MasonryGrid } from "@/components/MasonryGrid"
 import { getTranslations } from "next-intl/server"
 
-export const revalidate = 3600
+export const revalidate = 300
 
 export async function generateStaticParams() {
   const repository = await contentRepository()

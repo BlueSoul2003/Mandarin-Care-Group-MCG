@@ -2,7 +2,7 @@ import { contentRepository } from "@/content"
 import { EventCard } from "@/components/EventCard"
 import { getTranslations } from "next-intl/server"
 
-export const revalidate = 3600
+export const revalidate = 300
 
 export default async function EventsPage() {
   const t = await getTranslations("PastEvents")

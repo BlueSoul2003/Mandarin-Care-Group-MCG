@@ -28,4 +28,16 @@ describe("Notion content configuration", () => {
       articlesDataSourceId: "articles",
     })
   })
+
+  it("supports the original article database setting during migration", () => {
+    expect(
+      getNotionContentConfig({
+        NOTION_API_KEY: "secret",
+        NOTION_DATABASE_ID: "legacy-articles-database",
+      }),
+    ).toMatchObject({
+      apiKey: "secret",
+      legacyArticlesDatabaseId: "legacy-articles-database",
+    })
+  })
 })
