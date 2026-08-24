@@ -1,11 +1,27 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-08-02T04:48:50.189Z",
+  "generatedAt": "2026-08-24T06:07:57.889Z",
   "terms": [],
   "series": [],
   "people": [],
   "committeeRoles": [],
   "events": [],
   "media": [],
-  "articles": []
+  "articles": [
+    {
+      "id": "3bdd7fb7-72c9-80eb-9753-f47d10f92b2c",
+      "slug": "prayer-before-meals",
+      "title": "Before We Eat: A Moment of Gratitude",
+      "excerpt": "A simple prayer before meals",
+      "publishedAt": "2026-08-15",
+      "authorName": "Brandon Chan",
+      "section": "spiritual",
+      "tags": [
+        "祷文"
+      ],
+      "eventIds": [],
+      "contentMarkdown": "\"Bless us, O Lord, and these Thy gifts, which we are about to receive from Thy bounty, through Christ our Lord. Amen.\"",
+      "status": "Published"
+    }
+  ]
 }

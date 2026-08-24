@@ -14,13 +14,14 @@ type Property = PageObjectResponse["properties"][string]
 
 export interface NotionContentConfig {
   apiKey: string
-  termsDataSourceId: string
-  seriesDataSourceId: string
-  peopleDataSourceId: string
-  committeeRolesDataSourceId: string
-  eventsDataSourceId: string
-  mediaDataSourceId: string
-  articlesDataSourceId: string
+  termsDataSourceId?: string
+  seriesDataSourceId?: string
+  peopleDataSourceId?: string
+  committeeRolesDataSourceId?: string
+  eventsDataSourceId?: string
+  mediaDataSourceId?: string
+  articlesDataSourceId?: string
+  legacyArticlesDatabaseId?: string
 }
 
 const configKeys = [
@@ -34,10 +35,18 @@ const configKeys = [
 ] as const
 
 export function getNotionContentConfig(
-  environment: NodeJS.ProcessEnv = process.env,
+  environment: Readonly<Record<string, string | undefined>> = process.env,
 ): NotionContentConfig | null {
   if (!environment.NOTION_API_KEY) return null
-  if (configKeys.some((key) => !environment[key])) return null
+
+  const hasCompleteActivityConfig = configKeys.every((key) => environment[key])
+  const hasLegacyArticlesConfig = Boolean(environment.NOTION_DATABASE_ID)
+
+  // A partially migrated activity-centered setup is unsafe because events,
+  // people, and media have required cross-data-source relations. The original
+  // production deployment only had NOTION_DATABASE_ID, so keep that one
+  // well-defined legacy shape working while deployments migrate.
+  if (!hasCompleteActivityConfig && !hasLegacyArticlesConfig) return null
 
   return {
     apiKey: environment.NOTION_API_KEY,
@@ -49,6 +58,7 @@ export function getNotionContentConfig(
     eventsDataSourceId: environment.NOTION_EVENTS_DATA_SOURCE_ID!,
     mediaDataSourceId: environment.NOTION_MEDIA_DATA_SOURCE_ID!,
     articlesDataSourceId: environment.NOTION_ARTICLES_DATA_SOURCE_ID!,
+    legacyArticlesDatabaseId: environment.NOTION_DATABASE_ID,
   }
 }
 
@@ -134,15 +144,42 @@ async function queryPublished(
   notion: Client,
   dataSourceId: string,
 ): Promise<PageObjectResponse[]> {
+  const dataSource = await notion.dataSources.retrieve({
+    data_source_id: dataSourceId,
+  })
+  const statusProperty =
+    "properties" in dataSource ? dataSource.properties.Status : undefined
+  const statusFilter =
+    statusProperty?.type === "status"
+      ? { status: { equals: "Published" } }
+      : { select: { equals: "Published" } }
+
   const results = await collectPaginatedAPI(notion.dataSources.query, {
     data_source_id: dataSourceId,
     filter: {
       property: "Status",
-      select: { equals: "Published" },
+      ...statusFilter,
     },
   })
 
   return results.filter(isFullPage)
+}
+
+async function resolveLegacyDataSourceId(
+  notion: Client,
+  databaseId: string,
+): Promise<string> {
+  const database = await notion.databases.retrieve({ database_id: databaseId })
+  const dataSourceId =
+    "data_sources" in database ? database.data_sources[0]?.id : undefined
+
+  if (!dataSourceId) {
+    throw new Error(
+      `Notion database ${databaseId} does not expose a data source for articles`,
+    )
+  }
+
+  return dataSourceId
 }
 
 export async function loadNotionPublishedSnapshot(
@@ -155,17 +192,37 @@ export async function loadNotionPublishedSnapshot(
     retry: { maxRetries: 2 },
   })
 
+  const articlesDataSourceId =
+    config.articlesDataSourceId ??
+    (config.legacyArticlesDatabaseId
+      ? await resolveLegacyDataSourceId(
+          notion,
+          config.legacyArticlesDatabaseId,
+        )
+      : undefined)
+
   // Keep these calls sequential to stay comfortably below Notion's API rate limit.
-  const termPages = await queryPublished(notion, config.termsDataSourceId)
-  const seriesPages = await queryPublished(notion, config.seriesDataSourceId)
-  const peoplePages = await queryPublished(notion, config.peopleDataSourceId)
-  const rolePages = await queryPublished(
-    notion,
-    config.committeeRolesDataSourceId,
-  )
-  const eventPages = await queryPublished(notion, config.eventsDataSourceId)
-  const mediaPages = await queryPublished(notion, config.mediaDataSourceId)
-  const articlePages = await queryPublished(notion, config.articlesDataSourceId)
+  const termPages = config.termsDataSourceId
+    ? await queryPublished(notion, config.termsDataSourceId)
+    : []
+  const seriesPages = config.seriesDataSourceId
+    ? await queryPublished(notion, config.seriesDataSourceId)
+    : []
+  const peoplePages = config.peopleDataSourceId
+    ? await queryPublished(notion, config.peopleDataSourceId)
+    : []
+  const rolePages = config.committeeRolesDataSourceId
+    ? await queryPublished(notion, config.committeeRolesDataSourceId)
+    : []
+  const eventPages = config.eventsDataSourceId
+    ? await queryPublished(notion, config.eventsDataSourceId)
+    : []
+  const mediaPages = config.mediaDataSourceId
+    ? await queryPublished(notion, config.mediaDataSourceId)
+    : []
+  const articlePages = articlesDataSourceId
+    ? await queryPublished(notion, articlesDataSourceId)
+    : []
 
   const terms = termPages.map((page) => {
     const range = dateValue(page, "Dates")

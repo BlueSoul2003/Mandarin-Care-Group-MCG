@@ -3,7 +3,7 @@
 import * as React from "react"
 import { Moon, Sun, Menu, X } from "lucide-react"
 import { useTheme } from "next-themes"
-import { Link, usePathname } from "@/i18n/routing"
+import { Link } from "@/i18n/routing"
 import { createClient } from "@/lib/supabase"
 import type { User } from "@supabase/supabase-js"
 import { useTranslations } from "next-intl"
@@ -24,13 +24,6 @@ export function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false)
   const menuRef = React.useRef<HTMLDivElement>(null)
   const t = useTranslations("Navbar")
-  const pathname = usePathname()
-
-  // Close mobile menu on route change
-  React.useEffect(() => {
-    setMobileMenuOpen(false)
-  }, [pathname])
-
   // Prevent background scrolling when mobile menu is open
   React.useEffect(() => {
     if (mobileMenuOpen) {
@@ -211,6 +204,7 @@ export function Navbar() {
                   <Link
                     key={link.href}
                     href={link.href}
+                    onClick={() => setMobileMenuOpen(false)}
                     className="text-lg font-medium text-foreground hover:text-primary transition-colors py-2"
                   >
                     {link.label}
@@ -241,12 +235,14 @@ export function Navbar() {
                   <>
                     <Link
                       href="/login"
+                      onClick={() => setMobileMenuOpen(false)}
                       className="text-lg font-medium text-foreground hover:text-primary transition-colors py-2"
                     >
                       {t("login")}
                     </Link>
                     <Link
                       href="/join"
+                      onClick={() => setMobileMenuOpen(false)}
                       className="text-lg font-medium text-foreground hover:text-primary transition-colors py-2"
                     >
                       {t("join")}

@@ -2,7 +2,7 @@ import { ArticleCard } from "@/components/ArticleCard"
 import { contentRepository } from "@/content"
 import { getTranslations } from "next-intl/server"
 
-export const revalidate = 3600
+export const revalidate = 300
 
 export default async function SpiritualPage() {
   const repository = await contentRepository()
