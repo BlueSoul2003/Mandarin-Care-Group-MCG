@@ -113,6 +113,8 @@ NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME=您的_Cloudinary_名稱
 ```
 *(備註：請向上一屆負責人索取金鑰，或自行至 Notion Developers 與 Cloudinary 重新建立。)*
 
+早期 Vercel 部署若仍只有 `NOTION_DATABASE_ID`，網站會自動從該 database container 找出文章 data source，作為遷移期間的相容模式。正式設定仍應在 Vercel Production 補齊上列七個 `NOTION_*_DATA_SOURCE_ID`；不要把任何 secret 提交到 Git。
+
 ### 3. 啟動開發伺服器
 ```bash
 npm run dev
@@ -127,4 +129,4 @@ npm run dev
 npm run content:sync
 ```
 
-此命令只在所有公開資料通過 schema、關聯、slug 唯一性與每場 30 個媒體上限後，才會更新 `src/content/snapshot.json`。網站連不上 Notion 或資料驗證失敗時，會繼續展示這份最後成功快照；快照不包含報名個資、密鑰或照片原檔。
+此命令只在所有公開資料通過 schema、關聯、slug 唯一性與每場 30 個媒體上限後，才會更新 `src/content/snapshot.json`。網站連不上 Notion 或資料驗證失敗時，會繼續展示這份最後成功快照；快照不包含報名個資、密鑰或照片原檔。公開頁面最長約 5 分鐘重新驗證一次內容。

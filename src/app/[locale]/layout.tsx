@@ -5,7 +5,7 @@ import { ThemeProvider } from "@/components/theme-provider";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { GlobalAudioPlayer } from "@/components/GlobalAudioPlayer";
-import {NextIntlClientProvider} from 'next-intl';
+import {hasLocale, NextIntlClientProvider} from 'next-intl';
 import {getMessages, setRequestLocale} from 'next-intl/server';
 import {notFound} from 'next/navigation';
 import {routing} from '@/i18n/routing';
@@ -38,7 +38,7 @@ export default async function RootLayout({
 }>) {
   const { locale } = await params;
 
-  if (!routing.locales.includes(locale as (typeof routing.locales)[number])) {
+  if (!hasLocale(routing.locales, locale)) {
     notFound();
   }
 

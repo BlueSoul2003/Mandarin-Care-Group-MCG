@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
-import { Client } from "@notionhq/client"
+import { Client, type CreatePageParameters } from "@notionhq/client"
 
 const notion = new Client({ auth: process.env.NOTION_API_KEY })
 const REGISTRATION_DATA_SOURCE_ID = process.env.NOTION_REGISTRATION_DATA_SOURCE_ID
@@ -79,49 +79,51 @@ export async function POST(req: NextRequest) {
 
     // Try creating Notion page with Birthday property (if configured as Date in Notion)
     try {
+      const properties: NonNullable<CreatePageParameters["properties"]> = {
+        Name: {
+          type: "title",
+          title: [{ type: "text", text: { content: payload.name } }],
+        },
+        Email: {
+          type: "email",
+          email: payload.email,
+        },
+        Phone: {
+          type: "phone_number",
+          phone_number: payload.phone || null,
+        },
+        ...(payload.birthday
+          ? {
+              Birthday: {
+                type: "date" as const,
+                date: { start: payload.birthday },
+              },
+            }
+          : {}),
+        MajorYear: {
+          type: "rich_text",
+          rich_text: payload.majorYear
+            ? [{ type: "text", text: { content: payload.majorYear } }]
+            : [],
+        },
+        Message: {
+          type: "rich_text",
+          rich_text: payload.message
+            ? [{ type: "text", text: { content: payload.message } }]
+            : [],
+        },
+        Consent: {
+          type: "checkbox",
+          checkbox: true,
+        },
+      }
+
       await notion.pages.create({
         parent: {
           type: "data_source_id",
           data_source_id: REGISTRATION_DATA_SOURCE_ID,
         },
-        properties: {
-          Name: {
-            type: "title",
-            title: [{ type: "text", text: { content: payload.name } }],
-          },
-          Email: {
-            type: "email",
-            email: payload.email,
-          },
-          Phone: {
-            type: "phone_number",
-            phone_number: payload.phone || null,
-          },
-          ...(payload.birthday
-            ? {
-                Birthday: {
-                  type: "date",
-                  date: { start: payload.birthday },
-                },
-              }
-            : {}),
-          MajorYear: {
-            type: "rich_text",
-            rich_text: payload.majorYear
-              ? [{ type: "text", text: { content: payload.majorYear } }]
-              : [],
-          },
-          Message: {
-            type: "rich_text",
-            rich_text: payload.message
-              ? [{ type: "text", text: { content: payload.message } }]
-              : [],
-          },
-          Consent: {
-            type: "checkbox",
-            checkbox: true,
-          },
-        } as Parameters<typeof notion.pages.create>[0]["properties"],
+        properties,
       })
     } catch (notionErr) {
       // Fallback: If Notion doesn't have the 'Birthday' property configured, append Birthday to Message
