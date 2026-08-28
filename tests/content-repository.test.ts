@@ -32,12 +32,12 @@ describe("resilient content repository", () => {
     } satisfies PublishedContentSnapshot
     const fallback = {
       getPublishedSnapshot: async () => fallbackSnapshot,
-    } as ContentRepository
+    } as unknown as ContentRepository
     const failingPrimary = {
       getPublishedSnapshot: async () => {
         throw new Error("Notion unavailable")
       },
-    } as ContentRepository
+    } as unknown as ContentRepository
 
     const repository = new ResilientContentRepository(
       failingPrimary,

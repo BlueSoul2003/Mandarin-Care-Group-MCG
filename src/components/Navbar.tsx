@@ -26,10 +26,11 @@ export function Navbar() {
   const t = useTranslations("Navbar")
   const pathname = usePathname()
 
-  // Close mobile menu on route change
-  React.useEffect(() => {
+  const [prevPathname, setPrevPathname] = React.useState(pathname)
+  if (prevPathname !== pathname) {
+    setPrevPathname(pathname)
     setMobileMenuOpen(false)
-  }, [pathname])
+  }
 
   // Prevent background scrolling when mobile menu is open
   React.useEffect(() => {

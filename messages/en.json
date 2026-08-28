@@ -67,48 +67,21 @@
   },
   "RosaryGuide": {
     "swipe": "Swipe",
-    "prayers": [
-      {
-        "id": 0,
-        "title": "Sign of the Cross",
-        "content": "In the name of the Father, and of the Son, and of the Holy Spirit. Amen."
-      },
-      {
-        "id": 1,
-        "title": "Apostles' Creed",
-        "content": "I believe in God, the Father almighty, Creator of heaven and earth. I believe in Jesus Christ, his only Son, our Lord..."
-      },
-      {
-        "id": 2,
-        "title": "The Lord's Prayer",
-        "content": "Our Father, who art in heaven, hallowed be thy name; thy kingdom come; thy will be done on earth as it is in heaven..."
-      },
-      {
-        "id": 3,
-        "title": "Hail Mary (Faith)",
-        "content": "Hail Mary, full of grace, the Lord is with thee..."
-      },
-      {
-        "id": 4,
-        "title": "Hail Mary (Hope)",
-        "content": "Hail Mary, full of grace..."
-      },
-      {
-        "id": 5,
-        "title": "Hail Mary (Charity)",
-        "content": "Hail Mary, full of grace..."
-      },
-      {
-        "id": 6,
-        "title": "Glory Be",
-        "content": "Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be. Amen."
-      },
-      {
-        "id": 7,
-        "title": "First Joyful Mystery",
-        "content": "The Annunciation\nMary, you are full of grace, the Lord is with you... (Begin ten Hail Marys)"
-      }
-    ]
+    "today": "Today",
+    "mystery": "Mysteries",
+    "selectMystery": "Select Mysteries",
+    "decade": "Decade",
+    "jumpToSection": "Jump to Decade",
+    "stepCount": "Step {current} of {total}",
+    "prev": "Previous",
+    "next": "Next",
+    "restart": "Restart",
+    "joyful": "Joyful",
+    "luminous": "Luminous",
+    "sorrowful": "Sorrowful",
+    "glorious": "Glorious",
+    "completedTitle": "Rosary Completed",
+    "completedDesc": "May Our Lady's intercession and God's peace be with you throughout your day. God bless! 🙏"
   },
   "LoginPage": {
     "title": "Welcome Back",
@@ -151,7 +124,15 @@
       "submit": "Submit Registration",
       "loading": "Submitting...",
       "successTitle": "Thank you for registering!",
-      "successDesc": "We've sent a verification email to you, and our committee will contact you shortly. God bless! 🙏",
+      "successDesc": "We've sent a verification email to {email}.",
+      "spamCheckNotice": "If you don't see the email in your inbox after a few moments, please be sure to check your Spam or Junk folder.",
+      "resendPrompt": "Didn't receive the email?",
+      "resendCountdown": "Resend confirmation in {seconds}s",
+      "resendButton": "Resend Confirmation Email",
+      "resending": "Sending...",
+      "resendSuccess": "A new confirmation email has been sent! Please check your inbox and spam folder.",
+      "resendError": "Failed to resend confirmation email. Please try again.",
+      "goToLogin": "Go to Login",
       "passwordMismatch": "Passwords do not match!",
       "passwordMatch": "Passwords match"
     }

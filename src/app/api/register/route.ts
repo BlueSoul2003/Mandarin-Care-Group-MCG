@@ -121,7 +121,7 @@ export async function POST(req: NextRequest) {
             type: "checkbox",
             checkbox: true,
           },
-        } as any,
+        } as Parameters<typeof notion.pages.create>[0]["properties"],
       })
     } catch (notionErr) {
       // Fallback: If Notion doesn't have the 'Birthday' property configured, append Birthday to Message
