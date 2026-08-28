@@ -1,7 +1,8 @@
 import { describe, expect, it } from "vitest"
 import { getNotionContentConfig } from "../src/content/notion-repository"
 
-const completeEnvironment = {
+const completeEnvironment: NodeJS.ProcessEnv = {
+  NODE_ENV: "test",
   NOTION_API_KEY: "secret",
   NOTION_TERMS_DATA_SOURCE_ID: "terms",
   NOTION_SERIES_DATA_SOURCE_ID: "series",

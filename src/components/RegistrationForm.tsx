@@ -2,9 +2,23 @@
 
 import * as React from "react"
 import { motion, AnimatePresence } from "framer-motion"
-import { Send, CheckCircle, AlertCircle, Loader2, Eye, EyeOff, Check, X } from "lucide-react"
+import {
+  Send,
+  CheckCircle,
+  AlertCircle,
+  AlertTriangle,
+  Loader2,
+  Eye,
+  EyeOff,
+  Check,
+  X,
+  Mail,
+  RefreshCw,
+  ArrowRight,
+} from "lucide-react"
 import { createClient } from "@/lib/supabase"
 import { useTranslations, useLocale } from "next-intl"
+import { Link } from "@/i18n/routing"
 
 type Status = "idle" | "loading" | "success" | "error"
 
@@ -14,6 +28,9 @@ export function RegistrationForm() {
   const [status, setStatus] = React.useState<Status>("idle")
   const [errorMsg, setErrorMsg] = React.useState("")
   const [showPassword, setShowPassword] = React.useState(false)
+  const [countdown, setCountdown] = React.useState(60)
+  const [resendStatus, setResendStatus] = React.useState<"idle" | "loading" | "success" | "error">("idle")
+  const [resendErrorMsg, setResendErrorMsg] = React.useState("")
   const [form, setForm] = React.useState({
     name: "",
     email: "",
@@ -26,6 +43,47 @@ export function RegistrationForm() {
     consent: false,
     website: "",
   })
+
+  // Count down every second when on success screen and countdown > 0
+  React.useEffect(() => {
+    if (status !== "success" || countdown <= 0) return
+
+    const timer = setInterval(() => {
+      setCountdown((prev) => (prev <= 1 ? 0 : prev - 1))
+    }, 1000)
+
+    return () => clearInterval(timer)
+  }, [status, countdown])
+
+  const handleResendConfirmation = async () => {
+    if (countdown > 0 || resendStatus === "loading") return
+
+    setResendStatus("loading")
+    setResendErrorMsg("")
+
+    try {
+      const supabase = createClient()
+      const { error } = await supabase.auth.resend({
+        type: "signup",
+        email: form.email.trim(),
+        options: {
+          emailRedirectTo: `${window.location.origin}/${locale}/login`,
+        },
+      })
+
+      if (error) {
+        setResendStatus("error")
+        setResendErrorMsg(error.message || t("resendError"))
+        return
+      }
+
+      setResendStatus("success")
+      setCountdown(60)
+    } catch (err) {
+      setResendStatus("error")
+      setResendErrorMsg(err instanceof Error ? err.message : t("resendError"))
+    }
+  }
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const value = e.target instanceof HTMLInputElement && e.target.type === "checkbox"
@@ -108,6 +166,7 @@ export function RegistrationForm() {
         throw new Error(message)
       }
 
+      setCountdown(60)
       setStatus("success")
     } catch (err) {
       console.error("Registration failed:", err)
@@ -130,15 +189,85 @@ export function RegistrationForm() {
       {status === "success" ? (
         <motion.div
           key="success"
-          initial={{ opacity: 0, scale: 0.9 }}
+          initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
-          className="flex flex-col items-center justify-center gap-4 py-16 text-center"
+          className="flex flex-col items-center justify-center gap-6 py-8 text-center"
         >
-          <CheckCircle className="w-16 h-16 text-emerald-400" />
-          <h2 className="text-2xl font-bold font-heading text-foreground">{t("successTitle")}</h2>
-          <p className="text-muted-foreground max-w-sm text-sm">
-            {t("successDesc")}
-          </p>
+          <div className="relative">
+            <div className="w-16 h-16 rounded-full bg-emerald-500/10 flex items-center justify-center border border-emerald-500/20 text-emerald-400">
+              <CheckCircle className="w-9 h-9" />
+            </div>
+            <div className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-primary/20 flex items-center justify-center text-primary border border-primary/30">
+              <Mail className="w-3.5 h-3.5" />
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <h2 className="text-2xl font-bold font-heading text-foreground">{t("successTitle")}</h2>
+            <p className="text-muted-foreground text-sm max-w-md mx-auto leading-relaxed">
+              {t("successDesc", { email: form.email })}{" "}
+            </p>
+          </div>
+
+          {/* Spam / Junk Notice Box */}
+          <div className="w-full max-w-md rounded-xl bg-amber-500/10 dark:bg-amber-500/10 border border-amber-600/30 dark:border-amber-500/20 p-4 text-left flex items-start gap-3">
+            <AlertTriangle className="w-5 h-5 text-amber-700 dark:text-amber-400 shrink-0 mt-0.5" />
+            <div className="text-xs text-amber-950 dark:text-amber-200 leading-relaxed font-medium">
+              {t("spamCheckNotice")}
+            </div>
+          </div>
+
+          {/* Resend Confirmation Section */}
+          <div className="w-full max-w-md rounded-xl bg-muted/40 dark:bg-white/5 border border-border dark:border-white/10 p-5 text-center space-y-3">
+            <p className="text-xs text-muted-foreground font-medium">{t("resendPrompt")}</p>
+            
+            <button
+              type="button"
+              onClick={handleResendConfirmation}
+              disabled={countdown > 0 || resendStatus === "loading"}
+              className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg text-xs font-semibold bg-background hover:bg-muted dark:bg-white/10 dark:hover:bg-white/15 text-foreground transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed border border-border dark:border-white/10 shadow-xs"
+            >
+              {resendStatus === "loading" ? (
+                <>
+                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                  <span>{t("resending")}</span>
+                </>
+              ) : countdown > 0 ? (
+                <>
+                  <RefreshCw className="w-3.5 h-3.5 opacity-60" />
+                  <span>{t("resendCountdown", { seconds: countdown })}</span>
+                </>
+              ) : (
+                <>
+                  <RefreshCw className="w-3.5 h-3.5 text-primary" />
+                  <span>{t("resendButton")}</span>
+                </>
+              )}
+            </button>
+
+            {resendStatus === "success" && (
+              <p className="text-xs text-emerald-400 font-medium">
+                {t("resendSuccess")}
+              </p>
+            )}
+
+            {resendStatus === "error" && (
+              <p className="text-xs text-red-400 font-medium">
+                {resendErrorMsg || t("resendError")}
+              </p>
+            )}
+          </div>
+
+          {/* Action Link */}
+          <div className="pt-2">
+            <Link
+              href="/login"
+              className="inline-flex items-center gap-1.5 px-6 py-2.5 rounded-full bg-primary text-primary-foreground text-sm font-semibold hover:opacity-90 transition-all shadow-md"
+            >
+              {t("goToLogin")}
+              <ArrowRight className="w-4 h-4" />
+            </Link>
+          </div>
         </motion.div>
       ) : (
         <motion.form
