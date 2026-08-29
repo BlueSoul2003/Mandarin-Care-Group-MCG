@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { Moon, Sun, Menu, X } from "lucide-react"
+import { Moon, Sun, Menu, X, User as UserIcon } from "lucide-react"
 import { useTheme } from "next-themes"
 import { Link } from "@/i18n/routing"
 import { createClient } from "@/lib/supabase"
@@ -72,6 +72,8 @@ export function Navbar() {
 
   const initials = getInitials(displayName)
 
+  const avatarUrl: string | undefined = user?.user_metadata?.avatar_url
+
   const handleLogout = async () => {
     const supabase = createClient()
     await supabase.auth.signOut()
@@ -109,29 +111,49 @@ export function Navbar() {
                 {/* Avatar Badge — click to open dropdown */}
                 <button
                   onClick={() => setMenuOpen((prev) => !prev)}
-                  className="flex items-center justify-center w-8 h-8 rounded-full bg-primary text-primary-foreground font-bold text-xs shadow-md hover:opacity-90 active:scale-95 transition-all select-none"
+                  className="flex items-center justify-center w-8 h-8 rounded-full bg-primary text-primary-foreground font-bold text-xs shadow-md hover:opacity-90 active:scale-95 transition-all select-none overflow-hidden border border-border/40"
                   title={t("loggedInAs", { name: displayName })}
                 >
-                  {initials}
+                  {avatarUrl ? (
+                    avatarUrl.startsWith("data:") || avatarUrl.startsWith("http") ? (
+                      <img src={avatarUrl} alt={displayName} className="w-full h-full object-cover" />
+                    ) : (
+                      <span className="text-sm">{avatarUrl}</span>
+                    )
+                  ) : (
+                    initials
+                  )}
                 </button>
 
-                {/* Dropdown Popout */}
-                {menuOpen && (
-                  <div className="absolute right-0 mt-2 w-52 rounded-xl border border-border bg-card shadow-xl z-50 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-150">
-                    <div className="px-4 py-3 border-b border-border/50">
-                      <p className="text-xs font-semibold text-foreground truncate">{displayName}</p>
-                      <p className="text-xs text-muted-foreground truncate">{user.email}</p>
-                    </div>
-                    <div className="py-1">
-                      <button
-                        onClick={handleLogout}
-                        className="w-full text-left px-4 py-2 text-sm text-destructive hover:bg-destructive/10 transition-colors"
-                      >
-                        {t("signOut")}
-                      </button>
-                    </div>
-                  </div>
-                )}
+                    {/* Dropdown Popout */}
+                    {menuOpen && (
+                      <div className="absolute right-0 mt-2 w-52 rounded-xl border border-border bg-card shadow-xl z-50 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-150">
+                        <Link
+                          href="/profile"
+                          onClick={() => setMenuOpen(false)}
+                          className="block px-4 py-3 border-b border-border/50 hover:bg-muted/50 transition-colors"
+                        >
+                          <p className="text-xs font-semibold text-foreground truncate">{displayName}</p>
+                          <p className="text-xs text-muted-foreground truncate">{user.email}</p>
+                        </Link>
+                        <div className="py-1">
+                          <Link
+                            href="/profile"
+                            onClick={() => setMenuOpen(false)}
+                            className="flex items-center gap-2 px-4 py-2 text-sm text-foreground/80 hover:text-foreground hover:bg-muted transition-colors"
+                          >
+                            <UserIcon className="w-4 h-4 text-muted-foreground" />
+                            <span>{t("profile")}</span>
+                          </Link>
+                          <button
+                            onClick={handleLogout}
+                            className="w-full text-left px-4 py-2 text-sm text-destructive hover:bg-destructive/10 transition-colors"
+                          >
+                            {t("signOut")}
+                          </button>
+                        </div>
+                      </div>
+                    )}
               </div>
             ) : (
               <>
@@ -215,15 +237,35 @@ export function Navbar() {
               <div className="mt-8 pt-8 border-t border-border/50 flex flex-col space-y-4">
                 {user ? (
                   <>
-                    <div className="flex items-center gap-3 mb-4">
-                      <div className="flex items-center justify-center w-10 h-10 rounded-full bg-primary text-primary-foreground font-bold text-sm">
-                        {initials}
+                    <Link
+                      href="/profile"
+                      onClick={() => setMobileMenuOpen(false)}
+                      className="flex items-center gap-3 p-2 -mx-2 rounded-xl hover:bg-muted/60 transition-colors"
+                    >
+                      <div className="flex items-center justify-center w-10 h-10 rounded-full bg-primary text-primary-foreground font-bold text-sm shrink-0 overflow-hidden">
+                        {avatarUrl ? (
+                          avatarUrl.startsWith("data:") || avatarUrl.startsWith("http") ? (
+                            <img src={avatarUrl} alt={displayName} className="w-full h-full object-cover" />
+                          ) : (
+                            <span className="text-base">{avatarUrl}</span>
+                          )
+                        ) : (
+                          initials
+                        )}
                       </div>
-                      <div className="flex flex-col overflow-hidden">
+                      <div className="flex flex-col overflow-hidden min-w-0">
                         <span className="text-sm font-semibold truncate">{displayName}</span>
                         <span className="text-xs text-muted-foreground truncate">{user.email}</span>
                       </div>
-                    </div>
+                    </Link>
+                    <Link
+                      href="/profile"
+                      onClick={() => setMobileMenuOpen(false)}
+                      className="flex items-center gap-2 text-base font-medium text-foreground/80 hover:text-primary transition-colors py-1"
+                    >
+                      <UserIcon className="w-4 h-4 text-muted-foreground" />
+                      <span>{t("profile")}</span>
+                    </Link>
                     <button
                       onClick={handleLogout}
                       className="w-full text-left text-destructive font-medium py-2 hover:bg-destructive/10 rounded-md transition-colors px-2 -mx-2"
@@ -233,6 +275,14 @@ export function Navbar() {
                   </>
                 ) : (
                   <>
+                    <Link
+                      href="/profile"
+                      onClick={() => setMobileMenuOpen(false)}
+                      className="flex items-center gap-2 text-base font-medium text-foreground hover:text-primary transition-colors py-1"
+                    >
+                      <UserIcon className="w-4 h-4 text-muted-foreground" />
+                      <span>{t("profile")}</span>
+                    </Link>
                     <Link
                       href="/login"
                       onClick={() => setMobileMenuOpen(false)}
