@@ -11,6 +11,8 @@
     "content:sync": "node --env-file-if-exists=.env.local --import tsx scripts/sync-content-snapshot.ts"
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.1120.0",
+    "@aws-sdk/s3-request-presigner": "^3.1120.0",
     "@base-ui/react": "^1.5.0",
     "@notionhq/client": "^5.23.3",
     "@supabase/ssr": "0.12.0",
