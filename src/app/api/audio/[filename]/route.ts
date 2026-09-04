@@ -1,16 +1,11 @@
 import { NextRequest, NextResponse } from "next/server"
-import { S3Client, GetObjectCommand } from "@aws-sdk/client-s3"
+import { GetObjectCommand } from "@aws-sdk/client-s3"
 import { Readable } from "stream"
-
-const s3 = new S3Client({
-  endpoint: process.env.FILEBASE_ENDPOINT || "https://s3.filebase.io",
-  region: "auto",
-  forcePathStyle: true,
-  credentials: {
-    accessKeyId: process.env.FILEBASE_ACCESS_KEY!,
-    secretAccessKey: process.env.FILEBASE_SECRET_KEY!,
-  },
-})
+import {
+  FilebaseConfigurationError,
+  getFilebaseConnection,
+  getS3ErrorName,
+} from "@/lib/filebase"
 
 export async function GET(
   req: NextRequest,
@@ -37,14 +32,14 @@ export async function GET(
     }
 
     const range = req.headers.get("range")
-
-    const command = new GetObjectCommand({
-      Bucket: process.env.FILEBASE_BUCKET || "taize-audio",
-      Key: decodedFilename,
-      Range: range || undefined,
-    })
-
-    const s3Response = await s3.send(command)
+    const { bucket, client } = getFilebaseConnection()
+    const s3Response = await client.send(
+      new GetObjectCommand({
+        Bucket: bucket,
+        Key: decodedFilename,
+        Range: range || undefined,
+      })
+    )
 
     const headers = new Headers()
     headers.set("Content-Type", s3Response.ContentType || "audio/mpeg")
@@ -75,12 +70,43 @@ export async function GET(
       status: range && s3Response.ContentRange ? 206 : 200,
       headers,
     })
-  } catch (error: any) {
-    console.error("Filebase audio error:", error)
+  } catch (error: unknown) {
+    const errorName = getS3ErrorName(error)
+    console.error("Filebase audio error:", {
+      name: errorName,
+      message: error instanceof Error ? error.message : "Unknown error",
+    })
+
+    if (error instanceof FilebaseConfigurationError) {
+      return NextResponse.json(
+        {
+          error: "Audio storage is not configured.",
+          code: "FILEBASE_CONFIGURATION_ERROR",
+        },
+        { status: 503 }
+      )
+    }
+
+    if (errorName === "NoSuchKey" || errorName === "NotFound") {
+      return NextResponse.json(
+        { error: "Audio file not found.", code: "AUDIO_NOT_FOUND" },
+        { status: 404 }
+      )
+    }
+
+    const accessDenied =
+      errorName === "AccessDenied" ||
+      errorName === "InvalidAccessKeyId" ||
+      errorName === "SignatureDoesNotMatch"
 
     return NextResponse.json(
-      { error: error?.message || "Unable to access audio file." },
-      { status: 500 }
+      {
+        error: accessDenied
+          ? "Audio storage credentials or bucket access are invalid."
+          : "Unable to access audio file.",
+        code: accessDenied ? "FILEBASE_ACCESS_DENIED" : "FILEBASE_REQUEST_FAILED",
+      },
+      { status: 502 }
     )
   }
 }
