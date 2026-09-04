@@ -110,12 +110,24 @@ NOTION_MEDIA_DATA_SOURCE_ID=精選媒體資料表_ID
 NOTION_ARTICLES_DATA_SOURCE_ID=文章資料表_ID
 NOTION_REGISTRATION_DATA_SOURCE_ID=加入表單資料表_ID
 NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME=您的_Cloudinary_名稱
+
+# Filebase 音檔儲存（只供伺服器使用，請勿加 NEXT_PUBLIC_）
+FILEBASE_ACCESS_KEY=您的_Filebase_Access_Key
+FILEBASE_SECRET_KEY=您的_Filebase_Secret_Key
+FILEBASE_BUCKET=taize-audio
+FILEBASE_ENDPOINT=https://s3.filebase.io
 ```
 *(備註：請向上一屆負責人索取金鑰，或自行至 Notion Developers 與 Cloudinary 重新建立。)*
 
 早期 Vercel 部署若仍只有 `NOTION_DATABASE_ID`，網站會自動從該 database container 找出文章 data source，作為遷移期間的相容模式。正式設定仍應在 Vercel Production 補齊上列七個 `NOTION_*_DATA_SOURCE_ID`；不要把任何 secret 提交到 Git。
 
-### 3. Filebase 音檔設定與上傳\n\n太澤音樂頁會由 Vercel 伺服器讀取 Filebase；瀏覽器不會直接取得 Filebase 密鑰，因此私有 bucket 不需要為網站開放 CORS。請在 Filebase 控制台把 MP3 上傳到 `FILEBASE_BUCKET` 指定的 bucket，並在 Vercel Project Settings → Environment Variables 為 **Production、Preview、Development** 設定上述四個變數。儲存後必須重新部署，既有 deployment 不會自動取得新值。\n\n程式也兼容 Filebase 官方範例常見的 `FILEBASE_KEY` / `FILEBASE_SECRET` 名稱，但新設定建議統一使用 `FILEBASE_ACCESS_KEY` / `FILEBASE_SECRET_KEY`。若 `/api/audio?fresh=true` 回傳 `FILEBASE_CONFIGURATION_ERROR`，代表缺少環境變數；若回傳 `FILEBASE_ACCESS_DENIED`，請重新產生同一 Filebase 帳號的 S3 Access Key，並確認 `FILEBASE_BUCKET` 拼字與實際 bucket 完全一致。密鑰不可提交到 Git。\n\n### 4. 啟動開發伺服器
+### 3. Filebase 音檔設定與上傳
+
+太澤音樂頁會由 Vercel 伺服器讀取 Filebase；瀏覽器不會直接取得 Filebase 密鑰，因此私有 bucket 不需要為網站開放 CORS。請在 Filebase 控制台把 MP3 上傳到 `FILEBASE_BUCKET` 指定的 bucket，並在 Vercel Project Settings → Environment Variables 為 **Production、Preview、Development** 設定上述四個變數。儲存後必須重新部署，既有 deployment 不會自動取得新值。
+
+程式也兼容 Filebase 官方範例常見的 `FILEBASE_KEY` / `FILEBASE_SECRET` 名稱，但新設定建議統一使用 `FILEBASE_ACCESS_KEY` / `FILEBASE_SECRET_KEY`。若 `/api/audio?fresh=true` 回傳 `FILEBASE_CONFIGURATION_ERROR`，代表缺少環境變數；若回傳 `FILEBASE_ACCESS_DENIED`，請重新產生同一 Filebase 帳號的 S3 Access Key，並確認 `FILEBASE_BUCKET` 拼字與實際 bucket 完全一致。密鑰不可提交到 Git。
+
+### 4. 啟動開發伺服器
 ```bash
 npm run dev
 ```
