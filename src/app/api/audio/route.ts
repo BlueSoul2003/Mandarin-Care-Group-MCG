@@ -1,15 +1,10 @@
 import { NextResponse } from "next/server"
-import { S3Client, ListObjectsV2Command } from "@aws-sdk/client-s3"
-
-const s3 = new S3Client({
-  endpoint: process.env.FILEBASE_ENDPOINT || "https://s3.filebase.io",
-  region: "auto",
-  forcePathStyle: true,
-  credentials: {
-    accessKeyId: process.env.FILEBASE_ACCESS_KEY || "",
-    secretAccessKey: process.env.FILEBASE_SECRET_KEY || "",
-  },
-})
+import { ListObjectsV2Command } from "@aws-sdk/client-s3"
+import {
+  FilebaseConfigurationError,
+  getFilebaseConnection,
+  getS3ErrorName,
+} from "@/lib/filebase"
 
 // In-memory cache for audio tracks
 let cachedTracks: any[] | null = null
@@ -34,12 +29,12 @@ export async function GET(req: Request) {
       )
     }
 
-    const bucket = process.env.FILEBASE_BUCKET || "taize-audio"
-    const command = new ListObjectsV2Command({
-      Bucket: bucket,
-    })
-
-    const response = await s3.send(command)
+    const { bucket, client } = getFilebaseConnection()
+    const response = await client.send(
+      new ListObjectsV2Command({
+        Bucket: bucket,
+      })
+    )
     const contents = response.Contents || []
 
     const audioExtensions = [".mp3", ".wav", ".m4a", ".ogg", ".aac", ".flac"]
@@ -79,8 +74,24 @@ export async function GET(req: Request) {
         },
       }
     )
-  } catch (error: any) {
-    console.error("Failed to list Filebase audio tracks:", error)
+  } catch (error: unknown) {
+    const errorName = getS3ErrorName(error)
+    console.error("Failed to list Filebase audio tracks:", {
+      name: errorName,
+      message: error instanceof Error ? error.message : "Unknown error",
+    })
+
+    if (error instanceof FilebaseConfigurationError) {
+      return NextResponse.json(
+        {
+          error: "Audio storage is not configured.",
+          code: "FILEBASE_CONFIGURATION_ERROR",
+          tracks: [],
+        },
+        { status: 503 }
+      )
+    }
+
     if (cachedTracks) {
       return NextResponse.json(
         { tracks: cachedTracks, stale: true },
@@ -91,9 +102,21 @@ export async function GET(req: Request) {
         }
       )
     }
+
+    const accessDenied =
+      errorName === "AccessDenied" ||
+      errorName === "InvalidAccessKeyId" ||
+      errorName === "SignatureDoesNotMatch"
+
     return NextResponse.json(
-      { error: error?.message || "Failed to list audio tracks", tracks: [] },
-      { status: 500 }
+      {
+        error: accessDenied
+          ? "Audio storage credentials or bucket access are invalid."
+          : "Failed to load audio tracks.",
+        code: accessDenied ? "FILEBASE_ACCESS_DENIED" : "FILEBASE_REQUEST_FAILED",
+        tracks: [],
+      },
+      { status: 502 }
     )
   }
 }
