@@ -35,6 +35,9 @@ export function getFilebaseConnection(): FilebaseConnection {
   const bucket = firstConfiguredValue("FILEBASE_BUCKET")
   const endpoint =
     firstConfiguredValue("FILEBASE_ENDPOINT") || "https://s3.filebase.io"
+  const region =
+    firstConfiguredValue("FILEBASE_REGION") ||
+    (endpoint.includes("s3.filebase.com") ? "us-east-1" : "auto")
 
   const missingVariables: string[] = []
   if (!accessKeyId) {
@@ -51,7 +54,7 @@ export function getFilebaseConnection(): FilebaseConnection {
     throw new FilebaseConfigurationError(missingVariables)
   }
 
-  const signature = [endpoint, bucket, accessKeyId, secretAccessKey].join("\n")
+  const signature = [endpoint, region, bucket, accessKeyId, secretAccessKey].join("\n")
   if (cachedConnection && cachedSignature === signature) {
     return cachedConnection
   }
@@ -60,7 +63,7 @@ export function getFilebaseConnection(): FilebaseConnection {
     bucket,
     client: new S3Client({
       endpoint,
-      region: "auto",
+      region,
       credentials: {
         accessKeyId,
         secretAccessKey,
