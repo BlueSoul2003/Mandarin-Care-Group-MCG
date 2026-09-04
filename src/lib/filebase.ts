@@ -47,7 +47,7 @@ export function getFilebaseConnection(): FilebaseConnection {
     missingVariables.push("FILEBASE_BUCKET")
   }
 
-  if (missingVariables.length > 0) {
+  if (!accessKeyId || !secretAccessKey || !bucket) {
     throw new FilebaseConfigurationError(missingVariables)
   }
 
