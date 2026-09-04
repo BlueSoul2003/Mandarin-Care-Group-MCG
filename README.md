@@ -115,7 +115,9 @@ NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME=您的_Cloudinary_名稱
 FILEBASE_ACCESS_KEY=您的_Filebase_Access_Key
 FILEBASE_SECRET_KEY=您的_Filebase_Secret_Key
 FILEBASE_BUCKET=taize-audio
+# 一般 S3 bucket
 FILEBASE_ENDPOINT=https://s3.filebase.io
+FILEBASE_REGION=auto
 ```
 *(備註：請向上一屆負責人索取金鑰，或自行至 Notion Developers 與 Cloudinary 重新建立。)*
 
@@ -123,7 +125,9 @@ FILEBASE_ENDPOINT=https://s3.filebase.io
 
 ### 3. Filebase 音檔設定與上傳
 
-太澤音樂頁會由 Vercel 伺服器讀取 Filebase；瀏覽器不會直接取得 Filebase 密鑰，因此私有 bucket 不需要為網站開放 CORS。請在 Filebase 控制台把 MP3 上傳到 `FILEBASE_BUCKET` 指定的 bucket，並在 Vercel Project Settings → Environment Variables 為 **Production、Preview、Development** 設定上述四個變數。儲存後必須重新部署，既有 deployment 不會自動取得新值。
+太澤音樂頁會由 Vercel 伺服器讀取 Filebase；瀏覽器不會直接取得 Filebase 密鑰，因此私有 bucket 不需要為網站開放 CORS。請在 Filebase 控制台把 MP3 上傳到 `FILEBASE_BUCKET` 指定的 bucket，並在 Vercel Project Settings → Environment Variables 為 **Production、Preview、Development** 設定 Access Key、Secret Key、bucket、endpoint 與 region。儲存後必須重新部署，既有 deployment 不會自動取得新值。
+
+Filebase 的兩種 storage tier 必須使用成對設定：一般 **S3 object-storage bucket** 使用 `FILEBASE_ENDPOINT=https://s3.filebase.io` 與 `FILEBASE_REGION=auto`；**IPFS bucket** 使用 `FILEBASE_ENDPOINT=https://s3.filebase.com` 與 `FILEBASE_REGION=us-east-1`。程式會依 endpoint 自動推斷 region，但明確設定最容易交接與排錯。
 
 程式也兼容 Filebase 官方範例常見的 `FILEBASE_KEY` / `FILEBASE_SECRET` 名稱，但新設定建議統一使用 `FILEBASE_ACCESS_KEY` / `FILEBASE_SECRET_KEY`。若 `/api/audio?fresh=true` 回傳 `FILEBASE_CONFIGURATION_ERROR`，代表缺少環境變數；若回傳 `FILEBASE_ACCESS_DENIED`，請重新產生同一 Filebase 帳號的 S3 Access Key，並確認 `FILEBASE_BUCKET` 拼字與實際 bucket 完全一致。密鑰不可提交到 Git。
 
