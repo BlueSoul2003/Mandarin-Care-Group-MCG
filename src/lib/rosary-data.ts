@@ -25,6 +25,29 @@ export interface MysterySet {
   mysteries: MysteryDetail[]
 }
 
+export const DEFAULT_ROSARY_AUDIO_MAP: Record<"en" | "zh-TW", Record<string, string>> = {
+  en: {
+    "sign-of-cross": `/api/audio/${encodeURIComponent("Sign of the cross.mp3")}`,
+    creed: `/api/audio/${encodeURIComponent("Apostle Creed.mp3")}`,
+    "our-father": `/api/audio/${encodeURIComponent("Our Father.mp3")}`,
+    "hail-mary": `/api/audio/${encodeURIComponent("Hail Mary.mp3")}`,
+    "glory-be": `/api/audio/${encodeURIComponent("Glory Be.mp3")}`,
+    fatima: `/api/audio/${encodeURIComponent("Fatima Prayer.mp3")}`,
+    "hail-holy-queen": `/api/audio/${encodeURIComponent("Hail Holy Queen.mp3")}`,
+    concluding: `/api/audio/${encodeURIComponent("Conclude.mp3")}`,
+  },
+  "zh-TW": {
+    "sign-of-cross": `/api/audio/${encodeURIComponent("Sign of the cross-zh.mp3")}`,
+    creed: `/api/audio/${encodeURIComponent("Apostle Creed-zh.mp3")}`,
+    "our-father": `/api/audio/${encodeURIComponent("Our Father-zh.mp3")}`,
+    "hail-mary": `/api/audio/${encodeURIComponent("Hail Mary-zh.mp3")}`,
+    "glory-be": `/api/audio/${encodeURIComponent("Glory Be-zh.mp3")}`,
+    fatima: `/api/audio/${encodeURIComponent("Fatima Prayer-zh.mp3")}`,
+    "hail-holy-queen": `/api/audio/${encodeURIComponent("Hail Holy Queen-zh.mp3")}`,
+    concluding: `/api/audio/${encodeURIComponent("Conclude-zh.mp3")}`,
+  },
+}
+
 export const ROSARY_PRAYERS = {
   en: {
     signOfCross: {

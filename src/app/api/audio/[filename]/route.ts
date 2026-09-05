@@ -1,22 +1,13 @@
 import { NextRequest, NextResponse } from "next/server"
-import { S3Client, GetObjectCommand } from "@aws-sdk/client-s3"
+import { GetObjectCommand } from "@aws-sdk/client-s3"
 import { Readable } from "stream"
-
-const s3 = new S3Client({
-  endpoint: process.env.FILEBASE_ENDPOINT || "https://s3.filebase.io",
-  region: "auto",
-  forcePathStyle: true,
-  credentials: {
-    accessKeyId: process.env.FILEBASE_ACCESS_KEY!,
-    secretAccessKey: process.env.FILEBASE_SECRET_KEY!,
-  },
-})
+import { filebaseS3, FILEBASE_BUCKET } from "@/lib/filebase"
 
 export async function GET(
   req: NextRequest,
   { params }: { params?: Promise<{ filename?: string }> } = {}
 ) {
-  try {
+  try {   
     const resolvedParams = params ? await params : undefined
     const rawFilename =
       resolvedParams?.filename ||
@@ -39,12 +30,12 @@ export async function GET(
     const range = req.headers.get("range")
 
     const command = new GetObjectCommand({
-      Bucket: process.env.FILEBASE_BUCKET || "taize-audio",
+      Bucket: FILEBASE_BUCKET,
       Key: decodedFilename,
       Range: range || undefined,
     })
 
-    const s3Response = await s3.send(command)
+    const s3Response = await filebaseS3.send(command)
 
     const headers = new Headers()
     headers.set("Content-Type", s3Response.ContentType || "audio/mpeg")

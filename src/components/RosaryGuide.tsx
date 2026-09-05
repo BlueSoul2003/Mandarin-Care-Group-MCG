@@ -1,3 +1,4 @@
+
 "use client"
 
 import * as React from "react"
@@ -9,6 +10,10 @@ import {
   BookOpen,
   Layers,
   HeartHandshake,
+  Play,
+  Pause,
+  FastForward,
+  ChevronDown,
 } from "lucide-react"
 import { useLocale, useTranslations } from "next-intl"
 import {
@@ -16,9 +21,18 @@ import {
   getTodaysMystery,
   getDecadeLabels,
   generateRosarySteps,
+  DEFAULT_ROSARY_AUDIO_MAP,
 } from "@/lib/rosary-data"
+import { usePlayerStore } from "@/store/usePlayerStore"
 
 const STORAGE_KEY = "mcg_rosary_progress"
+
+function formatAudioTime(seconds: number): string {
+  if (isNaN(seconds) || seconds < 0) return "0:00"
+  const mins = Math.floor(seconds / 60)
+  const secs = Math.floor(seconds % 60)
+  return `${mins}:${secs < 10 ? "0" : ""}${secs}`
+}
 
 export function RosaryGuide() {
   const locale = useLocale() as "en" | "zh-TW"
@@ -31,6 +45,43 @@ export function RosaryGuide() {
   const [direction, setDirection] = React.useState(0) // -1 left, 1 right
   const [isJumpMenuOpen, setIsJumpMenuOpen] = React.useState(false)
   const isLoadedRef = React.useRef(false)
+
+  // Audio Playback State (for English & Chinese narration)
+  const audioRef = React.useRef<HTMLAudioElement | null>(null)
+  const [audioMap, setAudioMap] = React.useState(DEFAULT_ROSARY_AUDIO_MAP)
+  const [isAudioPlaying, setIsAudioPlaying] = React.useState(false)
+  const [playbackSpeed, setPlaybackSpeed] = React.useState<number>(1)
+  const [currentTime, setCurrentTime] = React.useState<number>(0)
+  const [duration, setDuration] = React.useState<number>(0)
+  const [reflectionCountdown, setReflectionCountdown] = React.useState<number | null>(null)
+  const reflectionTimerRef = React.useRef<NodeJS.Timeout | null>(null)
+  const playbackSpeedRef = React.useRef(playbackSpeed)
+  playbackSpeedRef.current = playbackSpeed
+
+  // Load dynamically mapped audio files from Filebase
+  React.useEffect(() => {
+    let isMounted = true
+    async function loadRosaryAudio() {
+      try {
+        const res = await fetch("/api/audio/rosary")
+        if (res.ok) {
+          const data = await res.json()
+          if (data.audioMap && isMounted) {
+            setAudioMap((prev) => ({
+              en: { ...prev.en, ...(data.audioMap.en || {}) },
+              "zh-TW": { ...prev["zh-TW"], ...(data.audioMap["zh-TW"] || {}) },
+            }))
+          }
+        }
+      } catch (err) {
+        console.error("Failed to load Rosary audio map:", err)
+      }
+    }
+    loadRosaryAudio()
+    return () => {
+      isMounted = false
+    }
+  }, [])
 
   // Restore saved progress from localStorage after initial client mount
   React.useEffect(() => {
@@ -204,6 +255,141 @@ export function RosaryGuide() {
     currentStepIndex === steps.length - 1 &&
     (!currentStep.totalHailMarys || hailMaryIndex === currentStep.totalHailMarys)
 
+  // Play current prayer audio
+  const playPrayerAudio = React.useCallback(
+    (step: (typeof steps)[number]) => {
+      if (step.prayerType === "mystery") {
+        if (audioRef.current) {
+          audioRef.current.pause()
+        }
+        setReflectionCountdown(4)
+        if (reflectionTimerRef.current) clearInterval(reflectionTimerRef.current)
+        reflectionTimerRef.current = setInterval(() => {
+          setReflectionCountdown((prev) => {
+            if (prev === null || prev <= 1) {
+              clearInterval(reflectionTimerRef.current!)
+              reflectionTimerRef.current = null
+              paginate(1)
+              return null
+            }
+            return prev - 1
+          })
+        }, 1000)
+        return
+      }
+
+      if (reflectionTimerRef.current) {
+        clearInterval(reflectionTimerRef.current)
+        reflectionTimerRef.current = null
+      }
+      setReflectionCountdown(null)
+
+      const activeLocale = locale === "zh-TW" ? "zh-TW" : "en"
+      const url = audioMap[activeLocale]?.[step.prayerType] || audioMap.en?.[step.prayerType]
+      if (url && audioRef.current) {
+        usePlayerStore.setState({ isPlaying: false }) // Pause global music
+        audioRef.current.src = url
+        audioRef.current.playbackRate = playbackSpeedRef.current
+        audioRef.current.currentTime = 0
+        audioRef.current.play().catch((err) => {
+          console.log("Audio play prevented or interrupted:", err)
+        })
+      }
+    },
+    [audioMap, paginate, locale]
+  )
+
+  // Trigger audio update when step index or mystery changes while playing
+  React.useEffect(() => {
+    if (!isAudioPlaying) return
+    const step = steps[currentStepIndex]
+    if (step) {
+      playPrayerAudio(step)
+    }
+  }, [currentStepIndex, selectedMystery, isAudioPlaying, playPrayerAudio, steps])
+
+  // Handle audio track finishing
+  const handleAudioEnded = React.useCallback(() => {
+    if (!isAudioPlaying) return
+
+    if (currentStep.prayerType === "hail-mary") {
+      const maxBeads = currentStep.totalHailMarys || 1
+      if (hailMaryIndex < maxBeads) {
+        setHailMaryIndex((prev) => prev + 1)
+        if (audioRef.current) {
+          audioRef.current.currentTime = 0
+          audioRef.current.playbackRate = playbackSpeedRef.current
+          audioRef.current.play().catch(console.error)
+        }
+        return
+      }
+    }
+
+    if (isLastStep) {
+      setIsAudioPlaying(false)
+      return
+    }
+
+    paginate(1)
+  }, [isAudioPlaying, currentStep, hailMaryIndex, isLastStep, paginate])
+
+  // Toggle Audio Play / Pause
+  const toggleAudioPlay = () => {
+    if (isAudioPlaying) {
+      setIsAudioPlaying(false)
+      if (audioRef.current) {
+        audioRef.current.pause()
+      }
+      if (reflectionTimerRef.current) {
+        clearInterval(reflectionTimerRef.current)
+        reflectionTimerRef.current = null
+      }
+      setReflectionCountdown(null)
+    } else {
+      setIsAudioPlaying(true)
+      playPrayerAudio(currentStep)
+    }
+  }
+
+  // Change Playback Speed
+  const handleSpeedChange = (speed: number) => {
+    setPlaybackSpeed(speed)
+    if (audioRef.current) {
+      audioRef.current.playbackRate = speed
+    }
+  }
+
+  // Skip mystery meditation
+  const skipReflection = () => {
+    if (reflectionTimerRef.current) {
+      clearInterval(reflectionTimerRef.current)
+      reflectionTimerRef.current = null
+    }
+    setReflectionCountdown(null)
+    paginate(1)
+  }
+
+  // Handle manual bead clicking
+  const handleSelectBead = (beadNumber: number) => {
+    setHailMaryIndex(beadNumber)
+    if (isAudioPlaying && audioRef.current) {
+      audioRef.current.currentTime = 0
+      audioRef.current.play().catch(console.error)
+    }
+  }
+
+  // Cleanup timers on unmount
+  React.useEffect(() => {
+    return () => {
+      if (audioRef.current) {
+        audioRef.current.pause()
+      }
+      if (reflectionTimerRef.current) {
+        clearInterval(reflectionTimerRef.current)
+      }
+    }
+  }, [])
+
   return (
     <div className="w-full max-w-2xl mx-auto flex flex-col items-center gap-6">
       {/* 1. Mystery Selection Tabs */}
@@ -297,7 +483,7 @@ export function RosaryGuide() {
                 return (
                   <button
                     key={i}
-                    onClick={() => setHailMaryIndex(beadNumber)}
+                    onClick={() => handleSelectBead(beadNumber)}
                     className={`relative flex-1 h-3.5 sm:h-4 rounded-full transition-all duration-300 flex items-center justify-center ${
                       isCurrent
                         ? "bg-primary shadow-md shadow-primary/40 ring-2 ring-primary/50 scale-110"
@@ -336,7 +522,7 @@ export function RosaryGuide() {
                 return (
                   <button
                     key={i}
-                    onClick={() => setHailMaryIndex(beadNumber)}
+                    onClick={() => handleSelectBead(beadNumber)}
                     className={`w-12 h-3.5 sm:h-4 rounded-full transition-all duration-300 ${
                       isCurrent
                         ? "bg-primary shadow-md shadow-primary/40 ring-2 ring-primary/50 scale-110"
@@ -424,6 +610,118 @@ export function RosaryGuide() {
           )}
         </AnimatePresence>
 
+        {/* Audio Narration Controls Bar (English & Chinese) */}
+        <div className="relative px-6 py-3 bg-gradient-to-r from-primary/10 via-primary/5 to-transparent border-b border-border/40 flex flex-wrap items-center justify-between gap-3">
+          {/* Left: Play/Pause button & prayer title/progress */}
+          <div className="flex items-center gap-3">
+            <button
+              onClick={toggleAudioPlay}
+              className={`relative w-10 h-10 rounded-full flex items-center justify-center transition-all duration-300 shadow-md ${
+                isAudioPlaying
+                  ? "bg-primary text-primary-foreground shadow-primary/30 ring-4 ring-primary/20 scale-105"
+                  : "bg-primary text-primary-foreground hover:opacity-90 hover:scale-105"
+              }`}
+              title={isAudioPlaying ? (locale === "zh-TW" ? "暫停語音" : "Pause Audio") : (locale === "zh-TW" ? "播放語音" : "Play Audio")}
+            >
+              {isAudioPlaying ? (
+                <Pause className="w-4 h-4 fill-current" />
+              ) : (
+                <Play className="w-4 h-4 fill-current ml-0.5" />
+              )}
+            </button>
+
+            <div className="flex flex-col">
+              <div className="flex items-center gap-1.5">
+                <span className="text-xs font-bold text-foreground">
+                  {reflectionCountdown !== null
+                    ? locale === "zh-TW"
+                      ? "默想奧蹟中"
+                      : "Reflecting on Mystery"
+                    : isAudioPlaying
+                    ? currentStep.title
+                    : locale === "zh-TW"
+                    ? "語音"
+                    : "Audio"}
+                </span>
+                {isAudioPlaying && reflectionCountdown === null && (
+                  <span className="inline-flex items-center gap-0.5 ml-1">
+                    <span className="w-1 h-3 bg-primary rounded-full animate-pulse" />
+                    <span className="w-1 h-4 bg-primary rounded-full animate-pulse delay-75" />
+                    <span className="w-1 h-2 bg-primary rounded-full animate-pulse delay-150" />
+                  </span>
+                )}
+              </div>
+              {(reflectionCountdown !== null || isAudioPlaying) && (
+                <span className="text-[11px] text-muted-foreground">
+                  {reflectionCountdown !== null
+                    ? locale === "zh-TW"
+                      ? `${reflectionCountdown} 秒後繼續...`
+                      : `Continuing in ${reflectionCountdown}s...`
+                    : `${formatAudioTime(currentTime)} / ${formatAudioTime(duration)}`}
+                </span>
+              )}
+            </div>
+          </div>
+
+          {/* Right: Actions (Skip reflection if counting down, or Speed control) */}
+          <div className="flex items-center gap-2">
+            {reflectionCountdown !== null ? (
+              <button
+                onClick={skipReflection}
+                className="flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-semibold bg-primary text-primary-foreground hover:opacity-90 shadow-sm transition-all hover:scale-105"
+              >
+                <span>{locale === "zh-TW" ? "跳過" : "Skip"}</span>
+                <FastForward className="w-3.5 h-3.5" />
+              </button>
+            ) : (
+              <div className="relative inline-flex items-center">
+                <select
+                  value={playbackSpeed}
+                  onChange={(e) => handleSpeedChange(Number(e.target.value))}
+                  className="appearance-none bg-card hover:bg-muted/80 text-foreground font-mono font-bold text-xs pl-2.5 pr-7 py-1 rounded-full border border-border/60 shadow-xs cursor-pointer focus:outline-hidden focus:ring-2 focus:ring-primary/40 transition-colors"
+                  title={locale === "zh-TW" ? "播放速度" : "Playback Speed"}
+                >
+                  <option value={0.75}>0.75x</option>
+                  <option value={1}>1.0x</option>
+                  <option value={1.25}>1.25x</option>
+                  <option value={1.5}>1.5x</option>
+                  <option value={1.75}>1.75x</option>
+                  <option value={2}>2.0x</option>
+                </select>
+                <ChevronDown className="w-3.5 h-3.5 text-muted-foreground pointer-events-none absolute right-2" />
+              </div>
+            )}
+          </div>
+
+          {/* Audio Track Progress Indicator Line */}
+          {isAudioPlaying && reflectionCountdown === null && duration > 0 && (
+            <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-border/40 overflow-hidden">
+              <div
+                className="h-full bg-primary transition-all duration-200"
+                style={{ width: `${Math.min(100, (currentTime / duration) * 100)}%` }}
+              />
+            </div>
+          )}
+        </div>
+
+        {/* Hidden Audio Element */}
+        <audio
+          ref={audioRef}
+          onTimeUpdate={() => {
+            if (audioRef.current) {
+              setCurrentTime(audioRef.current.currentTime)
+              setDuration(audioRef.current.duration || 0)
+            }
+          }}
+          onLoadedMetadata={() => {
+            if (audioRef.current) {
+              setDuration(audioRef.current.duration || 0)
+            }
+          }}
+          onEnded={handleAudioEnded}
+          className="hidden"
+        />
+
         {/* Prayer Text Area with Slide & Swipe Animation */}
         <div className="relative flex-1 p-6 sm:p-8 flex items-center justify-center overflow-hidden">
           <AnimatePresence initial={false} custom={direction} mode="popLayout">
@@ -499,6 +797,9 @@ export function RosaryGuide() {
                 setCurrentStepIndex(0)
                 setHailMaryIndex(1)
                 setDirection(-1)
+                if (isAudioPlaying) {
+                  playPrayerAudio(steps[0])
+                }
               }}
               className="flex items-center gap-1 px-5 py-2.5 rounded-full text-xs font-semibold bg-primary text-primary-foreground hover:opacity-90 shadow-md transition-transform hover:scale-105"
             >

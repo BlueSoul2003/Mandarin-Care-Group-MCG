@@ -1,20 +1,31 @@
 import { NextResponse } from "next/server"
-import { S3Client, ListObjectsV2Command } from "@aws-sdk/client-s3"
-
-const s3 = new S3Client({
-  endpoint: process.env.FILEBASE_ENDPOINT || "https://s3.filebase.io",
-  region: "auto",
-  forcePathStyle: true,
-  credentials: {
-    accessKeyId: process.env.FILEBASE_ACCESS_KEY || "",
-    secretAccessKey: process.env.FILEBASE_SECRET_KEY || "",
-  },
-})
+import { ListObjectsV2Command } from "@aws-sdk/client-s3"
+import { filebaseS3, FILEBASE_BUCKET } from "@/lib/filebase"
 
 // In-memory cache for audio tracks
 let cachedTracks: any[] | null = null
 let cacheTimestamp = 0
-const CACHE_TTL_MS = 5 * 60 * 1000 // 5 minutes
+const CACHE_TTL_MS = 15 * 60 * 1000 // 15 minutes
+
+const audioExtensions = [".mp3", ".wav", ".m4a", ".ogg", ".aac", ".flac"]
+
+const ROSARY_AUDIO_KEYWORDS = [
+  "apostle creed",
+  "apostles creed",
+  "conclude",
+  "fatima prayer",
+  "fatima",
+  "glory be",
+  "hail holy queen",
+  "hail mary",
+  "our father",
+  "sign of the cross",
+]
+
+export function isRosaryAudioKey(key: string): boolean {
+  const lower = key.toLowerCase()
+  return ROSARY_AUDIO_KEYWORDS.some((kw) => lower.includes(kw))
+}
 
 export async function GET(req: Request) {
   try {
@@ -28,25 +39,23 @@ export async function GET(req: Request) {
         { tracks: cachedTracks, cached: true },
         {
           headers: {
-            "Cache-Control": "public, s-maxage=300, stale-while-revalidate=3600",
+            "Cache-Control": "public, s-maxage=900, stale-while-revalidate=3600",
           },
         }
       )
     }
 
-    const bucket = process.env.FILEBASE_BUCKET || "taize-audio"
     const command = new ListObjectsV2Command({
-      Bucket: bucket,
+      Bucket: FILEBASE_BUCKET,
     })
 
-    const response = await s3.send(command)
+    const response = await filebaseS3.send(command)
     const contents = response.Contents || []
-
-    const audioExtensions = [".mp3", ".wav", ".m4a", ".ogg", ".aac", ".flac"]
 
     const tracks = contents
       .filter((item) => {
         if (!item.Key) return false
+        if (isRosaryAudioKey(item.Key)) return false
         const lower = item.Key.toLowerCase()
         return audioExtensions.some((ext) => lower.endsWith(ext))
       })
@@ -75,7 +84,7 @@ export async function GET(req: Request) {
       { tracks, cached: false },
       {
         headers: {
-          "Cache-Control": "public, s-maxage=300, stale-while-revalidate=3600",
+          "Cache-Control": "public, s-maxage=900, stale-while-revalidate=3600",
         },
       }
     )
