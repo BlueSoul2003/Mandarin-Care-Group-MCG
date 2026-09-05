@@ -1,6 +1,11 @@
 import { NextResponse } from "next/server"
 import { ListObjectsV2Command } from "@aws-sdk/client-s3"
-import { filebaseS3, FILEBASE_BUCKET } from "@/lib/filebase"
+import {
+  filebaseS3,
+  FILEBASE_BUCKET,
+  FilebaseConfigurationError,
+  getS3ErrorName,
+} from "@/lib/filebase"
 
 // In-memory cache for audio tracks
 let cachedTracks: any[] | null = null

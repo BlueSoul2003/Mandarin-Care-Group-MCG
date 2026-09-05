@@ -1,7 +1,12 @@
 import { NextRequest, NextResponse } from "next/server"
 import { GetObjectCommand } from "@aws-sdk/client-s3"
 import { Readable } from "stream"
-import { filebaseS3, FILEBASE_BUCKET } from "@/lib/filebase"
+import {
+  filebaseS3,
+  FILEBASE_BUCKET,
+  FilebaseConfigurationError,
+  getS3ErrorName,
+} from "@/lib/filebase"
 
 export async function GET(
   req: NextRequest,
