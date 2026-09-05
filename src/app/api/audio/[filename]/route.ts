@@ -66,12 +66,43 @@ export async function GET(
       status: range && s3Response.ContentRange ? 206 : 200,
       headers,
     })
-  } catch (error: any) {
-    console.error("Filebase audio error:", error)
+  } catch (error: unknown) {
+    const errorName = getS3ErrorName(error)
+    console.error("Filebase audio error:", {
+      name: errorName,
+      message: error instanceof Error ? error.message : "Unknown error",
+    })
+
+    if (error instanceof FilebaseConfigurationError) {
+      return NextResponse.json(
+        {
+          error: "Audio storage is not configured.",
+          code: "FILEBASE_CONFIGURATION_ERROR",
+        },
+        { status: 503 }
+      )
+    }
+
+    if (errorName === "NoSuchKey" || errorName === "NotFound") {
+      return NextResponse.json(
+        { error: "Audio file not found.", code: "AUDIO_NOT_FOUND" },
+        { status: 404 }
+      )
+    }
+
+    const accessDenied =
+      errorName === "AccessDenied" ||
+      errorName === "InvalidAccessKeyId" ||
+      errorName === "SignatureDoesNotMatch"
 
     return NextResponse.json(
-      { error: error?.message || "Unable to access audio file." },
-      { status: 500 }
+      {
+        error: accessDenied
+          ? "Audio storage credentials or bucket access are invalid."
+          : "Unable to access audio file.",
+        code: accessDenied ? "FILEBASE_ACCESS_DENIED" : "FILEBASE_REQUEST_FAILED",
+      },
+      { status: 502 }
     )
   }
 }

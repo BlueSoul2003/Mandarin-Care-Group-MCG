@@ -88,8 +88,24 @@ export async function GET(req: Request) {
         },
       }
     )
-  } catch (error: any) {
-    console.error("Failed to list Filebase audio tracks:", error)
+  } catch (error: unknown) {
+    const errorName = getS3ErrorName(error)
+    console.error("Failed to list Filebase audio tracks:", {
+      name: errorName,
+      message: error instanceof Error ? error.message : "Unknown error",
+    })
+
+    if (error instanceof FilebaseConfigurationError) {
+      return NextResponse.json(
+        {
+          error: "Audio storage is not configured.",
+          code: "FILEBASE_CONFIGURATION_ERROR",
+          tracks: [],
+        },
+        { status: 503 }
+      )
+    }
+
     if (cachedTracks) {
       return NextResponse.json(
         { tracks: cachedTracks, stale: true },
@@ -100,9 +116,21 @@ export async function GET(req: Request) {
         }
       )
     }
+
+    const accessDenied =
+      errorName === "AccessDenied" ||
+      errorName === "InvalidAccessKeyId" ||
+      errorName === "SignatureDoesNotMatch"
+
     return NextResponse.json(
-      { error: error?.message || "Failed to list audio tracks", tracks: [] },
-      { status: 500 }
+      {
+        error: accessDenied
+          ? "Audio storage credentials or bucket access are invalid."
+          : "Failed to load audio tracks.",
+        code: accessDenied ? "FILEBASE_ACCESS_DENIED" : "FILEBASE_REQUEST_FAILED",
+        tracks: [],
+      },
+      { status: 502 }
     )
   }
 }
