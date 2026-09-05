@@ -2,8 +2,9 @@ import { NextRequest, NextResponse } from "next/server"
 import { GetObjectCommand } from "@aws-sdk/client-s3"
 import { Readable } from "stream"
 import {
+  filebaseS3,
+  FILEBASE_BUCKET,
   FilebaseConfigurationError,
-  getFilebaseConnection,
   getS3ErrorName,
 } from "@/lib/filebase"
 
@@ -11,7 +12,7 @@ export async function GET(
   req: NextRequest,
   { params }: { params?: Promise<{ filename?: string }> } = {}
 ) {
-  try {
+  try {   
     const resolvedParams = params ? await params : undefined
     const rawFilename =
       resolvedParams?.filename ||
@@ -32,14 +33,14 @@ export async function GET(
     }
 
     const range = req.headers.get("range")
-    const { bucket, client } = getFilebaseConnection()
-    const s3Response = await client.send(
-      new GetObjectCommand({
-        Bucket: bucket,
-        Key: decodedFilename,
-        Range: range || undefined,
-      })
-    )
+
+    const command = new GetObjectCommand({
+      Bucket: FILEBASE_BUCKET,
+      Key: decodedFilename,
+      Range: range || undefined,
+    })
+
+    const s3Response = await filebaseS3.send(command)
 
     const headers = new Headers()
     headers.set("Content-Type", s3Response.ContentType || "audio/mpeg")

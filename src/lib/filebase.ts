@@ -1,5 +1,3 @@
-import "server-only"
-
 import { S3Client } from "@aws-sdk/client-s3"
 
 export class FilebaseConfigurationError extends Error {
@@ -25,19 +23,14 @@ function firstConfiguredValue(...names: string[]) {
     const value = process.env[name]?.trim()
     if (value) return value
   }
-
   return undefined
 }
 
 export function getFilebaseConnection(): FilebaseConnection {
   const accessKeyId = firstConfiguredValue("FILEBASE_ACCESS_KEY", "FILEBASE_KEY")
   const secretAccessKey = firstConfiguredValue("FILEBASE_SECRET_KEY", "FILEBASE_SECRET")
-  const bucket = firstConfiguredValue("FILEBASE_BUCKET")
-  const endpoint =
-    firstConfiguredValue("FILEBASE_ENDPOINT") || "https://s3.filebase.io"
-  const region =
-    firstConfiguredValue("FILEBASE_REGION") ||
-    (endpoint.includes("s3.filebase.com") ? "us-east-1" : "auto")
+  const bucket = firstConfiguredValue("FILEBASE_BUCKET") || "taize-audio"
+  const endpoint = firstConfiguredValue("FILEBASE_ENDPOINT") || "https://s3.filebase.io"
 
   const missingVariables: string[] = []
   if (!accessKeyId) {
@@ -46,15 +39,12 @@ export function getFilebaseConnection(): FilebaseConnection {
   if (!secretAccessKey) {
     missingVariables.push("FILEBASE_SECRET_KEY (or FILEBASE_SECRET)")
   }
-  if (!bucket) {
-    missingVariables.push("FILEBASE_BUCKET")
-  }
 
-  if (!accessKeyId || !secretAccessKey || !bucket) {
+  if (!accessKeyId || !secretAccessKey) {
     throw new FilebaseConfigurationError(missingVariables)
   }
 
-  const signature = [endpoint, region, bucket, accessKeyId, secretAccessKey].join("\n")
+  const signature = [endpoint, bucket, accessKeyId, secretAccessKey].join("\n")
   if (cachedConnection && cachedSignature === signature) {
     return cachedConnection
   }
@@ -63,7 +53,8 @@ export function getFilebaseConnection(): FilebaseConnection {
     bucket,
     client: new S3Client({
       endpoint,
-      region,
+      region: "auto",
+      forcePathStyle: true,
       credentials: {
         accessKeyId,
         secretAccessKey,
@@ -75,7 +66,7 @@ export function getFilebaseConnection(): FilebaseConnection {
   return cachedConnection
 }
 
-export function getS3ErrorName(error: unknown) {
+export function getS3ErrorName(error: unknown): string | undefined {
   if (!error || typeof error !== "object") return undefined
 
   const candidate = error as {
@@ -90,3 +81,15 @@ export function getS3ErrorName(error: unknown) {
 
   return undefined
 }
+
+export const FILEBASE_BUCKET = process.env.FILEBASE_BUCKET || "taize-audio"
+
+export const filebaseS3 = new S3Client({
+  endpoint: process.env.FILEBASE_ENDPOINT || "https://s3.filebase.io",
+  region: "auto",
+  forcePathStyle: true,
+  credentials: {
+    accessKeyId: process.env.FILEBASE_ACCESS_KEY || "",
+    secretAccessKey: process.env.FILEBASE_SECRET_KEY || "",
+  },
+})

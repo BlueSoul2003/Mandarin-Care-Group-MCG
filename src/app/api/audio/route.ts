@@ -1,15 +1,36 @@
 import { NextResponse } from "next/server"
 import { ListObjectsV2Command } from "@aws-sdk/client-s3"
 import {
+  filebaseS3,
+  FILEBASE_BUCKET,
   FilebaseConfigurationError,
-  getFilebaseConnection,
   getS3ErrorName,
 } from "@/lib/filebase"
 
 // In-memory cache for audio tracks
 let cachedTracks: any[] | null = null
 let cacheTimestamp = 0
-const CACHE_TTL_MS = 5 * 60 * 1000 // 5 minutes
+const CACHE_TTL_MS = 15 * 60 * 1000 // 15 minutes
+
+const audioExtensions = [".mp3", ".wav", ".m4a", ".ogg", ".aac", ".flac"]
+
+const ROSARY_AUDIO_KEYWORDS = [
+  "apostle creed",
+  "apostles creed",
+  "conclude",
+  "fatima prayer",
+  "fatima",
+  "glory be",
+  "hail holy queen",
+  "hail mary",
+  "our father",
+  "sign of the cross",
+]
+
+export function isRosaryAudioKey(key: string): boolean {
+  const lower = key.toLowerCase()
+  return ROSARY_AUDIO_KEYWORDS.some((kw) => lower.includes(kw))
+}
 
 export async function GET(req: Request) {
   try {
@@ -23,25 +44,23 @@ export async function GET(req: Request) {
         { tracks: cachedTracks, cached: true },
         {
           headers: {
-            "Cache-Control": "public, s-maxage=300, stale-while-revalidate=3600",
+            "Cache-Control": "public, s-maxage=900, stale-while-revalidate=3600",
           },
         }
       )
     }
 
-    const { bucket, client } = getFilebaseConnection()
-    const response = await client.send(
-      new ListObjectsV2Command({
-        Bucket: bucket,
-      })
-    )
-    const contents = response.Contents || []
+    const command = new ListObjectsV2Command({
+      Bucket: FILEBASE_BUCKET,
+    })
 
-    const audioExtensions = [".mp3", ".wav", ".m4a", ".ogg", ".aac", ".flac"]
+    const response = await filebaseS3.send(command)
+    const contents = response.Contents || []
 
     const tracks = contents
       .filter((item) => {
         if (!item.Key) return false
+        if (isRosaryAudioKey(item.Key)) return false
         const lower = item.Key.toLowerCase()
         return audioExtensions.some((ext) => lower.endsWith(ext))
       })
@@ -70,7 +89,7 @@ export async function GET(req: Request) {
       { tracks, cached: false },
       {
         headers: {
-          "Cache-Control": "public, s-maxage=300, stale-while-revalidate=3600",
+          "Cache-Control": "public, s-maxage=900, stale-while-revalidate=3600",
         },
       }
     )
