@@ -610,8 +610,103 @@ export function RosaryGuide() {
           )}
         </AnimatePresence>
 
-        {/* Audio Narration Controls Bar (English & Chinese) */}
-        <div className="relative px-6 py-3 bg-gradient-to-r from-primary/10 via-primary/5 to-transparent border-b border-border/40 flex flex-wrap items-center justify-between gap-3">
+        {/* Prayer Text Area with Slide & Swipe Animation */}
+        <div className="relative flex-1 p-6 sm:p-8 flex items-center justify-center overflow-hidden">
+          <AnimatePresence initial={false} custom={direction} mode="popLayout">
+            <motion.div
+              key={`${selectedMystery}-${currentStepIndex}`}
+              custom={direction}
+              variants={variants}
+              initial="enter"
+              animate="center"
+              exit="exit"
+              transition={{
+                x: { type: "spring", stiffness: 280, damping: 28 },
+                opacity: { duration: 0.2 },
+              }}
+              drag="x"
+              dragConstraints={{ left: 0, right: 0 }}
+              dragElastic={0.8}
+              onDragEnd={(_e, { offset, velocity }) => {
+                const swipePower = Math.abs(offset.x) * velocity.x
+                if (swipePower < -8000 || offset.x < -100) {
+                  paginate(1)
+                } else if (swipePower > 8000 || offset.x > 100) {
+                  paginate(-1)
+                }
+              }}
+              className="w-full flex flex-col items-center text-center cursor-grab active:cursor-grabbing"
+            >
+              {/* Title */}
+              <h2
+                className={`font-heading font-bold leading-snug mb-4 ${
+                  currentStep.prayerType === "mystery"
+                    ? "text-2xl sm:text-3xl md:text-4xl text-primary"
+                    : "text-xl sm:text-2xl md:text-3xl text-foreground"
+                }`}
+              >
+                {currentStep.title}
+              </h2>
+
+              {/* Description / Content */}
+              {currentStep.content && (
+                <div
+                  className={`max-w-xl leading-relaxed sm:leading-loose whitespace-pre-wrap px-2 sm:px-4 ${
+                    currentStep.prayerType === "mystery"
+                      ? "text-base sm:text-lg text-foreground/80 font-serif italic"
+                      : "text-base sm:text-lg text-foreground/90 font-serif"
+                  }`}
+                >
+                  {currentStep.content}
+                </div>
+              )}
+            </motion.div>
+          </AnimatePresence>
+        </div>
+
+        {/* Card Footer Navigation Buttons */}
+        <div className="p-4 sm:p-6 border-t border-border/40 bg-muted/20 flex items-center justify-between gap-3">
+          <button
+            onClick={() => paginate(-1)}
+            disabled={currentStepIndex === 0 && hailMaryIndex === 1}
+            className="flex items-center gap-1 px-4 py-2.5 rounded-full text-xs font-semibold bg-muted hover:bg-muted/80 text-foreground transition-all disabled:opacity-30 disabled:cursor-not-allowed border border-border/40"
+          >
+            <ChevronLeft className="w-4 h-4" />
+            <span className="hidden sm:inline">{t("prev")}</span>
+          </button>
+
+          <div className="flex items-center gap-1.5 text-xs text-muted-foreground font-medium">
+            <span>{t("stepCount", { current: currentStepIndex + 1, total: steps.length })}</span>
+          </div>
+
+          {isLastStep ? (
+            <button
+              onClick={() => {
+                setCurrentStepIndex(0)
+                setHailMaryIndex(1)
+                setDirection(-1)
+                if (isAudioPlaying) {
+                  playPrayerAudio(steps[0])
+                }
+              }}
+              className="flex items-center gap-1 px-5 py-2.5 rounded-full text-xs font-semibold bg-primary text-primary-foreground hover:opacity-90 shadow-md transition-transform hover:scale-105"
+            >
+              <RotateCcw className="w-4 h-4" />
+              <span>{t("restart")}</span>
+            </button>
+          ) : (
+            <button
+              onClick={() => paginate(1)}
+              className="flex items-center gap-1 px-5 py-2.5 rounded-full text-xs font-semibold bg-primary text-primary-foreground hover:opacity-90 shadow-md transition-transform hover:scale-105"
+            >
+              <span>{t("next")}</span>
+              <ChevronRight className="w-4 h-4" />
+            </button>
+          )}
+        </div>
+
+        {/* Audio Controls Bar (Below Previous/Next) */}
+        <div className="relative px-6 py-3 bg-gradient-to-r from-primary/10 via-primary/5 to-transparent border-t border-border/40 flex flex-wrap items-center justify-between gap-3">
           {/* Left: Play/Pause button & prayer title/progress */}
           <div className="flex items-center gap-3">
             <button
@@ -721,101 +816,6 @@ export function RosaryGuide() {
           onEnded={handleAudioEnded}
           className="hidden"
         />
-
-        {/* Prayer Text Area with Slide & Swipe Animation */}
-        <div className="relative flex-1 p-6 sm:p-8 flex items-center justify-center overflow-hidden">
-          <AnimatePresence initial={false} custom={direction} mode="popLayout">
-            <motion.div
-              key={`${selectedMystery}-${currentStepIndex}`}
-              custom={direction}
-              variants={variants}
-              initial="enter"
-              animate="center"
-              exit="exit"
-              transition={{
-                x: { type: "spring", stiffness: 280, damping: 28 },
-                opacity: { duration: 0.2 },
-              }}
-              drag="x"
-              dragConstraints={{ left: 0, right: 0 }}
-              dragElastic={0.8}
-              onDragEnd={(_e, { offset, velocity }) => {
-                const swipePower = Math.abs(offset.x) * velocity.x
-                if (swipePower < -8000 || offset.x < -100) {
-                  paginate(1)
-                } else if (swipePower > 8000 || offset.x > 100) {
-                  paginate(-1)
-                }
-              }}
-              className="w-full flex flex-col items-center text-center cursor-grab active:cursor-grabbing"
-            >
-              {/* Title */}
-              <h2
-                className={`font-heading font-bold leading-snug mb-4 ${
-                  currentStep.prayerType === "mystery"
-                    ? "text-2xl sm:text-3xl md:text-4xl text-primary"
-                    : "text-xl sm:text-2xl md:text-3xl text-foreground"
-                }`}
-              >
-                {currentStep.title}
-              </h2>
-
-              {/* Description / Content */}
-              {currentStep.content && (
-                <div
-                  className={`max-w-xl leading-relaxed sm:leading-loose whitespace-pre-wrap px-2 sm:px-4 ${
-                    currentStep.prayerType === "mystery"
-                      ? "text-base sm:text-lg text-foreground/80 font-serif italic"
-                      : "text-base sm:text-lg text-foreground/90 font-serif"
-                  }`}
-                >
-                  {currentStep.content}
-                </div>
-              )}
-            </motion.div>
-          </AnimatePresence>
-        </div>
-
-        {/* Card Footer Navigation Buttons */}
-        <div className="p-4 sm:p-6 border-t border-border/40 bg-muted/20 flex items-center justify-between gap-3">
-          <button
-            onClick={() => paginate(-1)}
-            disabled={currentStepIndex === 0 && hailMaryIndex === 1}
-            className="flex items-center gap-1 px-4 py-2.5 rounded-full text-xs font-semibold bg-muted hover:bg-muted/80 text-foreground transition-all disabled:opacity-30 disabled:cursor-not-allowed border border-border/40"
-          >
-            <ChevronLeft className="w-4 h-4" />
-            <span className="hidden sm:inline">{t("prev")}</span>
-          </button>
-
-          <div className="flex items-center gap-1.5 text-xs text-muted-foreground font-medium">
-            <span>{t("stepCount", { current: currentStepIndex + 1, total: steps.length })}</span>
-          </div>
-
-          {isLastStep ? (
-            <button
-              onClick={() => {
-                setCurrentStepIndex(0)
-                setHailMaryIndex(1)
-                setDirection(-1)
-                if (isAudioPlaying) {
-                  playPrayerAudio(steps[0])
-                }
-              }}
-              className="flex items-center gap-1 px-5 py-2.5 rounded-full text-xs font-semibold bg-primary text-primary-foreground hover:opacity-90 shadow-md transition-transform hover:scale-105"
-            >
-              <RotateCcw className="w-4 h-4" />
-              <span>{t("restart")}</span>
-            </button>
-          ) : (
-            <button
-              onClick={() => paginate(1)}
-              className="flex items-center gap-1 px-5 py-2.5 rounded-full text-xs font-semibold bg-primary text-primary-foreground hover:opacity-90 shadow-md transition-transform hover:scale-105"
-            >
-              <span>{t("next")}</span>
-              <ChevronRight className="w-4 h-4" />
-            </button>
-          )}
-        </div>
       </div>
 
       {/* Completion Banner (shows when on the final step) */}
