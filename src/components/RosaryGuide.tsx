@@ -49,7 +49,7 @@ export function RosaryGuide() {
   const [direction, setDirection] = React.useState(0) // -1 left, 1 right
   const [isJumpMenuOpen, setIsJumpMenuOpen] = React.useState(false)
   const [isMysterySelectorOpen, setIsMysterySelectorOpen] = React.useState(false)
-  const [fontSizeScale, setFontSizeScale] = React.useState<FontSizeScale>("large")
+  const [fontSizeScale, setFontSizeScale] = React.useState<FontSizeScale>("normal")
   const isLoadedRef = React.useRef(false)
 
   // Audio Playback State (for English & Chinese narration)
