@@ -157,7 +157,15 @@
     "sorrowful": "痛苦",
     "glorious": "榮福",
     "completedTitle": "玫瑰經祈禱圓滿完成",
-    "completedDesc": "願聖母瑪利亞的轉求與主耶穌的平安，時刻陪伴您。主佑平安！🙏"
+    "completedDesc": "願聖母瑪利亞的轉求與主耶穌的平安，時刻陪伴您。主佑平安！🙏",
+    "fontSize": "字體大小",
+    "decreaseFontSize": "縮小字體",
+    "increaseFontSize": "放大字體",
+    "beadProgress": "第 {current} / {total} 遍",
+    "meditating": "默想奧蹟中",
+    "skipReflection": "跳過默想",
+    "audio": "語音導引",
+    "speed": "語速"
   },
   "LoginPage": {
     "title": "歡迎回來",

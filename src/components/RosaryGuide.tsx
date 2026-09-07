@@ -1,4 +1,3 @@
-
 "use client"
 
 import * as React from "react"
@@ -8,12 +7,14 @@ import {
   ChevronRight,
   RotateCcw,
   BookOpen,
-  Layers,
   HeartHandshake,
   Play,
   Pause,
   FastForward,
   ChevronDown,
+  Type,
+  Check,
+  Sparkles,
 } from "lucide-react"
 import { useLocale, useTranslations } from "next-intl"
 import {
@@ -26,6 +27,9 @@ import {
 import { usePlayerStore } from "@/store/usePlayerStore"
 
 const STORAGE_KEY = "mcg_rosary_progress"
+const STORAGE_FONT_SIZE_KEY = "mcg_rosary_font_size"
+
+type FontSizeScale = "normal" | "large" | "xlarge"
 
 function formatAudioTime(seconds: number): string {
   if (isNaN(seconds) || seconds < 0) return "0:00"
@@ -44,6 +48,8 @@ export function RosaryGuide() {
   const [hailMaryIndex, setHailMaryIndex] = React.useState<number>(1)
   const [direction, setDirection] = React.useState(0) // -1 left, 1 right
   const [isJumpMenuOpen, setIsJumpMenuOpen] = React.useState(false)
+  const [isMysterySelectorOpen, setIsMysterySelectorOpen] = React.useState(false)
+  const [fontSizeScale, setFontSizeScale] = React.useState<FontSizeScale>("large")
   const isLoadedRef = React.useRef(false)
 
   // Audio Playback State (for English & Chinese narration)
@@ -56,7 +62,10 @@ export function RosaryGuide() {
   const [reflectionCountdown, setReflectionCountdown] = React.useState<number | null>(null)
   const reflectionTimerRef = React.useRef<NodeJS.Timeout | null>(null)
   const playbackSpeedRef = React.useRef(playbackSpeed)
-  playbackSpeedRef.current = playbackSpeed
+
+  React.useEffect(() => {
+    playbackSpeedRef.current = playbackSpeed
+  }, [playbackSpeed])
 
   // Load dynamically mapped audio files from Filebase
   React.useEffect(() => {
@@ -83,7 +92,7 @@ export function RosaryGuide() {
     }
   }, [])
 
-  // Restore saved progress from localStorage after initial client mount
+  // Restore saved progress & contemplation preference from localStorage
   React.useEffect(() => {
     const timer = setTimeout(() => {
       try {
@@ -103,6 +112,11 @@ export function RosaryGuide() {
             setHailMaryIndex(saved.hailMaryIndex)
           }
         }
+
+        const savedFontSize = localStorage.getItem(STORAGE_FONT_SIZE_KEY) as FontSizeScale | null
+        if (savedFontSize && ["normal", "large", "xlarge"].includes(savedFontSize)) {
+          setFontSizeScale(savedFontSize)
+        }
       } catch {
         // Ignore storage read errors
       } finally {
@@ -112,7 +126,7 @@ export function RosaryGuide() {
     return () => clearTimeout(timer)
   }, [])
 
-  // Persist progress to localStorage on change once loaded
+  // Persist progress to localStorage
   React.useEffect(() => {
     if (!isLoadedRef.current) return
     try {
@@ -129,6 +143,19 @@ export function RosaryGuide() {
     }
   }, [selectedMystery, currentStepIndex, hailMaryIndex])
 
+
+  // Cycle font size (normal -> large -> xlarge -> normal)
+  const cycleFontSize = () => {
+    const nextSize: FontSizeScale =
+      fontSizeScale === "normal" ? "large" : fontSizeScale === "large" ? "xlarge" : "normal"
+    setFontSizeScale(nextSize)
+    try {
+      localStorage.setItem(STORAGE_FONT_SIZE_KEY, nextSize)
+    } catch {
+      // Ignore storage errors
+    }
+  }
+
   // Generate steps based on selected mystery & locale
   const steps = React.useMemo(() => {
     return generateRosarySteps(selectedMystery, locale === "zh-TW" ? "zh-TW" : "en")
@@ -142,6 +169,7 @@ export function RosaryGuide() {
       setHailMaryIndex(1)
       setDirection(0)
       setIsJumpMenuOpen(false)
+      setIsMysterySelectorOpen(false)
     }
   }
 
@@ -168,10 +196,7 @@ export function RosaryGuide() {
         }
       } else {
         // Going Previous
-        if (
-          currentStep.prayerType === "hail-mary" &&
-          hailMaryIndex > 1
-        ) {
+        if (currentStep.prayerType === "hail-mary" && hailMaryIndex > 1) {
           setHailMaryIndex((prev) => prev - 1)
           return
         }
@@ -197,7 +222,8 @@ export function RosaryGuide() {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === "ArrowLeft") {
         paginate(-1)
-      } else if (e.key === "ArrowRight" || e.key === "Space") {
+      } else if (e.key === "ArrowRight" || e.key === " ") {
+        e.preventDefault()
         paginate(1)
       }
     }
@@ -231,23 +257,25 @@ export function RosaryGuide() {
     [selectedMystery, locale]
   )
 
+  const activeMysteryItem = mysteryTypes.find((m) => m.type === selectedMystery) || mysteryTypes[0]
+
   const variants = {
     enter: (dir: number) => ({
-      x: dir > 0 ? 240 : -240,
+      x: dir > 0 ? 120 : -120,
       opacity: 0,
-      scale: 0.98,
+      filter: "blur(4px)",
     }),
     center: {
       zIndex: 1,
       x: 0,
       opacity: 1,
-      scale: 1,
+      filter: "blur(0px)",
     },
     exit: (dir: number) => ({
       zIndex: 0,
-      x: dir < 0 ? 240 : -240,
+      x: dir < 0 ? 120 : -120,
       opacity: 0,
-      scale: 0.98,
+      filter: "blur(4px)",
     }),
   }
 
@@ -304,7 +332,10 @@ export function RosaryGuide() {
     if (!isAudioPlaying) return
     const step = steps[currentStepIndex]
     if (step) {
-      playPrayerAudio(step)
+      const timer = setTimeout(() => {
+        playPrayerAudio(step)
+      }, 0)
+      return () => clearTimeout(timer)
     }
   }, [currentStepIndex, selectedMystery, isAudioPlaying, playPrayerAudio, steps])
 
@@ -380,9 +411,10 @@ export function RosaryGuide() {
 
   // Cleanup timers on unmount
   React.useEffect(() => {
+    const currentAudio = audioRef.current
     return () => {
-      if (audioRef.current) {
-        audioRef.current.pause()
+      if (currentAudio) {
+        currentAudio.pause()
       }
       if (reflectionTimerRef.current) {
         clearInterval(reflectionTimerRef.current)
@@ -390,181 +422,124 @@ export function RosaryGuide() {
     }
   }, [])
 
+  // Font size styling mappings
+  const prayerTextSizeClass =
+    fontSizeScale === "normal"
+      ? "text-base sm:text-lg leading-relaxed"
+      : fontSizeScale === "large"
+      ? "text-lg sm:text-xl md:text-2xl leading-relaxed sm:leading-loose"
+      : "text-xl sm:text-2xl md:text-3xl leading-loose"
+
   return (
-    <div className="w-full max-w-2xl mx-auto flex flex-col items-center gap-6">
-      {/* 1. Mystery Selection Tabs */}
-      <div className="w-full bg-card/80 backdrop-blur-md rounded-2xl border border-border/60 p-2 shadow-sm">
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5">
-          {mysteryTypes.map((item) => {
-            const isSelected = selectedMystery === item.type
-            const isToday = todaysMystery === item.type
-            return (
-              <button
-                key={item.type}
-                onClick={() => handleSelectMystery(item.type)}
-                className={`relative flex flex-col items-center justify-center py-2.5 px-3 rounded-xl text-xs font-semibold transition-all duration-200 ${
-                  isSelected
-                    ? "bg-primary text-primary-foreground shadow-md"
-                    : "hover:bg-muted/70 text-muted-foreground hover:text-foreground"
-                }`}
-              >
-                <div className="flex items-center gap-1.5">
-                  <span>{item.label}</span>
-                  {isToday && (
-                    <span
-                      className={`text-[10px] px-1.5 py-0.5 rounded-full font-bold uppercase ${
-                        isSelected
-                          ? "bg-white/20 text-white"
-                          : "bg-primary/15 text-primary"
-                      }`}
-                    >
-                      {t("today")}
-                    </span>
-                  )}
-                </div>
-                <span
-                  className={`text-[10px] mt-0.5 font-normal ${
-                    isSelected ? "text-primary-foreground/80" : "text-muted-foreground/70"
-                  }`}
-                >
-                  {locale === "zh-TW" ? item.daysZh : item.daysEn}
+    <div className="relative w-full max-w-2xl mx-auto flex flex-col items-center gap-6 transition-all duration-500">
+      {/* Sacred Halo Ambient Glow behind the altar card */}
+      <div className="absolute -inset-1 sm:-inset-2 rounded-[2.5rem] bg-gradient-to-b from-primary/20 via-primary/10 to-transparent blur-3xl pointer-events-none opacity-50 dark:opacity-60 transition-opacity duration-700" />
+
+      {/* 1. Main Unified Altar Prayer Card */}
+      <div className="relative w-full rounded-[2rem] border border-border/70 shadow-xl bg-card/90 backdrop-blur-md transition-all duration-500 overflow-hidden flex flex-col">
+        {/* Top Sanctuary Header Ribbon */}
+        <div className="pt-4 px-5 sm:px-7 pb-3 border-b border-border/50 flex items-center justify-between gap-2 bg-muted/15">
+          {/* Left: Mystery Badge / Selector trigger */}
+          <div className="relative">
+            <button
+              onClick={() => setIsMysterySelectorOpen(!isMysterySelectorOpen)}
+              className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/10 hover:bg-primary/15 text-primary border border-primary/20 transition-all text-xs font-semibold group cursor-pointer"
+              title={t("selectMystery")}
+            >
+              <Sparkles className="w-3.5 h-3.5 text-primary animate-pulse" />
+              <span>{activeMysteryItem.label}</span>
+              {todaysMystery === activeMysteryItem.type && (
+                <span className="text-[10px] px-1.5 py-0.2 rounded-full font-bold bg-primary text-primary-foreground">
+                  {t("today")}
                 </span>
-              </button>
-            )
-          })}
-        </div>
-      </div>
-
-      {/* 2. Decade Navigation & Bead Indicator */}
-      <div className="w-full bg-card/60 backdrop-blur-md rounded-2xl border border-border/50 p-4 shadow-sm flex flex-col gap-3">
-        {/* Section / Decade Jump Pills */}
-        <div className="flex items-center justify-between gap-1 overflow-x-auto pb-1 scrollbar-none">
-          {decadePillLabels.map((label, dIdx) => {
-            const isActiveDecade = currentStep.decadeIndex === dIdx
-            const isPastDecade = currentStep.decadeIndex > dIdx
-            return (
-              <button
-                key={dIdx}
-                onClick={() => jumpToDecade(dIdx)}
-                className={`px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-all duration-200 flex items-center gap-1 ${
-                  isActiveDecade
-                    ? "bg-primary text-primary-foreground shadow-xs font-bold scale-105"
-                    : isPastDecade
-                    ? "bg-primary/10 text-primary hover:bg-primary/20"
-                    : "bg-muted/50 text-muted-foreground hover:bg-muted"
+              )}
+              <ChevronDown
+                className={`w-3 h-3 text-primary transition-transform duration-200 ${
+                  isMysterySelectorOpen ? "rotate-180" : ""
                 }`}
-              >
-                {label}
-              </button>
-            )
-          })}
-        </div>
+              />
+            </button>
 
-        {/* 10-Bead Progress Indicator for Hail Marys */}
-        {currentStep.prayerType === "hail-mary" && currentStep.totalHailMarys === 10 && (
-          <div className="pt-2 border-t border-border/40 flex flex-col items-center gap-2">
-            <div className="flex items-center justify-between w-full text-xs text-muted-foreground px-1">
-              <span className="font-semibold text-primary">
-                {locale === "zh-TW"
-                  ? `聖母經（第 ${hailMaryIndex} 遍 / 共 10 遍）`
-                  : `Hail Mary (${hailMaryIndex} of 10)`}
-              </span>
-              <span className="text-xs font-mono font-bold text-foreground">
-                {hailMaryIndex} / 10
-              </span>
-            </div>
-
-            <div className="flex items-center justify-between w-full gap-1.5 sm:gap-2 px-1">
-              {Array.from({ length: 10 }).map((_, i) => {
-                const beadNumber = i + 1
-                const isCurrent = hailMaryIndex === beadNumber
-                const isPassed = hailMaryIndex > beadNumber
-
-                return (
-                  <button
-                    key={i}
-                    onClick={() => handleSelectBead(beadNumber)}
-                    className={`relative flex-1 h-3.5 sm:h-4 rounded-full transition-all duration-300 flex items-center justify-center ${
-                      isCurrent
-                        ? "bg-primary shadow-md shadow-primary/40 ring-2 ring-primary/50 scale-110"
-                        : isPassed
-                        ? "bg-primary/45 hover:bg-primary/60"
-                        : "bg-muted/80 dark:bg-muted/50 hover:bg-muted"
-                    }`}
-                    title={`${beadNumber} / 10`}
-                  />
-                )
-              })}
-            </div>
-          </div>
-        )}
-
-        {/* 3-Bead Indicator for Introductory Hail Marys */}
-        {currentStep.prayerType === "hail-mary" && currentStep.totalHailMarys === 3 && (
-          <div className="pt-2 border-t border-border/40 flex flex-col items-center gap-2">
-            <div className="flex items-center justify-between w-full text-xs text-muted-foreground px-1">
-              <span className="font-semibold text-primary">
-                {locale === "zh-TW"
-                  ? `聖母經（第 ${hailMaryIndex} 遍 / 共 3 遍）`
-                  : `Hail Mary (${hailMaryIndex} of 3)`}
-              </span>
-              <span className="text-xs font-mono font-bold text-foreground">
-                {hailMaryIndex} / 3
-              </span>
-            </div>
-
-            <div className="flex items-center justify-center gap-4 w-full px-1">
-              {Array.from({ length: 3 }).map((_, i) => {
-                const beadNumber = i + 1
-                const isCurrent = hailMaryIndex === beadNumber
-                const isPassed = hailMaryIndex > beadNumber
-
-                return (
-                  <button
-                    key={i}
-                    onClick={() => handleSelectBead(beadNumber)}
-                    className={`w-12 h-3.5 sm:h-4 rounded-full transition-all duration-300 ${
-                      isCurrent
-                        ? "bg-primary shadow-md shadow-primary/40 ring-2 ring-primary/50 scale-110"
-                        : isPassed
-                        ? "bg-primary/45 hover:bg-primary/60"
-                        : "bg-muted/80 dark:bg-muted/50 hover:bg-muted"
-                    }`}
-                    title={`${beadNumber} / 3`}
-                  />
-                )
-              })}
-            </div>
-          </div>
-        )}
-      </div>
-
-      {/* 3. Main Prayer Interactive Card */}
-      <div className="relative w-full bg-card rounded-3xl shadow-xl border border-border/60 overflow-hidden flex flex-col min-h-[460px] md:min-h-[480px]">
-        {/* Card Header with Location Badge & Quick Menu */}
-        <div className="pt-6 px-6 sm:px-8 pb-3 border-b border-border/40 flex items-center justify-between gap-2 bg-muted/20">
-          <div className="flex flex-col">
-            <span className="text-[11px] font-semibold uppercase tracking-wider text-primary flex items-center gap-1">
-              <Layers className="w-3.5 h-3.5" />
-              {currentStep.sectionTitle}
-            </span>
-            <span className="text-xs font-bold text-foreground mt-0.5">
-              {currentStep.prayerType === "hail-mary" && currentStep.totalHailMarys
-                ? `${currentStep.title} (${hailMaryIndex}/${currentStep.totalHailMarys})`
-                : currentStep.title}
-            </span>
+            {/* Collapsible Mystery Switcher Dropdown */}
+            <AnimatePresence>
+              {isMysterySelectorOpen && (
+                <motion.div
+                  initial={{ opacity: 0, y: 6, scale: 0.95 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: 6, scale: 0.95 }}
+                  className="absolute left-0 top-full mt-2 w-72 sm:w-80 bg-popover/95 backdrop-blur-xl border border-border/80 rounded-2xl shadow-2xl p-2 z-50 flex flex-col gap-1"
+                >
+                  <div className="px-3 py-1.5 text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
+                    {t("selectMystery")}
+                  </div>
+                  {mysteryTypes.map((item) => {
+                    const isSelected = selectedMystery === item.type
+                    const isToday = todaysMystery === item.type
+                    return (
+                      <button
+                        key={item.type}
+                        onClick={() => handleSelectMystery(item.type)}
+                        className={`w-full flex items-center justify-between p-2.5 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
+                          isSelected
+                            ? "bg-primary text-primary-foreground shadow-sm"
+                            : "hover:bg-muted/70 text-foreground"
+                        }`}
+                      >
+                        <div className="flex items-center gap-2">
+                          <span>{item.label}</span>
+                          {isToday && (
+                            <span
+                              className={`text-[10px] px-1.5 py-0.5 rounded-full font-bold uppercase ${
+                                isSelected
+                                  ? "bg-white/20 text-white"
+                                  : "bg-primary/15 text-primary"
+                              }`}
+                            >
+                              {t("today")}
+                            </span>
+                          )}
+                        </div>
+                        <span
+                          className={`text-[10px] font-normal ${
+                            isSelected ? "text-primary-foreground/85" : "text-muted-foreground"
+                          }`}
+                        >
+                          {locale === "zh-TW" ? item.daysZh : item.daysEn}
+                        </span>
+                      </button>
+                    )
+                  })}
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
 
-          <div className="flex items-center gap-2">
+          {/* Right Action Tools: Font Size, Quick Jump, Step Counter */}
+          <div className="flex items-center gap-1.5 sm:gap-2">
+            {/* Font Size Toggle */}
+            <button
+              onClick={cycleFontSize}
+              className="px-2.5 py-1.5 rounded-full text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-muted/70 transition-colors flex items-center gap-1 border border-border/40 cursor-pointer"
+              title={`${t("fontSize")}: ${fontSizeScale}`}
+            >
+              <Type className="w-3.5 h-3.5" />
+              <span className="text-[10px] font-mono uppercase font-bold">
+                {fontSizeScale === "normal" ? "A" : fontSizeScale === "large" ? "A+" : "A++"}
+              </span>
+            </button>
+
+            {/* Quick Jump Drawer Toggle */}
             <button
               onClick={() => setIsJumpMenuOpen(!isJumpMenuOpen)}
-              className="px-2.5 py-1 rounded-lg text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-colors flex items-center gap-1 border border-border/40"
+              className="px-2.5 py-1.5 rounded-full text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-muted/70 transition-colors flex items-center gap-1 border border-border/40 cursor-pointer"
               title={t("jumpToSection")}
             >
               <BookOpen className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline">{t("jumpToSection")}</span>
+              <span className="hidden md:inline">{t("jumpToSection")}</span>
             </button>
-            <span className="text-xs font-mono font-medium text-muted-foreground bg-muted/60 px-2 py-0.5 rounded-md">
+
+            {/* Step Counter */}
+            <span className="text-[11px] font-mono text-muted-foreground/80 bg-muted/60 px-2 py-1 rounded-full">
               {currentStepIndex + 1}/{steps.length}
             </span>
           </div>
@@ -595,9 +570,9 @@ export function RosaryGuide() {
                       <button
                         key={s.id}
                         onClick={() => jumpToStep(s.id)}
-                        className={`text-left p-2.5 rounded-lg transition-colors truncate ${
+                        className={`text-left p-2.5 rounded-xl transition-colors truncate cursor-pointer ${
                           currentStepIndex === s.id
-                            ? "bg-primary text-primary-foreground font-semibold"
+                            ? "bg-primary text-primary-foreground font-semibold shadow-xs"
                             : "hover:bg-card text-foreground"
                         }`}
                       >
@@ -610,36 +585,166 @@ export function RosaryGuide() {
           )}
         </AnimatePresence>
 
-        {/* Prayer Text Area with Slide & Swipe Animation */}
-        <div className="relative flex-1 p-6 sm:p-8 flex items-center justify-center overflow-hidden">
+        {/* Decade Navigation Pills */}
+        <div className="px-5 sm:px-7 py-2.5 border-b border-border/40 bg-card/40 flex items-center gap-1 overflow-x-auto scrollbar-none">
+          {decadePillLabels.map((label, dIdx) => {
+            const isActiveDecade = currentStep.decadeIndex === dIdx
+            const isPastDecade = currentStep.decadeIndex > dIdx
+            return (
+              <button
+                key={dIdx}
+                onClick={() => jumpToDecade(dIdx)}
+                className={`px-3 py-1 rounded-lg text-xs font-semibold whitespace-nowrap transition-all duration-200 flex items-center gap-1 cursor-pointer ${
+                  isActiveDecade
+                    ? "bg-primary text-primary-foreground shadow-xs font-bold scale-102"
+                    : isPastDecade
+                    ? "bg-primary/10 text-primary hover:bg-primary/20"
+                    : "bg-muted/40 text-muted-foreground hover:bg-muted/70"
+                }`}
+              >
+                {label}
+              </button>
+            )
+          })}
+        </div>
+
+        {/* 2. Luminous Rosary Bead Strand (Hail Mary Beads) */}
+        {currentStep.prayerType === "hail-mary" && (
+          <div className="pt-5 px-6 sm:px-8 pb-3 flex flex-col items-center gap-3 border-b border-border/30 bg-muted/5">
+            {/* Bead Counter & Spiritual Context */}
+            <div className="flex items-center justify-between w-full text-xs text-muted-foreground">
+              <span className="font-semibold text-primary flex items-center gap-1.5">
+                <span className="w-2 h-2 rounded-full bg-primary animate-ping" />
+                {currentStep.totalHailMarys === 10
+                  ? locale === "zh-TW"
+                    ? `第 ${hailMaryIndex} 遍 · 共 10 遍`
+                    : `Bead ${hailMaryIndex} of 10`
+                  : locale === "zh-TW"
+                  ? `序禱第 ${hailMaryIndex} 遍 · 共 3 遍`
+                  : `Introductory Bead ${hailMaryIndex} of 3`}
+              </span>
+              <span className="text-[11px] font-mono text-muted-foreground/70">
+                {hailMaryIndex} / {currentStep.totalHailMarys}
+              </span>
+            </div>
+
+            {/* Liturgical Rosary Bead Strand */}
+            <div className="relative w-full flex items-center justify-center py-2">
+              {/* Golden Rosary Chain Line */}
+              <div className="absolute left-4 right-4 top-1/2 -translate-y-1/2 h-[2px] bg-gradient-to-r from-primary/10 via-primary/30 to-primary/10 pointer-events-none" />
+
+              {/* 10 Decade Beads */}
+              {currentStep.totalHailMarys === 10 && (
+                <div className="relative w-full flex items-center justify-between gap-1 sm:gap-2 z-10 px-1">
+                  {Array.from({ length: 10 }).map((_, i) => {
+                    const beadNumber = i + 1
+                    const isCurrent = hailMaryIndex === beadNumber
+                    const isPassed = hailMaryIndex > beadNumber
+
+                    return (
+                      <button
+                        key={i}
+                        onClick={() => handleSelectBead(beadNumber)}
+                        className={`relative rounded-full transition-all duration-300 flex items-center justify-center cursor-pointer ${
+                          isCurrent
+                            ? "w-8 h-8 sm:w-9 sm:h-9 bg-primary text-primary-foreground shadow-lg shadow-primary/40 ring-4 ring-primary/25 scale-110 font-bold text-xs"
+                            : isPassed
+                            ? "w-6 h-6 sm:w-7 sm:h-7 bg-primary/75 hover:bg-primary text-primary-foreground font-semibold text-[10px] shadow-xs"
+                            : "w-6 h-6 sm:w-7 sm:h-7 bg-card hover:bg-muted border border-primary/30 text-muted-foreground font-normal text-[10px]"
+                        }`}
+                        title={`${t("beadProgress", { current: beadNumber, total: 10 })}`}
+                      >
+                        {isPassed ? <Check className="w-3 h-3 stroke-[3]" /> : beadNumber}
+                      </button>
+                    )
+                  })}
+                </div>
+              )}
+
+              {/* 3 Introductory Beads */}
+              {currentStep.totalHailMarys === 3 && (
+                <div className="relative flex items-center justify-center gap-6 sm:gap-8 z-10">
+                  {Array.from({ length: 3 }).map((_, i) => {
+                    const beadNumber = i + 1
+                    const isCurrent = hailMaryIndex === beadNumber
+                    const isPassed = hailMaryIndex > beadNumber
+
+                    return (
+                      <button
+                        key={i}
+                        onClick={() => handleSelectBead(beadNumber)}
+                        className={`relative rounded-full transition-all duration-300 flex items-center justify-center cursor-pointer ${
+                          isCurrent
+                            ? "w-10 h-10 bg-primary text-primary-foreground shadow-lg shadow-primary/40 ring-4 ring-primary/25 scale-115 font-bold text-sm"
+                            : isPassed
+                            ? "w-8 h-8 bg-primary/75 hover:bg-primary text-primary-foreground font-semibold text-xs shadow-xs"
+                            : "w-8 h-8 bg-card hover:bg-muted border border-primary/30 text-muted-foreground font-normal text-xs"
+                        }`}
+                        title={`${t("beadProgress", { current: beadNumber, total: 3 })}`}
+                      >
+                        {isPassed ? <Check className="w-3.5 h-3.5 stroke-[3]" /> : beadNumber}
+                      </button>
+                    )
+                  })}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* 3. Sacred Prayer Reading Sanctuary Canvas */}
+        <div
+          onClick={() => paginate(1)}
+          className="relative flex-1 p-6 sm:p-10 flex flex-col items-center justify-center overflow-hidden min-h-[380px] sm:min-h-[420px] select-none cursor-pointer transition-all duration-500"
+        >
+          {/* Subtle Liturgical Cross Watermark Emblem */}
+          <div className="mb-4 text-primary/35 flex flex-col items-center pointer-events-none">
+            <svg
+              className="w-7 h-7 stroke-current"
+              viewBox="0 0 24 24"
+              fill="none"
+              strokeWidth="1.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <line x1="12" y1="3" x2="12" y2="21" />
+              <line x1="6" y1="8" x2="18" y2="8" />
+            </svg>
+          </div>
+
           <AnimatePresence initial={false} custom={direction} mode="popLayout">
             <motion.div
-              key={`${selectedMystery}-${currentStepIndex}`}
+              key={`${selectedMystery}-${currentStepIndex}-${hailMaryIndex}`}
               custom={direction}
               variants={variants}
               initial="enter"
               animate="center"
               exit="exit"
               transition={{
-                x: { type: "spring", stiffness: 280, damping: 28 },
-                opacity: { duration: 0.2 },
+                x: { type: "spring", stiffness: 300, damping: 30 },
+                opacity: { duration: 0.25 },
               }}
               drag="x"
               dragConstraints={{ left: 0, right: 0 }}
               dragElastic={0.8}
               onDragEnd={(_e, { offset, velocity }) => {
                 const swipePower = Math.abs(offset.x) * velocity.x
-                if (swipePower < -8000 || offset.x < -100) {
+                if (swipePower < -6000 || offset.x < -80) {
                   paginate(1)
-                } else if (swipePower > 8000 || offset.x > 100) {
+                } else if (swipePower > 6000 || offset.x > 80) {
                   paginate(-1)
                 }
               }}
-              className="w-full flex flex-col items-center text-center cursor-grab active:cursor-grabbing"
+              className="w-full flex flex-col items-center text-center max-w-xl mx-auto"
             >
-              {/* Title */}
+              {/* Section Subtitle (Decade / Intro) */}
+              <span className="text-[11px] sm:text-xs font-semibold uppercase tracking-widest text-primary/80 mb-2">
+                {currentStep.sectionTitle}
+              </span>
+
+              {/* Prayer Title */}
               <h2
-                className={`font-heading font-bold leading-snug mb-4 ${
+                className={`font-serif font-bold tracking-tight leading-snug mb-5 ${
                   currentStep.prayerType === "mystery"
                     ? "text-2xl sm:text-3xl md:text-4xl text-primary"
                     : "text-xl sm:text-2xl md:text-3xl text-foreground"
@@ -648,13 +753,13 @@ export function RosaryGuide() {
                 {currentStep.title}
               </h2>
 
-              {/* Description / Content */}
+              {/* Prayer or Mystery Reflection Text */}
               {currentStep.content && (
                 <div
-                  className={`max-w-xl leading-relaxed sm:leading-loose whitespace-pre-wrap px-2 sm:px-4 ${
+                  className={`w-full whitespace-pre-wrap px-2 sm:px-4 font-serif text-foreground/90 transition-all duration-300 ${prayerTextSizeClass} ${
                     currentStep.prayerType === "mystery"
-                      ? "text-base sm:text-lg text-foreground/80 font-serif italic"
-                      : "text-base sm:text-lg text-foreground/90 font-serif"
+                      ? "italic text-foreground/80 bg-primary/5 rounded-2xl p-5 sm:p-6 border border-primary/20 shadow-xs"
+                      : ""
                   }`}
                 >
                   {currentStep.content}
@@ -664,59 +769,29 @@ export function RosaryGuide() {
           </AnimatePresence>
         </div>
 
-        {/* Card Footer Navigation Buttons */}
-        <div className="p-4 sm:p-6 border-t border-border/40 bg-muted/20 flex items-center justify-between gap-3">
-          <button
-            onClick={() => paginate(-1)}
-            disabled={currentStepIndex === 0 && hailMaryIndex === 1}
-            className="flex items-center gap-1 px-4 py-2.5 rounded-full text-xs font-semibold bg-muted hover:bg-muted/80 text-foreground transition-all disabled:opacity-30 disabled:cursor-not-allowed border border-border/40"
-          >
-            <ChevronLeft className="w-4 h-4" />
-            <span className="hidden sm:inline">{t("prev")}</span>
-          </button>
-
-          <div className="flex items-center gap-1.5 text-xs text-muted-foreground font-medium">
-            <span>{t("stepCount", { current: currentStepIndex + 1, total: steps.length })}</span>
-          </div>
-
-          {isLastStep ? (
-            <button
-              onClick={() => {
-                setCurrentStepIndex(0)
-                setHailMaryIndex(1)
-                setDirection(-1)
-                if (isAudioPlaying) {
-                  playPrayerAudio(steps[0])
-                }
-              }}
-              className="flex items-center gap-1 px-5 py-2.5 rounded-full text-xs font-semibold bg-primary text-primary-foreground hover:opacity-90 shadow-md transition-transform hover:scale-105"
-            >
-              <RotateCcw className="w-4 h-4" />
-              <span>{t("restart")}</span>
-            </button>
-          ) : (
-            <button
-              onClick={() => paginate(1)}
-              className="flex items-center gap-1 px-5 py-2.5 rounded-full text-xs font-semibold bg-primary text-primary-foreground hover:opacity-90 shadow-md transition-transform hover:scale-105"
-            >
-              <span>{t("next")}</span>
-              <ChevronRight className="w-4 h-4" />
-            </button>
-          )}
-        </div>
-
-        {/* Audio Controls Bar (Below Previous/Next) */}
-        <div className="relative px-6 py-3 bg-gradient-to-r from-primary/10 via-primary/5 to-transparent border-t border-border/40 flex flex-wrap items-center justify-between gap-3">
-          {/* Left: Play/Pause button & prayer title/progress */}
+        {/* 4. Serene Audio Contemplation Pill */}
+        <div className="relative px-6 py-2.5 bg-muted/25 border-t border-border/40 flex flex-wrap items-center justify-between gap-3">
+          {/* Audio Player Controls */}
           <div className="flex items-center gap-3">
             <button
-              onClick={toggleAudioPlay}
-              className={`relative w-10 h-10 rounded-full flex items-center justify-center transition-all duration-300 shadow-md ${
+              onClick={(e) => {
+                e.stopPropagation()
+                toggleAudioPlay()
+              }}
+              className={`w-9 h-9 rounded-full flex items-center justify-center transition-all duration-300 cursor-pointer shadow-sm ${
                 isAudioPlaying
                   ? "bg-primary text-primary-foreground shadow-primary/30 ring-4 ring-primary/20 scale-105"
-                  : "bg-primary text-primary-foreground hover:opacity-90 hover:scale-105"
+                  : "bg-primary/90 text-primary-foreground hover:bg-primary hover:scale-105"
               }`}
-              title={isAudioPlaying ? (locale === "zh-TW" ? "暫停語音" : "Pause Audio") : (locale === "zh-TW" ? "播放語音" : "Play Audio")}
+              title={
+                isAudioPlaying
+                  ? locale === "zh-TW"
+                    ? "暫停語音"
+                    : "Pause Audio"
+                  : locale === "zh-TW"
+                  ? "播放語音"
+                  : "Play Audio"
+              }
             >
               {isAudioPlaying ? (
                 <Pause className="w-4 h-4 fill-current" />
@@ -725,18 +800,14 @@ export function RosaryGuide() {
               )}
             </button>
 
-            <div className="flex flex-col">
+            <div className="flex flex-col text-left">
               <div className="flex items-center gap-1.5">
-                <span className="text-xs font-bold text-foreground">
+                <span className="text-xs font-semibold text-foreground">
                   {reflectionCountdown !== null
-                    ? locale === "zh-TW"
-                      ? "默想奧蹟中"
-                      : "Reflecting on Mystery"
+                    ? t("meditating")
                     : isAudioPlaying
                     ? currentStep.title
-                    : locale === "zh-TW"
-                    ? "語音"
-                    : "Audio"}
+                    : t("audio")}
                 </span>
                 {isAudioPlaying && reflectionCountdown === null && (
                   <span className="inline-flex items-center gap-0.5 ml-1">
@@ -747,10 +818,10 @@ export function RosaryGuide() {
                 )}
               </div>
               {(reflectionCountdown !== null || isAudioPlaying) && (
-                <span className="text-[11px] text-muted-foreground">
+                <span className="text-[10px] text-muted-foreground font-mono">
                   {reflectionCountdown !== null
                     ? locale === "zh-TW"
-                      ? `${reflectionCountdown} 秒後繼續...`
+                      ? `${reflectionCountdown} 秒後自動繼續...`
                       : `Continuing in ${reflectionCountdown}s...`
                     : `${formatAudioTime(currentTime)} / ${formatAudioTime(duration)}`}
                 </span>
@@ -758,23 +829,27 @@ export function RosaryGuide() {
             </div>
           </div>
 
-          {/* Right: Actions (Skip reflection if counting down, or Speed control) */}
+          {/* Right Action: Skip Reflection or Adjust Speed */}
           <div className="flex items-center gap-2">
             {reflectionCountdown !== null ? (
               <button
-                onClick={skipReflection}
-                className="flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-semibold bg-primary text-primary-foreground hover:opacity-90 shadow-sm transition-all hover:scale-105"
+                onClick={(e) => {
+                  e.stopPropagation()
+                  skipReflection()
+                }}
+                className="flex items-center gap-1 px-3 py-1 rounded-full text-xs font-semibold bg-primary text-primary-foreground hover:opacity-90 shadow-sm transition-all hover:scale-105 cursor-pointer"
               >
-                <span>{locale === "zh-TW" ? "跳過" : "Skip"}</span>
-                <FastForward className="w-3.5 h-3.5" />
+                <span>{t("skipReflection")}</span>
+                <FastForward className="w-3 h-3" />
               </button>
             ) : (
               <div className="relative inline-flex items-center">
                 <select
                   value={playbackSpeed}
+                  onClick={(e) => e.stopPropagation()}
                   onChange={(e) => handleSpeedChange(Number(e.target.value))}
-                  className="appearance-none bg-card hover:bg-muted/80 text-foreground font-mono font-bold text-xs pl-2.5 pr-7 py-1 rounded-full border border-border/60 shadow-xs cursor-pointer focus:outline-hidden focus:ring-2 focus:ring-primary/40 transition-colors"
-                  title={locale === "zh-TW" ? "播放速度" : "Playback Speed"}
+                  className="appearance-none bg-card hover:bg-muted/80 text-foreground font-mono font-semibold text-[11px] pl-2.5 pr-6 py-1 rounded-full border border-border/60 shadow-2xs cursor-pointer focus:outline-hidden focus:ring-1 focus:ring-primary/40 transition-colors"
+                  title={t("speed")}
                 >
                   <option value={0.75}>0.75x</option>
                   <option value={1}>1.0x</option>
@@ -783,12 +858,12 @@ export function RosaryGuide() {
                   <option value={1.75}>1.75x</option>
                   <option value={2}>2.0x</option>
                 </select>
-                <ChevronDown className="w-3.5 h-3.5 text-muted-foreground pointer-events-none absolute right-2" />
+                <ChevronDown className="w-3 h-3 text-muted-foreground pointer-events-none absolute right-1.5" />
               </div>
             )}
           </div>
 
-          {/* Audio Track Progress Indicator Line */}
+          {/* Audio Track Progress Thin Line */}
           {isAudioPlaying && reflectionCountdown === null && duration > 0 && (
             <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-border/40 overflow-hidden">
               <div
@@ -796,6 +871,63 @@ export function RosaryGuide() {
                 style={{ width: `${Math.min(100, (currentTime / duration) * 100)}%` }}
               />
             </div>
+          )}
+        </div>
+
+        {/* 5. Altar Footer Navigation Controls */}
+        <div className="p-4 sm:p-5 border-t border-border/40 bg-card/70 flex items-center justify-between gap-3">
+          <button
+            onClick={(e) => {
+              e.stopPropagation()
+              paginate(-1)
+            }}
+            disabled={currentStepIndex === 0 && hailMaryIndex === 1}
+            className="flex items-center gap-1.5 px-4 sm:px-5 py-2 rounded-full text-xs font-semibold bg-muted/60 hover:bg-muted text-foreground transition-all disabled:opacity-25 disabled:cursor-not-allowed border border-border/40 cursor-pointer"
+          >
+            <ChevronLeft className="w-4 h-4" />
+            <span>{t("prev")}</span>
+          </button>
+
+          {/* Subtle Keyboard Navigation Tip */}
+          <div className="hidden sm:flex items-center gap-1.5 text-[11px] text-muted-foreground/60 font-mono">
+            <kbd className="px-1.5 py-0.5 rounded bg-muted/70 border border-border/40 text-[10px]">
+              ←
+            </kbd>
+            <kbd className="px-1.5 py-0.5 rounded bg-muted/70 border border-border/40 text-[10px]">
+              Space
+            </kbd>
+            <kbd className="px-1.5 py-0.5 rounded bg-muted/70 border border-border/40 text-[10px]">
+              →
+            </kbd>
+          </div>
+
+          {isLastStep ? (
+            <button
+              onClick={(e) => {
+                e.stopPropagation()
+                setCurrentStepIndex(0)
+                setHailMaryIndex(1)
+                setDirection(-1)
+                if (isAudioPlaying) {
+                  playPrayerAudio(steps[0])
+                }
+              }}
+              className="flex items-center gap-1.5 px-5 sm:px-6 py-2 rounded-full text-xs font-semibold bg-primary text-primary-foreground hover:opacity-95 shadow-md shadow-primary/20 transition-all hover:scale-102 cursor-pointer"
+            >
+              <RotateCcw className="w-4 h-4" />
+              <span>{t("restart")}</span>
+            </button>
+          ) : (
+            <button
+              onClick={(e) => {
+                e.stopPropagation()
+                paginate(1)
+              }}
+              className="flex items-center gap-1.5 px-5 sm:px-6 py-2 rounded-full text-xs font-semibold bg-primary text-primary-foreground hover:opacity-95 shadow-md shadow-primary/20 transition-all hover:scale-102 cursor-pointer"
+            >
+              <span>{t("next")}</span>
+              <ChevronRight className="w-4 h-4" />
+            </button>
           )}
         </div>
 
@@ -818,18 +950,20 @@ export function RosaryGuide() {
         />
       </div>
 
-      {/* Completion Banner (shows when on the final step) */}
+      {/* Completion Banner (shown on final step) */}
       {isLastStep && (
         <motion.div
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
-          className="w-full bg-emerald-500/10 border border-emerald-500/20 rounded-2xl p-5 text-center flex flex-col items-center gap-2"
+          className="w-full bg-emerald-500/10 border border-emerald-500/30 rounded-3xl p-6 text-center flex flex-col items-center gap-2 shadow-lg"
         >
-          <div className="w-10 h-10 rounded-full bg-emerald-500/20 text-emerald-500 flex items-center justify-center">
-            <HeartHandshake className="w-5 h-5" />
+          <div className="w-12 h-12 rounded-full bg-emerald-500/20 text-emerald-500 flex items-center justify-center">
+            <HeartHandshake className="w-6 h-6" />
           </div>
-          <h3 className="text-base font-bold text-foreground">{t("completedTitle")}</h3>
-          <p className="text-xs text-muted-foreground max-w-md">{t("completedDesc")}</p>
+          <h3 className="text-lg font-serif font-bold text-foreground">{t("completedTitle")}</h3>
+          <p className="text-xs sm:text-sm text-muted-foreground max-w-md leading-relaxed">
+            {t("completedDesc")}
+          </p>
         </motion.div>
       )}
     </div>

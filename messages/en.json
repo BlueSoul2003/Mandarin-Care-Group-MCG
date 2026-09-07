@@ -157,7 +157,15 @@
     "sorrowful": "Sorrowful",
     "glorious": "Glorious",
     "completedTitle": "Rosary Completed",
-    "completedDesc": "May Our Lady's intercession and God's peace be with you throughout your day. God bless! 🙏"
+    "completedDesc": "May Our Lady's intercession and God's peace be with you throughout your day. God bless! 🙏",
+    "fontSize": "Text Size",
+    "decreaseFontSize": "Smaller Text",
+    "increaseFontSize": "Larger Text",
+    "beadProgress": "Bead {current} of {total}",
+    "meditating": "Reflecting on Mystery",
+    "skipReflection": "Skip",
+    "audio": "Audio",
+    "speed": "Speed"
   },
   "LoginPage": {
     "title": "Welcome Back",
