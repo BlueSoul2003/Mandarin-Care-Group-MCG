@@ -72,6 +72,7 @@ export default async function EventPage({
           </p>
         )}
         {magazine && <a className="mt-6 inline-block rounded-full border px-6 py-3 text-sm hover:bg-muted" href="#magazine">{gallery("readMagazine")}</a>}
+        {media.some(item => item.type === "video") && <a className="mt-6 mx-2 inline-block rounded-full border px-6 py-3 text-sm hover:bg-muted" href="#videos">{gallery("activityVideos")}</a>}
       </header>
 
       <div className="relative mb-16 aspect-video overflow-hidden rounded-2xl border border-border/50 bg-muted/30">
@@ -81,6 +82,7 @@ export default async function EventPage({
             alt={t("eventCoverAlt", { title: event.title })}
             fill
             priority
+            unoptimized
             sizes="(max-width: 1200px) 100vw, 1152px"
             className="object-contain"
           />
@@ -89,7 +91,7 @@ export default async function EventPage({
         )}
       </div>
 
-      <section aria-labelledby="event-gallery-title">
+      {media.some(item => item.type === "image") && <section aria-labelledby="event-gallery-title">
         <div className="mb-8">
           <h2 id="event-gallery-title" className="font-heading text-3xl font-bold">
             {t("featuredMemories")}
@@ -97,7 +99,7 @@ export default async function EventPage({
           <p className="mt-2 text-muted-foreground">{t("memoriesNote")}</p>
         </div>
         <MasonryGrid
-          images={media.map((item) => ({
+          images={media.filter(item => item.type === "image").map((item) => ({
             id: item.id,
             title: item.title,
             url: item.url,
@@ -108,7 +110,13 @@ export default async function EventPage({
             alt: item.alt,
           }))}
         />
-      </section>
+      </section>}
+
+      {media.some(item => item.type === "video") && <section id="videos" className="mt-20 scroll-mt-24" aria-labelledby="event-videos-title">
+        <h2 id="event-videos-title" className="mb-3 font-heading text-3xl font-bold">{gallery("activityVideos")}</h2>
+        <p className="mb-8 text-muted-foreground">{gallery("videosNote")}</p>
+        <MasonryGrid images={media.filter(item => item.type === "video").map(item => ({ id: item.id, title: item.title, url: item.url, date: item.takenAt || gallery("dateUnknown"), poster: item.posterUrl, tags: [], type: item.type, alt: item.alt }))} />
+      </section>}
 
       {magazine && <MagazineReader magazine={magazine} title={event.title} />}
       {event.magazineManifestUrl && !magazine && <p className="mt-12 text-muted-foreground">{gallery("magazineUnavailable")}</p>}

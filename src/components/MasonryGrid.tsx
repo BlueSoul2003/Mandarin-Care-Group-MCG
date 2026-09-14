@@ -1,8 +1,9 @@
 "use client"
 
 import * as React from "react"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { motion, AnimatePresence } from "framer-motion"
+import Image from "next/image"
 import { CldImage } from "next-cloudinary"
 import { X, PlayCircle } from "lucide-react"
 import { useTranslations } from "next-intl"
@@ -23,6 +24,13 @@ export function MasonryGrid({ images }: { images: GalleryImage[] }) {
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [hoveredId, setHoveredId] = useState<string | null>(null)
 
+  useEffect(() => {
+    if (!selectedId) return
+    const close = (event: KeyboardEvent) => { if (event.key === "Escape") setSelectedId(null) }
+    window.addEventListener("keydown", close)
+    return () => window.removeEventListener("keydown", close)
+  }, [selectedId])
+
   if (!images || images.length === 0) {
     return <p className="text-center text-muted-foreground py-20">{t("empty")}</p>
   }
@@ -37,6 +45,10 @@ export function MasonryGrid({ images }: { images: GalleryImage[] }) {
             key={img.id}
             layoutId={`photo-${img.id}`}
             className="relative rounded-2xl overflow-hidden group bg-muted cursor-zoom-in break-inside-avoid"
+            role="button"
+            tabIndex={0}
+            aria-label={img.alt ?? img.title}
+            onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setSelectedId(img.id) } }}
             onClick={() => setSelectedId(img.id)}
             onMouseEnter={() => setHoveredId(img.id)}
             onMouseLeave={() => setHoveredId(null)}
@@ -52,7 +64,7 @@ export function MasonryGrid({ images }: { images: GalleryImage[] }) {
                 preload={img.poster ? "none" : "metadata"}
                 muted
                 playsInline
-                className="w-full h-auto object-cover transition-transform duration-700 group-hover:scale-105"
+                className="aspect-video w-full object-contain bg-black"
               />
             ) : (
               <CldImage
@@ -60,6 +72,7 @@ export function MasonryGrid({ images }: { images: GalleryImage[] }) {
                 alt={img.alt ?? img.title}
                 width={800}
                 height={800}
+                quality={90}
                 preserveTransformations
                 crop="limit"
                 className="w-full h-auto object-cover transition-transform duration-700 group-hover:scale-105"
@@ -69,7 +82,7 @@ export function MasonryGrid({ images }: { images: GalleryImage[] }) {
             <motion.div
               className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent flex flex-col justify-end p-6"
               initial={{ opacity: 0 }}
-              animate={{ opacity: hoveredId === img.id ? 1 : 0 }}
+              animate={{ opacity: img.type === "video" || hoveredId === img.id ? 1 : 0 }}
               transition={{ duration: 0.2 }}
             >
               {img.type === "video" && (
@@ -92,6 +105,7 @@ export function MasonryGrid({ images }: { images: GalleryImage[] }) {
             onClick={() => setSelectedId(null)}
           >
             <button
+              aria-label={t("closePreview")}
               className="absolute top-6 right-6 text-foreground/50 hover:text-foreground bg-background/50 backdrop-blur-sm p-2 rounded-full transition-colors z-10"
               onClick={(e) => {
                 e.stopPropagation()
@@ -100,6 +114,7 @@ export function MasonryGrid({ images }: { images: GalleryImage[] }) {
             >
               <X className="w-6 h-6" />
             </button>
+            {selectedImage.type === "image" && <a href={selectedImage.url} target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()} className="absolute bottom-5 rounded-full border bg-background px-5 py-2 text-sm z-10">{t("fullResolution")}</a>}
             <motion.div
               layoutId={`photo-${selectedId}`}
               className="relative w-full h-full max-w-6xl max-h-[80vh] overflow-hidden rounded-xl shadow-2xl flex justify-center items-center"
@@ -113,13 +128,12 @@ export function MasonryGrid({ images }: { images: GalleryImage[] }) {
                   className="w-full h-full object-contain"
                 />
               ) : (
-                <CldImage
+                <Image
                   src={selectedImage.url}
                   alt={selectedImage.alt ?? selectedImage.title}
-                  width={1920}
-                  height={1080}
-                  preserveTransformations
-                  crop="limit"
+                  fill
+                  unoptimized
+                  sizes="100vw"
                   className="w-full h-full object-contain"
                 />
               )}

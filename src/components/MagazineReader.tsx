@@ -31,7 +31,7 @@ export function MagazineReader({ magazine, title }: { magazine: Magazine; title:
           <button className="rounded-full border px-4 py-2 disabled:opacity-40" disabled={page === magazine.pages.length - 1} onClick={() => setPage(page + 1)}>{t("nextPage")}</button>
           <span aria-live="polite">{t("pageCount", { current: page + 1, total: magazine.pages.length })}</span>
         </div>
-        <Image key={page} src={magazine.pages[page]} alt={t("pageAlt", { title, page: page + 1 })} width={1200} height={1700} unoptimized className="mx-auto h-auto w-full max-w-3xl shadow-md" />
+        <a href={magazine.pages[page]} target="_blank" rel="noopener noreferrer" aria-label={t("fullPage")} className="block cursor-zoom-in"><Image key={page} src={magazine.pages[page]} alt={t("pageAlt", { title, page: page + 1 })} width={2481} height={3508} unoptimized className="mx-auto h-auto w-full max-w-3xl shadow-md" /></a>
       </div>
     </section>
   )

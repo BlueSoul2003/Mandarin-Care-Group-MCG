@@ -63,7 +63,12 @@
     "openAlbum": "Open album: {title}",
     "mediaCount": "{count} selected memories",
     "readMagazine": "Read the magazine",
-    "magazineUnavailable": "The magazine is temporarily unavailable. You can still enjoy the photos and videos above."
+    "magazineUnavailable": "The magazine is temporarily unavailable. You can still enjoy the photos and videos above.",
+    "fullResolution": "Open full-resolution photo",
+    "closePreview": "Close preview",
+    "activityVideos": "Activity videos",
+    "videosNote": "Select a video to enjoy the voices, movement and atmosphere.",
+    "fullPage": "Open this page at full size"
   },
   "Spiritual": {
     "title": "Spiritual",
@@ -199,10 +204,22 @@
     "description": "Whether you are a freshman, seeking a faith community, or just want to know more about us, fill out the form below and we'll reach out to you shortly!",
     "highlightsTitle": "By joining MCG, you'll experience...",
     "highlights": [
-      { "label": "Spiritual Companionship", "desc": "Taizé music, Rosary, and weekly prayer gatherings" },
-      { "label": "Youth Community", "desc": "A warm, Mandarin-speaking Catholic family" },
-      { "label": "Rich Activities", "desc": "Retreats, celebrations, and life skills workshops" },
-      { "label": "Holistic Growth", "desc": "From faith to financial literacy, we accompany you through university" }
+      {
+        "label": "Spiritual Companionship",
+        "desc": "Taizé music, Rosary, and weekly prayer gatherings"
+      },
+      {
+        "label": "Youth Community",
+        "desc": "A warm, Mandarin-speaking Catholic family"
+      },
+      {
+        "label": "Rich Activities",
+        "desc": "Retreats, celebrations, and life skills workshops"
+      },
+      {
+        "label": "Holistic Growth",
+        "desc": "From faith to financial literacy, we accompany you through university"
+      }
     ],
     "formTitle": "Registration Form",
     "form": {
