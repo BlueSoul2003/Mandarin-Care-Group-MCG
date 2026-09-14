@@ -90,6 +90,13 @@ function validSnapshot(): PublishedContentSnapshot {
 }
 
 describe("published content snapshot", () => {
+  it("preserves unknown historical dates without inventing a term", () => {
+    const snapshot = validSnapshot()
+    snapshot.events[0].startDate = null
+    delete snapshot.events[0].termId
+    snapshot.media[0].takenAt = null
+    expect(parsePublishedContentSnapshot(snapshot).events[0].startDate).toBeNull()
+  })
   it("accepts a connected activity-centered snapshot", () => {
     expect(parsePublishedContentSnapshot(validSnapshot()).events).toHaveLength(1)
   })

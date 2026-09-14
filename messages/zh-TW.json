@@ -50,7 +50,20 @@
   "Gallery": {
     "title": "相簿",
     "desc": "精選歷年活動精彩瞬間，記錄感動與歡笑。",
-    "empty": "相簿中還沒有照片或影片喔！快去 Notion 新增吧。"
+    "empty": "相簿正在整理中，稍後再來看看。",
+    "dateUnknown": "日期待確認",
+    "magazine": "電子雜誌",
+    "downloadPdf": "開啟／下載 PDF",
+    "readerLabel": "閱讀《{title}》",
+    "previousPage": "上一頁",
+    "nextPage": "下一頁",
+    "choosePage": "選擇頁數",
+    "pageCount": "第 {current} 頁，共 {total} 頁",
+    "pageAlt": "《{title}》第 {page} 頁",
+    "openAlbum": "開啟相簿：{title}",
+    "mediaCount": "{count} 個精選片段",
+    "readMagazine": "閱讀電子雜誌",
+    "magazineUnavailable": "電子雜誌暫時無法載入，仍可欣賞上方的照片和影片。"
   },
   "Spiritual": {
     "title": "靈修",

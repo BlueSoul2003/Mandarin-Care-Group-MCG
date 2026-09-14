@@ -50,7 +50,20 @@
   "Gallery": {
     "title": "Gallery",
     "desc": "Selected memories from past events, where stories are told.",
-    "empty": "No photos or videos in the gallery yet. Add them in Notion!"
+    "empty": "Our albums are being prepared. Come back soon.",
+    "dateUnknown": "Date to be confirmed",
+    "magazine": "Digital magazine",
+    "downloadPdf": "Open / download PDF",
+    "readerLabel": "Read {title}",
+    "previousPage": "Previous",
+    "nextPage": "Next",
+    "choosePage": "Choose a page",
+    "pageCount": "Page {current} of {total}",
+    "pageAlt": "{title}, page {page}",
+    "openAlbum": "Open album: {title}",
+    "mediaCount": "{count} selected memories",
+    "readMagazine": "Read the magazine",
+    "magazineUnavailable": "The magazine is temporarily unavailable. You can still enjoy the photos and videos above."
   },
   "Spiritual": {
     "title": "Spiritual",

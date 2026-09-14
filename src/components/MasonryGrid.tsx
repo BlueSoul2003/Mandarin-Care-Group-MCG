@@ -15,6 +15,7 @@ interface GalleryImage {
   tags: string[]
   type: "image" | "video"
   alt?: string
+  poster?: string
 }
 
 export function MasonryGrid({ images }: { images: GalleryImage[] }) {
@@ -47,8 +48,8 @@ export function MasonryGrid({ images }: { images: GalleryImage[] }) {
             {img.type === "video" ? (
               <video
                 src={img.url}
-                autoPlay
-                loop
+                poster={img.poster}
+                preload={img.poster ? "none" : "metadata"}
                 muted
                 playsInline
                 className="w-full h-auto object-cover transition-transform duration-700 group-hover:scale-105"

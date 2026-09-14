@@ -59,12 +59,14 @@ export const eventSchema = z.object({
   slug,
   title: z.string().trim().min(1),
   summary: z.string().trim(),
-  startDate: isoDate,
+  startDate: isoDate.nullable(),
   endDate: isoDate.optional(),
+  dateLabel: z.string().trim().optional(),
   location: z.string().trim().optional(),
-  termId: id,
+  termId: id.optional(),
   seriesId: id.optional(),
   coverImageUrl: cloudinaryUrl.optional(),
+  magazineManifestUrl: cloudinaryUrl.optional(),
   featured: z.boolean(),
   status: published,
 })
@@ -75,7 +77,8 @@ export const mediaItemSchema = z.object({
   title: z.string().trim().min(1),
   url: cloudinaryUrl,
   alt: z.string().trim().min(1),
-  takenAt: isoDate,
+  takenAt: isoDate.nullable(),
+  posterUrl: cloudinaryUrl.optional(),
   type: z.enum(["image", "video"]),
   sortOrder: z.number().int().nonnegative(),
   status: published,
@@ -152,7 +155,7 @@ export const publishedContentSnapshotSchema = z
     const eventIds = new Set(snapshot.events.map((event) => event.id))
 
     snapshot.events.forEach((event, index) => {
-      if (!termIds.has(event.termId)) {
+      if (event.termId && !termIds.has(event.termId)) {
         context.addIssue({
           code: "custom",
           message: `Unknown termId: ${event.termId}`,
