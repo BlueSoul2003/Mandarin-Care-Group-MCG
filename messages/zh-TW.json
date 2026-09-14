@@ -50,7 +50,25 @@
   "Gallery": {
     "title": "相簿",
     "desc": "精選歷年活動精彩瞬間，記錄感動與歡笑。",
-    "empty": "相簿中還沒有照片或影片喔！快去 Notion 新增吧。"
+    "empty": "相簿正在整理中，稍後再來看看。",
+    "dateUnknown": "日期待確認",
+    "magazine": "電子雜誌",
+    "downloadPdf": "開啟／下載 PDF",
+    "readerLabel": "閱讀《{title}》",
+    "previousPage": "上一頁",
+    "nextPage": "下一頁",
+    "choosePage": "選擇頁數",
+    "pageCount": "第 {current} 頁，共 {total} 頁",
+    "pageAlt": "《{title}》第 {page} 頁",
+    "openAlbum": "開啟相簿：{title}",
+    "mediaCount": "{count} 個精選片段",
+    "readMagazine": "閱讀電子雜誌",
+    "magazineUnavailable": "電子雜誌暫時無法載入，仍可欣賞上方的照片和影片。",
+    "fullResolution": "開啟原始尺寸照片",
+    "closePreview": "關閉預覽",
+    "activityVideos": "活動影片",
+    "videosNote": "點選影片觀看，保留聲音、動作與當時的氣氛。",
+    "fullPage": "放大閱讀這一頁"
   },
   "Spiritual": {
     "title": "靈修",
@@ -186,10 +204,22 @@
     "description": "無論您是剛入學的新生、尋找信仰群體的你，還是想了解我們的朋友，填寫以下表單，我們的執委會將在最短時間內與您聯繫！",
     "highlightsTitle": "加入 MCG，您將獲得…",
     "highlights": [
-      { "label": "靈修陪伴", "desc": "泰澤音樂、玫瑰經與每週祈禱聚會" },
-      { "label": "青年社群", "desc": "一個充滿溫度的華語天主教大家庭" },
-      { "label": "豐富活動", "desc": "退省、慶典、生活技能工作坊" },
-      { "label": "全人成長", "desc": "從信仰到財商，陪你走過大學四年" }
+      {
+        "label": "靈修陪伴",
+        "desc": "泰澤音樂、玫瑰經與每週祈禱聚會"
+      },
+      {
+        "label": "青年社群",
+        "desc": "一個充滿溫度的華語天主教大家庭"
+      },
+      {
+        "label": "豐富活動",
+        "desc": "退省、慶典、生活技能工作坊"
+      },
+      {
+        "label": "全人成長",
+        "desc": "從信仰到財商，陪你走過大學四年"
+      }
     ],
     "formTitle": "填寫您的資料",
     "form": {

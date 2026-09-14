@@ -16,7 +16,7 @@ export interface TermWithCommittee {
 
 export interface EventDetail {
   event: Event
-  term: Term
+  term?: Term
   series?: Series
   media: MediaItem[]
   articles: Article[]
@@ -40,7 +40,7 @@ export abstract class SnapshotContentRepository implements ContentRepository {
   async listPublishedEvents() {
     const snapshot = await this.getPublishedSnapshot()
     return [...snapshot.events].sort((a, b) =>
-      b.startDate.localeCompare(a.startDate),
+      (b.startDate ?? "").localeCompare(a.startDate ?? ""),
     )
   }
 
@@ -50,7 +50,7 @@ export abstract class SnapshotContentRepository implements ContentRepository {
     if (!event) return null
 
     const term = snapshot.terms.find((item) => item.id === event.termId)
-    if (!term) return null
+    if (event.termId && !term) return null
 
     return {
       event,
@@ -109,7 +109,7 @@ export abstract class SnapshotContentRepository implements ContentRepository {
   async listPublishedMedia() {
     const snapshot = await this.getPublishedSnapshot()
     return [...snapshot.media].sort((a, b) =>
-      b.takenAt.localeCompare(a.takenAt),
+      (b.takenAt ?? "").localeCompare(a.takenAt ?? ""),
     )
   }
 }

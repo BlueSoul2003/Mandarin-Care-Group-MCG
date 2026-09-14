@@ -14,6 +14,7 @@ export function EventCard({
   series?: Series
 }) {
   const t = useTranslations("PastEvents")
+  const gallery = useTranslations("Gallery")
   const hasCloudinaryCover = event.coverImageUrl?.includes("res.cloudinary.com")
 
   return (
@@ -41,7 +42,7 @@ export function EventCard({
         <div className="mb-4 flex flex-wrap gap-x-4 gap-y-2 text-xs text-muted-foreground">
           <span className="flex items-center gap-1.5">
             <Calendar className="h-3.5 w-3.5" />
-            {event.startDate}
+            {event.dateLabel || event.startDate || gallery("dateUnknown")}
           </span>
           {event.location && (
             <span className="flex items-center gap-1.5">

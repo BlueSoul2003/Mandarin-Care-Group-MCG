@@ -146,3 +146,11 @@ npm run content:sync
 ```
 
 此命令只在所有公開資料通過 schema、關聯、slug 唯一性與每場 30 個媒體上限後，才會更新 `src/content/snapshot.json`。網站連不上 Notion 或資料驗證失敗時，會繼續展示這份最後成功快照；快照不包含報名個資、密鑰或照片原檔。公開頁面最長約 5 分鐘重新驗證一次內容。
+
+### 活動相簿與電子雜誌
+
+Gallery 以活動封面進入 Event 頁面，可觀看精選照片、播放影片、逐頁閱讀雜誌及開啟 PDF。Events 可增設 `MagazineManifestURL` URL 與 `DateLabel` Text；Media 可增設 `PosterImageURL` URL 作為影片預覽。雜誌清單為 Cloudinary 上的 JSON：`{"version":1,"pdfUrl":"https://res.cloudinary.com/.../magazine.pdf","pages":["https://res.cloudinary.com/.../page-001.webp"]}`。清單只記錄檔案連結；活動名稱與描述仍由 Notion 管理。
+
+照片牆使用縮圖；點開照片後直接讀取 Media URL，並提供原始尺寸連結，避免再次縮圖。Media URL 應指向原始解析度的瀏覽版本；原始 HEIC 等檔案留在私人素材庫。活動影片另列一區，不放入照片雜誌；只有影片的相簿不設定 MagazineManifestURL。雜誌頁面建議使用 A4 300 dpi 圖片，點選頁面可放大閱讀，PDF 可附活動影片連結。
+
+歷史素材未能確認日期時，Dates / Date 留空，公開頁面顯示「日期待確認」；Event 的 Term 可留空，但指定時仍必須連到已公開的屆期。跨日期主題合輯可用 DateLabel 明列各次日期，避免暗示連續多日活動。雜誌載入失敗不會阻止照片與影片顯示。只上傳已確認的公開衍生檔；原檔及私人素材保留於網站儲存庫以外。
