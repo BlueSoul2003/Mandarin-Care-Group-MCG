@@ -1,4 +1,5 @@
 import { LifestyleClient } from "./LifestyleClient"
+import { EventTimeline } from "@/components/EventTimeline"
 import { contentRepository } from "@/content"
 import { getTranslations } from "next-intl/server"
 
@@ -7,7 +8,12 @@ export const revalidate = 300
 export default async function LifestylePage() {
   const t = await getTranslations("Lifestyle")
   const repository = await contentRepository()
-  const content = await repository.listPublishedArticles("lifestyle")
+  const [content, rawEvents, snapshot] = await Promise.all([
+    repository.listPublishedArticles("lifestyle"),
+    repository.listPublishedEvents(),
+    repository.getPublishedSnapshot(),
+  ])
+
   const articles = content.map((article) => ({
     slug: article.slug,
     title: article.title,
@@ -17,6 +23,25 @@ export default async function LifestylePage() {
     tags: article.tags,
     category: "lifestyle" as const,
   }))
+
+  const timelineEvents = rawEvents.map((event) => {
+    const series = snapshot.series.find((s) => s.id === event.seriesId)
+    const term = snapshot.terms.find((t) => t.id === event.termId)
+    return {
+      id: event.id,
+      slug: event.slug,
+      title: event.title,
+      summary: event.summary,
+      startDate: event.startDate,
+      endDate: event.endDate,
+      dateLabel: event.dateLabel,
+      location: event.location,
+      seriesName: series?.name,
+      seriesSlug: series?.slug,
+      termName: term?.name,
+      coverImageUrl: event.coverImageUrl,
+    }
+  })
   
   // Extract unique tags
   const tagsSet = new Set<string>()
@@ -26,15 +51,34 @@ export default async function LifestylePage() {
   const allTags = ["All", ...Array.from(tagsSet)]
 
   return (
-    <div className="container mx-auto px-4 py-12 md:py-20 max-w-5xl">
-      <div className="mb-12 md:mb-16 text-center">
-        <h1 className="text-4xl md:text-5xl font-heading font-bold text-foreground mb-6">{t("title")}</h1>
-        <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+    <div className="container mx-auto px-4 py-8 md:py-12 max-w-4xl">
+      {/* Page Header */}
+      <div className="mb-6 md:mb-8 text-center">
+        <h1 className="text-3xl md:text-4xl font-heading font-bold text-foreground mb-2.5">{t("title")}</h1>
+        <p className="text-sm md:text-base text-muted-foreground max-w-xl mx-auto leading-relaxed">
           {t("desc")}
         </p>
       </div>
 
-      <LifestyleClient articles={articles} allTags={allTags} />
+      {/* Notion-Connected Event Timeline */}
+      <div className="mb-14 md:mb-16">
+        <EventTimeline events={timelineEvents} />
+      </div>
+
+      {/* Articles Section */}
+      <div className="pt-12 border-t border-border/60">
+        <div className="mb-10 text-center">
+          <h2 className="text-2xl md:text-3xl font-heading font-bold text-foreground tracking-tight">
+            {t("articlesTitle")}
+          </h2>
+          <p className="mt-2 text-sm md:text-base text-muted-foreground max-w-xl mx-auto">
+            {t("articlesSubtitle")}
+          </p>
+        </div>
+
+        <LifestyleClient articles={articles} allTags={allTags} />
+      </div>
     </div>
   )
 }
+
