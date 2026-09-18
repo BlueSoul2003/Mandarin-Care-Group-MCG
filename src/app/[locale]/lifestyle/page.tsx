@@ -8,11 +8,7 @@ export const revalidate = 300
 export default async function LifestylePage() {
   const t = await getTranslations("Lifestyle")
   const repository = await contentRepository()
-  const [content, rawEvents, snapshot] = await Promise.all([
-    repository.listPublishedArticles("lifestyle"),
-    repository.listPublishedEvents(),
-    repository.getPublishedSnapshot(),
-  ])
+  const content = await repository.listPublishedArticles("lifestyle")
 
   const articles = content.map((article) => ({
     slug: article.slug,
@@ -23,25 +19,6 @@ export default async function LifestylePage() {
     tags: article.tags,
     category: "lifestyle" as const,
   }))
-
-  const timelineEvents = rawEvents.map((event) => {
-    const series = snapshot.series.find((s) => s.id === event.seriesId)
-    const term = snapshot.terms.find((t) => t.id === event.termId)
-    return {
-      id: event.id,
-      slug: event.slug,
-      title: event.title,
-      summary: event.summary,
-      startDate: event.startDate,
-      endDate: event.endDate,
-      dateLabel: event.dateLabel,
-      location: event.location,
-      seriesName: series?.name,
-      seriesSlug: series?.slug,
-      termName: term?.name,
-      coverImageUrl: event.coverImageUrl,
-    }
-  })
   
   // Extract unique tags
   const tagsSet = new Set<string>()
@@ -60,9 +37,9 @@ export default async function LifestylePage() {
         </p>
       </div>
 
-      {/* Notion-Connected Event Timeline */}
+      {/* Event Timeline */}
       <div className="mb-14 md:mb-16">
-        <EventTimeline events={timelineEvents} />
+        <EventTimeline />
       </div>
 
       {/* Articles Section */}

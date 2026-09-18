@@ -1,17 +1,10 @@
 "use client"
 
 import * as React from "react"
-import Image from "next/image"
 import { useLocale, useTranslations } from "next-intl"
-import { Link } from "@/i18n/routing"
-import { motion, AnimatePresence } from "framer-motion"
+import { motion } from "framer-motion"
 import {
-  MapPin,
-  ChevronDown,
   CalendarPlus,
-  Check,
-  Copy,
-  ArrowRight,
   Calendar,
 } from "lucide-react"
 import { getCatholicEventsForYears, type CatholicEventItem } from "@/data/catholic-events"
@@ -34,39 +27,9 @@ export interface NotionTimelineEvent {
 }
 
 export type UnifiedTimelineEvent =
-  | (NotionTimelineEvent & { isCatholic: false; isUtm: false; isHoliday: false })
-  | (CatholicEventItem & {
-      isCatholic: true
-      isUtm: false
-      isHoliday: false
-      endDate?: string
-      dateLabel?: string
-      location?: string
-      seriesName?: string
-      seriesSlug?: string
-      termName?: string
-      coverImageUrl?: string
-    })
-  | (UtmEventItem & {
-      isCatholic: false
-      isUtm: true
-      isHoliday: false
-      location?: string
-      seriesName?: string
-      seriesSlug?: string
-      termName?: string
-      coverImageUrl?: string
-    })
-  | (PublicHolidayItem & {
-      isCatholic: false
-      isUtm: false
-      isHoliday: true
-      location?: string
-      seriesName?: string
-      seriesSlug?: string
-      termName?: string
-      coverImageUrl?: string
-    })
+  | (CatholicEventItem & { isCatholic: true; isUtm: false; isHoliday: false; endDate?: string })
+  | (UtmEventItem & { isCatholic: false; isUtm: true; isHoliday: false })
+  | (PublicHolidayItem & { isCatholic: false; isUtm: false; isHoliday: true })
 
 interface MonthGroup {
   monthKey: string
@@ -76,20 +39,33 @@ interface MonthGroup {
   events: UnifiedTimelineEvent[]
 }
 
-function getEventDate(event: UnifiedTimelineEvent): string {
-  if (event.startDate) return event.startDate
-  if (!event.isCatholic && !event.isUtm && !event.isHoliday) {
-    if (event.dateLabel) {
-      const match = event.dateLabel.match(/\d{4}-\d{2}-\d{2}/)
-      if (match) return match[0]
-    }
-    const slugMatch = event.slug.match(/^(\d{4}-\d{2}-\d{2})/)
-    if (slugMatch) return slugMatch[1]
-  }
-  return ""
+function escapeIcsText(text: string): string {
+  return text
+    .replace(/\\/g, "\\\\")
+    .replace(/;/g, "\\;")
+    .replace(/,/g, "\\,")
+    .replace(/\n/g, "\\n")
 }
 
-export function EventTimeline({ events: notionEvents = [] }: { events?: NotionTimelineEvent[] }) {
+function getNextDayDateString(dateStr: string): string {
+  const d = new Date(dateStr + "T00:00:00Z")
+  d.setUTCDate(d.getUTCDate() + 1)
+  const year = d.getUTCFullYear()
+  const month = String(d.getUTCMonth() + 1).padStart(2, "0")
+  const day = String(d.getUTCDate()).padStart(2, "0")
+  return `${year}${month}${day}`
+}
+
+function getEventDate(event: UnifiedTimelineEvent): string {
+  return event.startDate || ""
+}
+
+export interface EventTimelineProps {
+  years?: string[]
+  events?: unknown
+}
+
+export function EventTimeline({ years }: EventTimelineProps = {}) {
   const t = useTranslations("Lifestyle")
   const locale = useLocale()
   const isZh = locale === "zh-TW"
@@ -104,32 +80,25 @@ export function EventTimeline({ events: notionEvents = [] }: { events?: NotionTi
 
   const currentYearStr = React.useMemo(() => new Date().getFullYear().toString(), [])
 
-  // Extract available years, ensuring 2024, 2025, 2026, 2027 are included
+  // Available academic & liturgical calendar years (defaulting to 2026 and 2027)
   const availableYears = React.useMemo(() => {
-    const yearsSet = new Set<string>(["2024", "2025", "2026", "2027"])
-    for (const ev of notionEvents) {
-      const d = ev.startDate || ev.slug.match(/^(\d{4})/)?.[1]
-      if (d && d.length >= 4) {
-        const yr = d.substring(0, 4)
-        if (/^\d{4}$/.test(yr)) {
-          yearsSet.add(yr)
-        }
-      }
+    if (years && years.length > 0) {
+      return [...years].sort()
     }
-    return Array.from(yearsSet).sort()
-  }, [notionEvents])
+    return ["2026", "2027"]
+  }, [years])
 
   // Selected year state (defaults to current year or latest available year)
   const defaultYear = availableYears.includes(currentYearStr)
     ? currentYearStr
-    : availableYears[availableYears.length - 1] || currentYearStr
+    : availableYears[0] || currentYearStr
 
   const [userSelectedYear, setUserSelectedYear] = React.useState<string | null>(null)
   const selectedYear = userSelectedYear && availableYears.includes(userSelectedYear)
     ? userSelectedYear
     : defaultYear
 
-  // Combine Notion events (labeled MCG Events) with Catholic events, UTM academic events, and Public Holidays
+  // Combine Catholic events, UTM academic events, and Public Holidays (Notion data disconnected)
   const combinedEvents = React.useMemo<UnifiedTimelineEvent[]>(() => {
     const numericYears = availableYears.map(Number).filter((y) => !isNaN(y))
     const catholicEvents: UnifiedTimelineEvent[] = getCatholicEventsForYears(numericYears).map((ev) => ({
@@ -151,15 +120,8 @@ export function EventTimeline({ events: notionEvents = [] }: { events?: NotionTi
       isHoliday: true as const,
     }))
 
-    const formattedNotion: UnifiedTimelineEvent[] = notionEvents.map((ev) => ({
-      ...ev,
-      isCatholic: false as const,
-      isUtm: false as const,
-      isHoliday: false as const,
-    }))
-
-    return [...formattedNotion, ...catholicEvents, ...utmEvents, ...holidayEvents]
-  }, [notionEvents, availableYears])
+    return [...catholicEvents, ...utmEvents, ...holidayEvents]
+  }, [availableYears])
 
   // Group and sort combined events chronologically ascending from January to December (01 to 12)
   const monthGroups = React.useMemo<MonthGroup[]>(() => {
@@ -209,24 +171,12 @@ export function EventTimeline({ events: notionEvents = [] }: { events?: NotionTi
     })
   }, [combinedEvents, selectedYear, isZh, currentYm])
 
-  // Initially ONLY the current month (or first month in the selected year) is expanded
-  const [expandedMonths, setExpandedMonths] = React.useState<Set<string>>(() => {
-    const activeYear = availableYears.includes(currentYearStr)
-      ? currentYearStr
-      : availableYears[availableYears.length - 1] || currentYearStr
-
-    if (activeYear === currentYearStr) {
-      return new Set([currentYm])
-    }
-    return new Set([`${activeYear}-01`])
-  })
-
   // Ref for smooth auto-scroll to the current month
   const currentMonthRef = React.useRef<HTMLDivElement | null>(null)
   const hasAutoScrolled = React.useRef(false)
 
   React.useEffect(() => {
-    // Smoothly scroll down to the current expanded month on initial load or year change
+    // Smoothly scroll down to the current month on initial load or year change
     if (selectedYear === currentYearStr && currentMonthRef.current && !hasAutoScrolled.current) {
       const timer = setTimeout(() => {
         if (currentMonthRef.current) {
@@ -241,55 +191,18 @@ export function EventTimeline({ events: notionEvents = [] }: { events?: NotionTi
     }
   }, [selectedYear, currentYearStr])
 
-  // Track expanded event card IDs
-  const [expandedEventIds, setExpandedEventIds] = React.useState<Set<string>>(() => new Set())
-  const [copiedId, setCopiedId] = React.useState<string | null>(null)
-
   const handleSelectYear = (year: string) => {
     setUserSelectedYear(year)
     hasAutoScrolled.current = false
-    if (year === currentYearStr) {
-      setExpandedMonths(new Set([currentYm]))
-    } else {
-      // expand January by default for historical years
-      setExpandedMonths(new Set([`${year}-01`]))
-    }
   }
 
-  const toggleMonth = (monthKey: string) => {
-    setExpandedMonths((prev) => {
-      const next = new Set(prev)
-      if (next.has(monthKey)) {
-        next.delete(monthKey)
-      } else {
-        next.add(monthKey)
-      }
-      return next
-    })
-  }
-
-  const toggleEventExpand = (id: string) => {
-    setExpandedEventIds((prev) => {
-      const next = new Set(prev)
-      if (next.has(id)) {
-        next.delete(id)
-      } else {
-        next.add(id)
-      }
-      return next
-    })
-  }
-
-  // Format short date: e.g. "14 Sep" or "9月14日", or explicit UTM/Holiday dateLabel
+  // Format short date: e.g. "14 Sep 2026" or explicit UTM/Holiday dateLabel
   const formatDisplayDate = (event: UnifiedTimelineEvent) => {
     if (event.isUtm || event.isHoliday) {
       return isZh ? event.dateLabel["zh-TW"] : event.dateLabel.en
     }
-    if (!event.isCatholic && event.dateLabel && !event.dateLabel.includes("、")) {
-      return event.dateLabel
-    }
-    const dateStr = getEventDate(event)
-    if (!dateStr) return (!event.isCatholic && event.dateLabel) || ""
+    const dateStr = event.startDate
+    if (!dateStr) return ""
     try {
       const date = new Date(dateStr + "T00:00:00")
       return new Intl.DateTimeFormat(isZh ? "zh-TW" : "en-US", {
@@ -302,43 +215,46 @@ export function EventTimeline({ events: notionEvents = [] }: { events?: NotionTi
     }
   }
 
-  const handleCopy = (e: React.MouseEvent, event: UnifiedTimelineEvent) => {
-    e.stopPropagation()
-    const eventTitle = event.isCatholic || event.isUtm || event.isHoliday ? (isZh ? event.title["zh-TW"] : event.title.en) : event.title
-    const dateStr = formatDisplayDate(event)
-    const url = !event.isCatholic && !event.isUtm && !event.isHoliday && typeof window !== "undefined"
-      ? `\n${window.location.origin}/events/${event.slug}`
-      : ""
-    const locationStr = !event.isCatholic && !event.isUtm && !event.isHoliday && event.location ? `\n📍 ${event.location}` : ""
-    const textToCopy = `${eventTitle}\n${dateStr}${locationStr}${url}`
-
-    if (navigator.clipboard) {
-      navigator.clipboard.writeText(textToCopy).then(() => {
-        setCopiedId(event.id)
-        setTimeout(() => setCopiedId(null), 2000)
-      })
-    }
-  }
-
   const handleAddToCalendar = (e: React.MouseEvent, event: UnifiedTimelineEvent) => {
     e.stopPropagation()
-    const eventTitle = event.isCatholic || event.isUtm || event.isHoliday ? (isZh ? event.title["zh-TW"] : event.title.en) : event.title
-    const eventSummary = event.isCatholic || event.isUtm || event.isHoliday ? (isZh ? event.summary["zh-TW"] : event.summary.en) : event.summary
-    const dateStr = getEventDate(event)
-    const cleanDate = dateStr ? dateStr.replace(/-/g, "") : ""
-    const endDateStr = (event.isUtm || event.isHoliday) && event.endDate ? event.endDate.replace(/-/g, "") : cleanDate
-    const gcalUrl = new URL("https://calendar.google.com/calendar/render")
-    gcalUrl.searchParams.set("action", "TEMPLATE")
-    gcalUrl.searchParams.set("text", eventTitle)
-    if (cleanDate) {
-      gcalUrl.searchParams.set("dates", `${cleanDate}T000000Z/${endDateStr}T235959Z`)
-    }
-    gcalUrl.searchParams.set("details", eventSummary)
-    if (!event.isCatholic && !event.isUtm && !event.isHoliday && event.location) {
-      gcalUrl.searchParams.set("location", event.location)
-    }
+    const eventTitle = isZh ? event.title["zh-TW"] : event.title.en
+    const eventSummary = isZh ? event.summary["zh-TW"] : event.summary.en
+    const startDate = event.startDate
+    const endDate = event.endDate || event.startDate
 
-    window.open(gcalUrl.toString(), "_blank", "noopener,noreferrer")
+    if (!startDate) return
+
+    const dtStart = startDate.replace(/-/g, "")
+    const dtEnd = getNextDayDateString(endDate)
+    const dtStamp = new Date().toISOString().replace(/[-:]/g, "").split(".")[0] + "Z"
+
+    const icsContent = [
+      "BEGIN:VCALENDAR",
+      "VERSION:2.0",
+      "PRODID:-//Mandarin Care Group//Event Calendar//EN",
+      "CALSCALE:GREGORIAN",
+      "METHOD:PUBLISH",
+      "BEGIN:VEVENT",
+      `UID:${event.id}@mandarincaregroup.org`,
+      `DTSTAMP:${dtStamp}`,
+      `DTSTART;VALUE=DATE:${dtStart}`,
+      `DTEND;VALUE=DATE:${dtEnd}`,
+      `SUMMARY:${escapeIcsText(eventTitle)}`,
+      `DESCRIPTION:${escapeIcsText(eventSummary)}`,
+      "STATUS:CONFIRMED",
+      "END:VEVENT",
+      "END:VCALENDAR",
+    ].join("\r\n")
+
+    const blob = new Blob([icsContent], { type: "text/calendar;charset=utf-8" })
+    const url = URL.createObjectURL(blob)
+    const link = document.createElement("a")
+    link.href = url
+    link.download = `${event.id}.ics`
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+    URL.revokeObjectURL(url)
   }
 
   if (!monthGroups.length) {
@@ -364,7 +280,7 @@ export function EventTimeline({ events: notionEvents = [] }: { events?: NotionTi
         </p>
       </div>
 
-      {/* Year Selection Bar: 2024 | 2025 | 2026 */}
+      {/* Year Selection Bar: 2026 | 2027 */}
       {availableYears.length > 1 && (
         <div
           role="tablist"
@@ -408,10 +324,8 @@ export function EventTimeline({ events: notionEvents = [] }: { events?: NotionTi
         />
 
         {/* 12 Months: January - December */}
-        <div className="space-y-6 sm:space-y-7">
+        <div className="space-y-5 sm:space-y-6">
           {monthGroups.map((group) => {
-            const isMonthExpanded = expandedMonths.has(group.monthKey)
-
             return (
               <div
                 key={group.monthKey}
@@ -424,9 +338,9 @@ export function EventTimeline({ events: notionEvents = [] }: { events?: NotionTi
                   className={`absolute left-[5px] sm:left-[9px] top-1 z-20 w-3.5 h-3.5 rounded-full border-[1.5px] transition-all duration-300 flex items-center justify-center ${
                     group.isCurrentMonth
                       ? "border-primary bg-primary ring-4 ring-primary/25 shadow-xs scale-110"
-                      : isMonthExpanded
+                      : group.events.length > 0
                       ? "border-primary bg-background ring-2 ring-primary/20"
-                      : "border-muted-foreground/40 bg-background ring-2 ring-background group-hover/month:border-primary group-hover/month:scale-110"
+                      : "border-muted-foreground/40 bg-background ring-2 ring-background"
                   }`}
                 >
                   {group.isCurrentMonth && (
@@ -434,23 +348,18 @@ export function EventTimeline({ events: notionEvents = [] }: { events?: NotionTi
                   )}
                 </div>
 
-                {/* Minimalist Month Header: Title on Left, Chevron on Right, Underline Divider */}
-                <button
-                  type="button"
-                  onClick={() => toggleMonth(group.monthKey)}
-                  aria-expanded={isMonthExpanded}
-                  className="w-full flex items-center justify-between pb-2 pt-0.5 border-b border-border/80 group-hover/month:border-primary/50 text-left transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary select-none cursor-pointer"
-                >
+                {/* Minimalist Month Header: Title on Left, Underline Divider */}
+                <header className="w-full flex items-center justify-between pb-1.5 pt-0.5 border-b border-border/80 text-left">
                   <div className="flex items-baseline gap-2.5 sm:gap-3 flex-wrap">
                     {/* Month Name & Year naturally connected */}
                     <div className="flex items-baseline gap-1.5">
-                      <h3 className="font-heading text-xl sm:text-2xl font-bold text-foreground group-hover/month:text-primary transition-colors tracking-tight">
+                      <h3 className="font-heading text-lg sm:text-xl font-bold text-foreground tracking-tight">
                         {group.monthLabel}
                       </h3>
 
                       {/* Year as secondary information */}
                       {group.yearLabel && (
-                        <span className="text-sm sm:text-base font-normal text-muted-foreground">
+                        <span className="text-xs sm:text-sm font-normal text-muted-foreground">
                           {group.yearLabel}
                         </span>
                       )}
@@ -458,271 +367,117 @@ export function EventTimeline({ events: notionEvents = [] }: { events?: NotionTi
 
                     {/* Current Month Badge */}
                     {group.isCurrentMonth && (
-                      <span className="px-2 py-0.5 rounded-full bg-primary/10 text-primary text-[11px] sm:text-xs font-semibold">
+                      <span className="px-2 py-0.5 rounded-full bg-primary/10 text-primary text-[10px] sm:text-[11px] font-semibold">
                         {t("currentMonth")}
                       </span>
                     )}
                   </div>
+                </header>
 
-                  {/* Minimalist Chevron */}
-                  <div
-                    className={`w-7 h-7 flex items-center justify-center transition-transform duration-200 ${
-                      isMonthExpanded
-                        ? "rotate-180 text-primary"
-                        : "text-muted-foreground group-hover/month:text-foreground"
-                    }`}
-                  >
-                    <ChevronDown className="w-4 h-4" />
-                  </div>
-                </button>
+                {/* Month Content: Chronological Events along the Spine - Compact & Immediately Visible */}
+                <div className="pt-2.5 space-y-2.5 sm:space-y-3">
+                  {group.events.length > 0 ? (
+                    group.events.map((event, idx) => {
+                      const displayDate = formatDisplayDate(event)
+                      const eventTitle = isZh ? event.title["zh-TW"] : event.title.en
+                      const eventSummary = isZh ? event.summary["zh-TW"] : event.summary.en
+                      const isFirst = idx === 0 && group.isCurrentMonth
 
-                {/* Month Content: Chronological Events along the Spine */}
-                <AnimatePresence initial={false}>
-                  {isMonthExpanded && (
-                    <motion.div
-                      initial={{ opacity: 0, height: 0 }}
-                      animate={{ opacity: 1, height: "auto" }}
-                      exit={{ opacity: 0, height: 0 }}
-                      transition={{ duration: 0.25, ease: "easeInOut" }}
-                      className="overflow-hidden"
-                    >
-                      <div className="pt-3.5 space-y-3.5 sm:space-y-4">
-                        {group.events.length > 0 ? (
-                          group.events.map((event, idx) => {
-                            const isEventExpanded = expandedEventIds.has(event.id)
-                            const displayDate = formatDisplayDate(event)
-                            const eventTitle = event.isCatholic || event.isUtm || event.isHoliday
-                              ? isZh ? event.title["zh-TW"] : event.title.en
-                              : event.title
-                            const eventSummary = event.isCatholic || event.isUtm || event.isHoliday
-                              ? isZh ? event.summary["zh-TW"] : event.summary.en
-                              : event.summary
-                            const isFirst = idx === 0 && group.isCurrentMonth
-                            const hasCover = !event.isCatholic && !event.isUtm && !event.isHoliday && Boolean(event.coverImageUrl)
+                      return (
+                        <motion.div
+                          key={event.id}
+                          initial={{ opacity: 0, y: 12 }}
+                          whileInView={{ opacity: 1, y: 0 }}
+                          viewport={{ once: true, amount: 0.1 }}
+                          transition={{
+                            duration: 0.3,
+                            delay: Math.min(idx * 0.04, 0.2),
+                            ease: [0.25, 0.1, 0.25, 1],
+                          }}
+                          className="relative group/event"
+                        >
+                          {/* Perfectly Centered Circular Dot on the Continuous Spine */}
+                          <div
+                            aria-hidden="true"
+                            className={`absolute -left-[25px] sm:-left-[29px] top-3.5 z-10 w-2.5 h-2.5 rounded-full border-[1.5px] transition-all duration-200 ring-4 ring-background ${
+                              isFirst
+                                ? "border-primary bg-primary/30 group-hover/event:bg-primary group-hover/event:scale-110"
+                                : "border-primary/70 bg-background group-hover/event:border-primary group-hover/event:bg-primary/20 group-hover/event:scale-110"
+                            }`}
+                          />
 
-                            return (
-                              <motion.div
-                                key={event.id}
-                                initial={{ opacity: 0, y: 14 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{
-                                  duration: 0.32,
-                                  delay: Math.min(idx * 0.045, 0.3),
-                                  ease: [0.25, 0.1, 0.25, 1],
-                                }}
-                                className="relative group/event"
-                              >
-                                {/* Perfectly Centered Circular Dot on the Continuous Spine */}
-                                <div
-                                  aria-hidden="true"
-                                  className={`absolute -left-[25px] sm:-left-[29px] top-5 z-10 w-2.5 h-2.5 rounded-full border-[1.5px] transition-all duration-200 ring-4 ring-background ${
-                                    isEventExpanded
-                                      ? "border-primary bg-primary ring-primary/20 scale-110 shadow-xs"
-                                      : isFirst
-                                      ? "border-primary bg-primary/30 group-hover/event:bg-primary group-hover/event:scale-110"
-                                      : "border-primary/70 bg-background group-hover/event:border-primary group-hover/event:bg-primary/20 group-hover/event:scale-110"
-                                  }`}
-                                />
+                          {/* Crisp Horizontal Connector Line */}
+                          <div
+                            aria-hidden="true"
+                            className="absolute -left-[20px] sm:-left-[24px] top-[19px] w-[20px] sm:w-[24px] h-px bg-border/80 group-hover/event:bg-primary/40 transition-colors"
+                          />
 
-                                {/* Crisp Horizontal Connector Line */}
-                                <div
-                                  aria-hidden="true"
-                                  className="absolute -left-[20px] sm:-left-[24px] top-[25px] w-[20px] sm:w-[24px] h-px bg-border/80 group-hover/event:bg-primary/40 transition-colors"
-                                />
+                          {/* Compact Event Card */}
+                          <article className="rounded-xl bg-card border border-border/70 shadow-2xs hover:border-primary/40 hover:shadow-xs transition-all duration-200 overflow-hidden">
+                            <div className="p-3 sm:py-3 sm:px-4 space-y-1.5">
+                              {/* Top Row: Badges + Date + Quick Actions */}
+                              <div className="flex items-center justify-between gap-2 flex-wrap">
+                                <div className="flex items-center gap-2 flex-wrap">
+                                  {/* Event Badge: Catholic vs UTM vs Public Holiday */}
+                                  {event.isCatholic ? (
+                                    <span className="px-2 py-0.5 rounded-full bg-primary/10 text-primary text-[11px] font-semibold">
+                                      {t("badgeCatholic")}
+                                    </span>
+                                  ) : event.isUtm ? (
+                                    <span className="px-2 py-0.5 rounded-full bg-primary/10 text-primary text-[11px] font-semibold">
+                                      {t("badgeUtm")}
+                                    </span>
+                                  ) : (
+                                    <span className="px-2 py-0.5 rounded-full bg-primary/10 text-primary text-[11px] font-semibold">
+                                      {t("badgeHoliday")}
+                                    </span>
+                                  )}
 
-                                {/* Event Card */}
-                                <article
-                                  role="button"
-                                  tabIndex={0}
-                                  aria-expanded={isEventExpanded}
-                                  onClick={() => toggleEventExpand(event.id)}
-                                  onKeyDown={(e) => {
-                                    if (e.key === "Enter" || e.key === " ") {
-                                      e.preventDefault()
-                                      toggleEventExpand(event.id)
-                                    }
-                                  }}
-                                  className={`rounded-xl sm:rounded-2xl bg-card border transition-all duration-200 overflow-hidden cursor-pointer select-none focus:outline-none focus-visible:ring-2 focus-visible:ring-primary ${
-                                    isEventExpanded
-                                      ? "border-primary/50 shadow-md ring-1 ring-primary/20"
-                                      : "border-border/70 shadow-xs hover:border-primary/40 hover:shadow-sm"
-                                  }`}
-                                >
-                                  <div className="p-4 sm:p-5">
-                                    {/* Top Row: Badge + Date + Chevron */}
-                                    <div className="flex items-center justify-between gap-2.5 mb-2.5">
-                                      <div className="flex items-center gap-2 flex-wrap">
-                                        {/* Event Badge: Catholic vs UTM vs Public Holiday vs MCG Events */}
-                                        {event.isCatholic ? (
-                                          <span className="px-2 py-0.5 rounded-full bg-primary/10 text-primary text-[11px] font-semibold">
-                                            {t("badgeCatholic")}
-                                          </span>
-                                        ) : event.isUtm ? (
-                                          <span className="px-2 py-0.5 rounded-full bg-primary/10 text-primary text-[11px] font-semibold">
-                                            {t("badgeUtm")}
-                                          </span>
-                                        ) : event.isHoliday ? (
-                                          <span className="px-2 py-0.5 rounded-full bg-primary/10 text-primary text-[11px] font-semibold">
-                                            {t("badgeHoliday")}
-                                          </span>
-                                        ) : (
-                                          <span className="px-2 py-0.5 rounded-full bg-primary/10 text-primary text-[11px] font-semibold">
-                                            {t("badgeMcg")}
-                                          </span>
-                                        )}
-
-                                        {/* Series Badge (for MCG events if present) */}
-                                        {!event.isCatholic && !event.isUtm && !event.isHoliday && event.seriesName && (
-                                          <span className="px-2 py-0.5 rounded-full bg-muted text-muted-foreground text-[11px] font-medium">
-                                            {event.seriesName}
-                                          </span>
-                                        )}
-
-                                        {/* Date */}
-                                        {displayDate && (
-                                          <div className="inline-flex items-center gap-1.5 text-xs font-semibold text-muted-foreground">
-                                            <Calendar className="w-3 h-3 text-primary/80" />
-                                            <span>{displayDate}</span>
-                                          </div>
-                                        )}
-                                      </div>
-
-                                      {/* Event Expand Hint */}
-                                      <div className="flex items-center gap-1 text-xs font-medium text-muted-foreground group-hover/event:text-foreground transition-colors">
-                                        <span className="hidden sm:inline text-[11px]">
-                                          {isEventExpanded ? t("hideDetails") : t("viewDetails")}
-                                        </span>
-                                        <div
-                                          className={`w-5 h-5 rounded-full flex items-center justify-center bg-muted/60 transition-transform duration-200 ${
-                                            isEventExpanded
-                                              ? "rotate-180 bg-primary/10 text-primary"
-                                              : ""
-                                          }`}
-                                        >
-                                          <ChevronDown className="w-3 h-3" />
-                                        </div>
-                                      </div>
+                                  {/* Date */}
+                                  {displayDate && (
+                                    <div className="inline-flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
+                                      <Calendar className="w-3 h-3 text-primary/80" />
+                                      <span>{displayDate}</span>
                                     </div>
+                                  )}
+                                </div>
 
-                                    {/* Title */}
-                                    <h4 className="font-heading text-base sm:text-lg font-bold text-foreground leading-snug group-hover/event:text-primary transition-colors">
-                                      {eventTitle}
-                                    </h4>
+                                {/* Action Control: Download .ics */}
+                                <div className="flex items-center ml-auto">
+                                  <button
+                                    type="button"
+                                    onClick={(e) => handleAddToCalendar(e, event)}
+                                    title={t("addToCalendar")}
+                                    className="inline-flex items-center gap-1 rounded-md border border-border/70 bg-background/80 px-2.5 py-1 text-[11px] font-medium text-foreground hover:bg-muted active:scale-98 transition-all cursor-pointer shadow-2xs"
+                                  >
+                                    <CalendarPlus className="w-3 h-3 text-primary/80" />
+                                    <span>{t("addToCalendar")}</span>
+                                  </button>
+                                </div>
+                              </div>
 
-                                    {/* Meta: Location (if present) */}
-                                    {!event.isCatholic && !event.isUtm && !event.isHoliday && event.location && (
-                                      <div className="mt-2 flex items-center gap-1.5 text-xs text-muted-foreground">
-                                        <MapPin className="w-3.5 h-3.5 text-primary/80 flex-shrink-0" />
-                                        <span>{event.location}</span>
-                                      </div>
-                                    )}
+                              {/* Title */}
+                              <h4 className="font-heading text-sm sm:text-base font-bold text-foreground leading-snug group-hover/event:text-primary transition-colors">
+                                {eventTitle}
+                              </h4>
 
-                                    {/* Short Description */}
-                                    {eventSummary && (
-                                      <p className="mt-2 text-xs sm:text-sm text-muted-foreground leading-relaxed line-clamp-2">
-                                        {eventSummary}
-                                      </p>
-                                    )}
-
-                                    {/* Expandable Details Area */}
-                                    <AnimatePresence initial={false}>
-                                      {isEventExpanded && (
-                                        <motion.div
-                                          initial={{ opacity: 0, height: 0 }}
-                                          animate={{ opacity: 1, height: "auto" }}
-                                          exit={{ opacity: 0, height: 0 }}
-                                          transition={{ duration: 0.25, ease: "easeInOut" }}
-                                          className="overflow-hidden"
-                                        >
-                                          <div className="pt-4 mt-4 border-t border-border/60 space-y-3.5">
-                                            {/* Cover image preview if available */}
-                                            {hasCover && event.coverImageUrl && (
-                                              <div className="relative aspect-[16/9] w-full rounded-lg overflow-hidden bg-muted/30">
-                                                <Image
-                                                  src={event.coverImageUrl}
-                                                  alt={eventTitle}
-                                                  fill
-                                                  sizes="(max-width: 768px) 100vw, 600px"
-                                                  className="object-cover"
-                                                />
-                                              </div>
-                                            )}
-
-                                            {/* Full Summary */}
-                                            <p className="text-xs sm:text-sm leading-relaxed text-foreground/90">
-                                              {eventSummary}
-                                            </p>
-
-                                            {/* Term Context (for MCG events) */}
-                                            {!event.isCatholic && !event.isUtm && !event.isHoliday && event.termName && (
-                                              <p className="text-xs text-muted-foreground">
-                                                {event.termName}
-                                              </p>
-                                            )}
-
-                                            {/* Action Buttons */}
-                                            <div className="flex flex-wrap items-center gap-2 pt-1.5">
-                                              {/* Link to Notion event page (for MCG events) */}
-                                              {!event.isCatholic && !event.isUtm && !event.isHoliday && (
-                                                <Link
-                                                  href={`/events/${event.slug}`}
-                                                  onClick={(e) => e.stopPropagation()}
-                                                  className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground shadow-xs hover:bg-primary/90 active:scale-98 transition-all"
-                                                >
-                                                  <span>{t("viewEventPage")}</span>
-                                                  <ArrowRight className="w-3.5 h-3.5" />
-                                                </Link>
-                                              )}
-
-                                              {/* Add to Calendar */}
-                                              <button
-                                                type="button"
-                                                onClick={(e) => handleAddToCalendar(e, event)}
-                                                className="inline-flex items-center gap-1.5 rounded-lg border border-border/80 bg-background px-3 py-1.5 text-xs font-medium text-foreground hover:bg-muted active:scale-98 transition-all"
-                                              >
-                                                <CalendarPlus className="w-3.5 h-3.5" />
-                                                <span>{t("addToCalendar")}</span>
-                                              </button>
-
-                                              {/* Copy Details */}
-                                              <button
-                                                type="button"
-                                                onClick={(e) => handleCopy(e, event)}
-                                                className="inline-flex items-center gap-1.5 rounded-lg border border-border/80 bg-background px-2.5 py-1.5 text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-muted active:scale-98 transition-all ml-auto"
-                                              >
-                                                {copiedId === event.id ? (
-                                                  <>
-                                                    <Check className="w-3.5 h-3.5 text-green-600 dark:text-green-400" />
-                                                    <span className="text-green-600 dark:text-green-400 font-medium">
-                                                      {t("linkCopied")}
-                                                    </span>
-                                                  </>
-                                                ) : (
-                                                  <>
-                                                    <Copy className="w-3.5 h-3.5" />
-                                                    <span>{t("copyLink")}</span>
-                                                  </>
-                                                )}
-                                              </button>
-                                            </div>
-                                          </div>
-                                        </motion.div>
-                                      )}
-                                    </AnimatePresence>
-                                  </div>
-                                </article>
-                              </motion.div>
-                            )
-                          })
-                        ) : (
-                          <div className="py-2.5 pl-2 text-xs text-muted-foreground/75 italic">
-                            {t("noEventsThisMonth")}
-                          </div>
-                        )}
-                      </div>
-                    </motion.div>
+                              {/* Description - Preserved in full */}
+                              {eventSummary && (
+                                <p className="text-xs sm:text-sm leading-relaxed text-muted-foreground">
+                                  {eventSummary}
+                                </p>
+                              )}
+                            </div>
+                          </article>
+                        </motion.div>
+                      )
+                    })
+                  ) : (
+                    <div className="py-1.5 pl-2 text-xs text-muted-foreground/60 italic">
+                      {t("noEventsThisMonth")}
+                    </div>
                   )}
-                </AnimatePresence>
+                </div>
               </div>
             )
           })}
