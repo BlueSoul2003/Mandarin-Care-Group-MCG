@@ -283,6 +283,15 @@
       "birthdayPlaceholder": "YYYY-MM-DD",
       "majorYear": "Major & Year (Optional)",
       "majorPlaceholder": "e.g., CS Year 1",
+      "faithStatus": "Which option best describes you?",
+      "faithStatusPlaceholder": "Please select an option...",
+      "faithOptions": {
+        "catholic_new": "I am a Catholic (new student)",
+        "catholic_senior": "I am a Catholic (senior/returning student)",
+        "christian_non_catholic": "I am a Christian but not Catholic",
+        "interested_non_christian": "I am not a Christian, but I’m interested in faith",
+        "not_thought_yet": "I have not really thought about faith before"
+      },
       "message": "Message for us (Optional)",
       "messagePlaceholder": "Why you want to join, what you expect...",
       "consent": "I agree that MCG committee can use this data to contact me regarding activities.",
@@ -299,7 +308,59 @@
       "resendError": "Failed to resend confirmation email. Please try again.",
       "goToLogin": "Go to Login",
       "passwordMismatch": "Passwords do not match!",
-      "passwordMatch": "Passwords match"
+      "passwordMatch": "Passwords match",
+      "nameRequired": "Please enter your full name.",
+      "invalidEmail": "Please enter a valid email address.",
+      "passwordTooShort": "Password must be at least 6 characters.",
+      "consentRequired": "Please agree to the privacy consent to proceed.",
+      "continue": "Continue",
+      "back": "Back",
+      "stepIndicator": "Step {current} of {total}",
+      "catholicStepTitle": "Catholic Journey & Talents",
+      "catholicStepSubtitle": "Tell us a bit about your sacraments and how you'd like to share your gifts",
+      "christianStepTitle": "Church Journey & Talents",
+      "christianStepSubtitle": "Tell us a bit about your church background and how you'd like to share your gifts",
+      "generalStepTitle": "Expectations & Community Interests",
+      "generalStepSubtitle": "Let us know how we can best support and accompany you in your university journey",
+      "sacramentsTitle": "Have you received the following sacraments? (Select all that apply)",
+      "sacraments": {
+        "baptism": "Baptism（领洗）",
+        "firstCommunion": "First Communion（初领圣体）",
+        "confirmation": "Confirmation（坚振）"
+      },
+      "parishServiceTitle": "Have you served in your parish/church before?",
+      "parishServiceOptions": {
+        "lector": "读经员 Lector",
+        "choir": "唱诗/圣歌团 Choir",
+        "instrumentalist": "乐器 Instrumentalist",
+        "altarServer": "祭台服务 Altar Server",
+        "youthGroup": "青年团/其他小组 Youth Group / Other Groups"
+      },
+      "giftsTitle": "What gifts/skills would you like to use in our community?",
+      "giftOptions": {
+        "singing": "歌唱 — Singing",
+        "instrument": "乐器 — Instrument playing",
+        "publicSpeaking": "演讲/带领祈祷 — Public speaking / Leading prayer",
+        "media": "摄影/摄像 — Photography / Videography",
+        "eventPlanning": "活动策划 — Event organizing",
+        "design": "设计/美工 — Design / Creative skills"
+      },
+      "expectationsTitle": "What would you like MCG to offer you? (Select all that apply)",
+      "expectationOptions": {
+        "newFriends": "认识新朋友 — Making new friends",
+        "faithExploration": "探索信仰 — Faith exploration",
+        "lifeSupport": "学业/生活支持 — Academic & life support",
+        "joiningEvents": "活动体验 — Joining events"
+      },
+      "activitiesTitle": "Would you be interested to join the following activities? (Select all that apply)",
+      "activityInterestOptions": {
+        "faithSharing": "信仰分享会 — Faith sharing sessions",
+        "faithQa": "信仰 Q&A/讨论 — Faith Q&A or discussion",
+        "smallGroups": "小组聚会 — Small group gatherings",
+        "campusEvents": "校园活动 — Campus events"
+      },
+      "otherLabel": "Other",
+      "otherPlaceholder": "Please specify..."
     }
   },
   "PastEvents": {
