@@ -256,6 +256,15 @@
       "birthdayPlaceholder": "年 / 月 / 日",
       "majorYear": "科系與年級（選填）",
       "majorPlaceholder": "例：資工大一 / CS Year 1",
+      "faithStatus": "請選擇最符合的選項",
+      "faithStatusPlaceholder": "請選擇最符合的選項...",
+      "faithOptions": {
+        "catholic_new": "我是天主教徒（新生）",
+        "catholic_senior": "我是天主教徒（舊生/學長姐）",
+        "christian_non_catholic": "我是基督徒，但不是天主教",
+        "interested_non_christian": "我不是基督徒，但對信仰有興趣",
+        "not_thought_yet": "我還沒有想過信仰的問題"
+      },
       "message": "給我們的話（選填）",
       "messagePlaceholder": "有什麼想說的、想加入的原因，或對我們的期待…",
       "consent": "我同意 MCG 執委會使用以上資料與我聯絡；資料只供加入團體與活動聯繫使用。",
@@ -272,7 +281,59 @@
       "resendError": "重新發送失敗，請稍後再試。",
       "goToLogin": "前往登入",
       "passwordMismatch": "密碼不一致！",
-      "passwordMatch": "密碼相符"
+      "passwordMatch": "密碼相符",
+      "nameRequired": "請輸入姓名。",
+      "invalidEmail": "請輸入有效的電子郵件地址。",
+      "passwordTooShort": "密碼長度至少需 6 個字符。",
+      "consentRequired": "請勾選同意條款以繼續提交。",
+      "continue": "繼續",
+      "back": "上一步",
+      "stepIndicator": "第 {current} / {total} 步",
+      "catholicStepTitle": "信仰歷程與恩賜分享",
+      "catholicStepSubtitle": "讓我們更認識您的信仰背景，以便提供最合適的陪伴與事奉機會",
+      "christianStepTitle": "教會歷程與恩賜分享",
+      "christianStepSubtitle": "讓我們更認識您的教會事奉背景，以及願在團契中發揮的恩賜",
+      "generalStepTitle": "團契期待與活動興趣",
+      "generalStepSubtitle": "讓我們了解您的期待，以便為您的大學生活提供最合適的陪伴與支持",
+      "sacramentsTitle": "你是否已經接受過以下聖事？（可多選）",
+      "sacraments": {
+        "baptism": "Baptism（領洗）",
+        "firstCommunion": "First Communion（初領聖體）",
+        "confirmation": "Confirmation（堅振）"
+      },
+      "parishServiceTitle": "你在家鄉堂區/教會是否有參與過服務事奉？",
+      "parishServiceOptions": {
+        "lector": "讀經員 Lector",
+        "choir": "唱詩/聖歌團 Choir",
+        "instrumentalist": "樂器 Instrumentalist",
+        "altarServer": "祭台服務 Altar Server",
+        "youthGroup": "青年團/其他小組 Youth Group / Other Groups"
+      },
+      "giftsTitle": "你有哪些技能或恩賜，願意在 MCG 或教會中分享？",
+      "giftOptions": {
+        "singing": "歌唱 — Singing",
+        "instrument": "樂器 — Instrument playing",
+        "publicSpeaking": "演講/帶領祈禱 — Public speaking / Leading prayer",
+        "media": "攝影/攝像 — Photography / Videography",
+        "eventPlanning": "活動策劃 — Event organizing",
+        "design": "設計/美工 — Design / Creative skills"
+      },
+      "expectationsTitle": "你希望 MCG 可以為你提供什麼？（可多選）",
+      "expectationOptions": {
+        "newFriends": "認識新朋友 — Making new friends",
+        "faithExploration": "探索信仰 — Faith exploration",
+        "lifeSupport": "學業/生活支持 — Academic & life support",
+        "joiningEvents": "活動體驗 — Joining events"
+      },
+      "activitiesTitle": "你是否有興趣參加以下活動？（可多選）",
+      "activityInterestOptions": {
+        "faithSharing": "信仰分享會 — Faith sharing sessions",
+        "faithQa": "信仰 Q&A/討論 — Faith Q&A or discussion",
+        "smallGroups": "小組聚會 — Small group gatherings",
+        "campusEvents": "校園活動 — Campus events"
+      },
+      "otherLabel": "其他",
+      "otherPlaceholder": "請註明…"
     }
   },
   "PastEvents": {
