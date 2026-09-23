@@ -20,6 +20,26 @@ function YouTubeIcon({ className = "w-4 h-4" }: { className?: string }) {
   )
 }
 
+function InstagramIcon({ className = "w-4 h-4" }: { className?: string }) {
+  return (
+    <svg
+      className={className}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      xmlns="http://www.w3.org/2000/svg"
+      aria-hidden="true"
+    >
+      <rect width="20" height="20" x="2" y="2" rx="5" ry="5" />
+      <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" />
+      <line x1="17.5" x2="17.51" y1="6.5" y2="6.5" />
+    </svg>
+  )
+}
+
 export function Footer() {
   const t = useTranslations("Footer")
 
@@ -49,8 +69,8 @@ export function Footer() {
               <span>{t("campusLocation")}</span>
             </div>
 
-            {/* Small YouTube Icon */}
-            <div className="pt-0.5">
+            {/* Social Icons (YouTube & Instagram) */}
+            <div className="flex items-center gap-2 pt-0.5">
               <a
                 href="https://www.youtube.com/@mcgutm5385"
                 target="_blank"
@@ -60,6 +80,16 @@ export function Footer() {
                 title="YouTube"
               >
                 <YouTubeIcon className="w-3.5 h-3.5 fill-current group-hover:scale-105 transition-transform" />
+              </a>
+              <a
+                href="https://www.instagram.com/mcg_utm?stkn=YzF4b2tpZjd0dXFj"
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="MCG UTM Instagram"
+                className="inline-flex items-center justify-center w-7 h-7 rounded-full bg-[#84632C]/8 hover:bg-[#84632C]/15 text-[#6B5A46] hover:text-[#84632C] dark:bg-white/5 dark:text-[#A89C8A] dark:hover:text-[#FAF6EE] border border-[#84632C]/20 hover:border-[#84632C]/40 transition-all group shadow-2xs"
+                title="Instagram"
+              >
+                <InstagramIcon className="w-3.5 h-3.5 group-hover:scale-105 transition-transform" />
               </a>
             </div>
           </div>

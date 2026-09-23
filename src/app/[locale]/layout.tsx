@@ -20,9 +20,18 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-const siteUrl =
-  process.env.NEXT_PUBLIC_SITE_URL ||
-  (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "https://mcgutm.org");
+const getSiteUrl = (): string => {
+  if (process.env.NEXT_PUBLIC_SITE_URL) {
+    const raw = process.env.NEXT_PUBLIC_SITE_URL.trim();
+    return raw.startsWith("http") ? raw : `https://${raw}`;
+  }
+  if (process.env.VERCEL_PROJECT_PRODUCTION_URL) {
+    return `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL.trim()}`;
+  }
+  return "https://mandarin-care-group-mcg.vercel.app";
+};
+
+const siteUrl = getSiteUrl();
 
 export async function generateMetadata({
   params,
@@ -64,9 +73,9 @@ export async function generateMetadata({
       type: "website",
       images: [
         {
-          url: "/icon.png",
-          width: 512,
-          height: 512,
+          url: "/og-image.png",
+          width: 600,
+          height: 600,
           type: "image/png",
           alt: "Mandarin Care Group | UTM Logo",
         },
@@ -76,7 +85,7 @@ export async function generateMetadata({
       card: "summary",
       title: defaultTitle,
       description,
-      images: ["/icon.png"],
+      images: ["/og-image.png"],
     },
   };
 }
