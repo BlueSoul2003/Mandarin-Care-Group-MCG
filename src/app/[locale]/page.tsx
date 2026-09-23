@@ -15,7 +15,7 @@ export default async function Home() {
   ]
 
   return (
-    <div className="container mx-auto max-w-6xl px-4 py-10 md:py-20 text-center">
+    <div className="container mx-auto max-w-6xl px-4 pt-10 pb-4 md:pt-16 md:pb-6 text-center">
       {/* Hero Section */}
       <section className="flex flex-col items-center justify-center pt-8 pb-12">
         <h1 className="text-4xl md:text-6xl font-bold tracking-tight mb-6 text-foreground font-heading">
@@ -33,7 +33,7 @@ export default async function Home() {
       <LatestYouTubeVideo />
 
       {/* Content Navigation Section */}
-      <section className="grid grid-cols-1 gap-5 py-12 text-left md:grid-cols-3" aria-label={t("contentNavigation")}>
+      <section className="grid grid-cols-1 gap-5 pt-8 pb-2 text-left md:grid-cols-3" aria-label={t("contentNavigation")}>
         {LANDING_LINKS.map((item) => (
           <Link
             key={item.href}
