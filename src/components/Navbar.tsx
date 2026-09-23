@@ -232,16 +232,12 @@ export function Navbar() {
                     {link.label}
                   </Link>
                 ))}
-              </div>
-
-              {/* Eucharistic Miracles Action Button */}
-              <div className="pt-2">
                 <a
                   href="https://www.miracolieucaristici.org/en/Liste/list.html"
                   target="_blank"
                   rel="noopener noreferrer"
                   onClick={() => setMobileMenuOpen(false)}
-                  className="inline-flex items-center justify-between w-full px-4 py-3 rounded-xl bg-[#84632C]/10 hover:bg-[#84632C]/15 dark:bg-[#C5A880]/15 dark:hover:bg-[#C5A880]/25 text-[#84632C] dark:text-[#E8D49E] border border-[#84632C]/25 dark:border-[#C5A880]/30 text-sm font-semibold transition-all group shadow-2xs"
+                  className="flex items-center justify-between text-lg font-medium text-foreground hover:text-primary transition-colors py-2 group"
                 >
                   <span>{t("exploreMiracles")}</span>
                   <span className="transition-transform group-hover:translate-x-1" aria-hidden="true">→</span>
