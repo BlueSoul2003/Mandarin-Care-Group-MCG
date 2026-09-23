@@ -13,7 +13,8 @@
     "toggleTheme": "切換外觀主題",
     "toggleLanguage": "切換語言",
     "openMenu": "開啟選單",
-    "closeMenu": "關閉選單"
+    "closeMenu": "關閉選單",
+    "exploreMiracles": "探索聖體奇蹟"
   },
   "Home": {
     "title": "MCG UTM",
@@ -72,7 +73,7 @@
     "amdg": "全為主榮 · 走向至善",
     "eucharisticMiraclesTitle": "普世聖體奇蹟",
     "eucharisticMiraclesDesc": "探索由聖卡洛·阿庫蒂斯（St. Carlo Acutis）構思策劃的普世聖體奇蹟國際展覽。",
-    "eucharisticMiraclesAction": "探索展覽"
+    "eucharisticMiraclesAction": "探索聖體奇蹟"
   },
   "Gallery": {
     "title": "相簿",

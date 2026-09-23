@@ -13,7 +13,8 @@
     "toggleTheme": "Toggle theme",
     "toggleLanguage": "Change Language",
     "openMenu": "Open Menu",
-    "closeMenu": "Close Menu"
+    "closeMenu": "Close Menu",
+    "exploreMiracles": "Explore Miracles"
   },
   "Home": {
     "title": "MCG UTM",
@@ -72,7 +73,7 @@
     "amdg": "Ad Majorem Dei Gloriam",
     "eucharisticMiraclesTitle": "Eucharistic Miracles",
     "eucharisticMiraclesDesc": "Explore the Eucharistic Miracles of the World, the international exhibition conceived by St. Carlo Acutis.",
-    "eucharisticMiraclesAction": "Explore Exhibition"
+    "eucharisticMiraclesAction": "Explore Miracles"
   },
   "Gallery": {
     "title": "Gallery",

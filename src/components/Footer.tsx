@@ -65,7 +65,7 @@ export function Footer() {
           </div>
 
           {/* Nav Columns: 3 sections (md:col-span-8 lg:col-span-8) */}
-          <div className="md:col-span-8 lg:col-span-8 grid grid-cols-2 sm:grid-cols-12 gap-6 md:gap-8">
+          <div className="md:col-span-8 lg:col-span-8 grid grid-cols-1 sm:grid-cols-12 gap-6 md:gap-8">
             {/* Column 1: Community */}
             <div className="col-span-1 sm:col-span-3 space-y-2">
               <h4 className="text-xs md:text-[13px] font-bold uppercase tracking-wider text-[#332616] dark:text-[#FAF6EE] font-heading">
@@ -125,7 +125,7 @@ export function Footer() {
             </div>
 
             {/* Column 3: Eucharistic Miracles Exhibition */}
-            <div className="col-span-2 sm:col-span-5 space-y-2">
+            <div className="col-span-1 sm:col-span-5 space-y-2">
               <h4 className="text-xs md:text-[13px] font-bold uppercase tracking-wider text-[#332616] dark:text-[#FAF6EE] font-heading">
                 {t("eucharisticMiraclesTitle")}
               </h4>
