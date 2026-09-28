@@ -19,7 +19,7 @@ export class ResilientContentRepository extends SnapshotContentRepository {
   constructor(
     private readonly primary: ContentRepository | null,
     private readonly fallback: ContentRepository,
-    ttlSeconds = 300,
+    ttlSeconds = 60,
   ) {
     super()
     this.ttlMs = ttlSeconds * 1000
@@ -45,37 +45,41 @@ export class ResilientContentRepository extends SnapshotContentRepository {
       return this.cachedSnapshot
     }
 
-    // 4. Cold start: Serve the offline Git snapshot immediately (< 5ms)
-    // while warming up the live Notion data in the background
-    this.refreshInBackground()
-    return this.fallback.getPublishedSnapshot()
+    // 4. Cold start / Build: On cold start or during static build (e.g. Vercel deployment),
+    // we must await the primary Notion source so that fresh content is generated and served.
+    // If Notion is offline or throws, fetchFromPrimaryOrFallback catches it and returns fallbackSnapshot.
+    return this.fetchFromPrimaryOrFallback()
   }
 
   private async fetchFromPrimaryOrFallback(): Promise<PublishedContentSnapshot> {
-    try {
-      const snapshot = await this.primary!.getPublishedSnapshot()
-      this.cachedSnapshot = snapshot
-      this.lastFetchedAt = Date.now()
-      return snapshot
-    } catch (error) {
-      console.error(
-        "[MCG content] Notion content failed validation; serving Git snapshot.",
-        error,
-      )
-      const fallbackSnapshot = await this.fallback.getPublishedSnapshot()
-      if (!this.cachedSnapshot) {
-        this.cachedSnapshot = fallbackSnapshot
-        this.lastFetchedAt = Date.now() - this.ttlMs + 60_000 // Retry in 60s
+    if (this.pendingFetch) return this.pendingFetch
+    this.pendingFetch = (async () => {
+      try {
+        const snapshot = await this.primary!.getPublishedSnapshot()
+        this.cachedSnapshot = snapshot
+        this.lastFetchedAt = Date.now()
+        return snapshot
+      } catch (error) {
+        console.error(
+          "[MCG content] Notion content failed validation; serving Git snapshot.",
+          error,
+        )
+        const fallbackSnapshot = await this.fallback.getPublishedSnapshot()
+        if (!this.cachedSnapshot) {
+          this.cachedSnapshot = fallbackSnapshot
+          this.lastFetchedAt = Date.now() - this.ttlMs + 60_000 // Retry in 60s
+        }
+        return fallbackSnapshot
+      } finally {
+        this.pendingFetch = null
       }
-      return fallbackSnapshot
-    }
+    })()
+    return this.pendingFetch
   }
 
   private refreshInBackground() {
     if (this.pendingFetch) return
-    this.pendingFetch = this.fetchFromPrimaryOrFallback().finally(() => {
-      this.pendingFetch = null
-    })
+    void this.fetchFromPrimaryOrFallback()
   }
 }
 
