@@ -25,6 +25,9 @@ export interface EventDetail {
 export interface ContentRepository {
   getPublishedSnapshot(): Promise<PublishedContentSnapshot>
   listPublishedEvents(): Promise<Event[]>
+  listTimelineEvents(): Promise<
+    Array<Event & { termName?: string; seriesName?: string; photoUrl?: string }>
+  >
   getEventBySlug(slug: string): Promise<EventDetail | null>
   listSeries(): Promise<Series[]>
   getSeriesBySlug(slug: string): Promise<Series | null>
@@ -42,6 +45,25 @@ export abstract class SnapshotContentRepository implements ContentRepository {
     return [...snapshot.events].sort((a, b) =>
       (b.startDate ?? "").localeCompare(a.startDate ?? ""),
     )
+  }
+
+  async listTimelineEvents() {
+    const snapshot = await this.getPublishedSnapshot()
+    return snapshot.events
+      .filter((item) => item.type === "EventReg")
+      .sort((a, b) => (a.startDate ?? "").localeCompare(b.startDate ?? ""))
+      .map((event) => {
+        const photoUrl =
+          event.coverImageUrl ||
+          snapshot.media.find((m) => m.eventId === event.id && m.type === "image")?.url
+        return {
+          ...event,
+          coverImageUrl: photoUrl || event.coverImageUrl,
+          photoUrl,
+          termName: snapshot.terms.find((item) => item.id === event.termId)?.name,
+          seriesName: snapshot.series.find((item) => item.id === event.seriesId)?.name,
+        }
+      })
   }
 
   async getEventBySlug(slug: string): Promise<EventDetail | null> {

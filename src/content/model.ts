@@ -59,6 +59,7 @@ export const eventSchema = z.object({
   slug,
   title: z.string().trim().min(1),
   summary: z.string().trim(),
+  type: z.string().trim().optional(),
   startDate: isoDate.nullable(),
   endDate: isoDate.optional(),
   dateLabel: z.string().trim().optional(),

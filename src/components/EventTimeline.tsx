@@ -3,9 +3,12 @@
 import * as React from "react"
 import { useLocale, useTranslations } from "next-intl"
 import { motion } from "framer-motion"
+import { Link } from "@/i18n/routing"
 import {
   CalendarPlus,
   Calendar,
+  MapPin,
+  ArrowRight,
 } from "lucide-react"
 import { getCatholicEventsForYears, type CatholicEventItem } from "@/data/catholic-events"
 import { getUtmEventsForYears, type UtmEventItem } from "@/data/utm-events"
@@ -16,6 +19,7 @@ export interface NotionTimelineEvent {
   slug: string
   title: string
   summary: string
+  type?: string
   startDate: string | null
   endDate?: string
   dateLabel?: string
@@ -24,12 +28,54 @@ export interface NotionTimelineEvent {
   seriesSlug?: string
   termName?: string
   coverImageUrl?: string
+  photoUrl?: string
 }
 
 export type UnifiedTimelineEvent =
-  | (CatholicEventItem & { isCatholic: true; isUtm: false; isHoliday: false; endDate?: string })
-  | (UtmEventItem & { isCatholic: false; isUtm: true; isHoliday: false })
-  | (PublicHolidayItem & { isCatholic: false; isUtm: false; isHoliday: true })
+  | (NotionTimelineEvent & {
+      isCatholic: false
+      isUtm: false
+      isHoliday: false
+      isNotion: true
+    })
+  | (CatholicEventItem & {
+      isCatholic: true
+      isUtm: false
+      isHoliday: false
+      isNotion: false
+      endDate?: string
+      dateLabel?: string
+      location?: string
+      seriesName?: string
+      termName?: string
+      slug?: string
+      coverImageUrl?: string
+      photoUrl?: string
+    })
+  | (UtmEventItem & {
+      isCatholic: false
+      isUtm: true
+      isHoliday: false
+      isNotion: false
+      location?: string
+      seriesName?: string
+      termName?: string
+      slug?: string
+      coverImageUrl?: string
+      photoUrl?: string
+    })
+  | (PublicHolidayItem & {
+      isCatholic: false
+      isUtm: false
+      isHoliday: true
+      isNotion: false
+      location?: string
+      seriesName?: string
+      termName?: string
+      slug?: string
+      coverImageUrl?: string
+      photoUrl?: string
+    })
 
 interface MonthGroup {
   monthKey: string
@@ -57,18 +103,33 @@ function getNextDayDateString(dateStr: string): string {
 }
 
 function getEventDate(event: UnifiedTimelineEvent): string {
-  return event.startDate || ""
+  if (event.startDate) return event.startDate
+  if (event.isNotion) {
+    if (event.dateLabel) {
+      const match = event.dateLabel.match(/\d{4}-\d{2}-\d{2}/)
+      if (match) return match[0]
+    }
+    const slugMatch = event.slug?.match(/^(\d{4}-\d{2}-\d{2})/)
+    if (slugMatch) return slugMatch[1]
+  }
+  return ""
 }
 
 export interface EventTimelineProps {
   years?: string[]
-  events?: unknown
+  events?: NotionTimelineEvent[]
 }
 
-export function EventTimeline({ years }: EventTimelineProps = {}) {
+export function EventTimeline({ years, events }: EventTimelineProps = {}) {
   const t = useTranslations("Lifestyle")
   const locale = useLocale()
   const isZh = locale === "zh-TW"
+
+  // Only integrate events from notion if the property named 'Type' is 'EventReg'
+  const notionEvents = React.useMemo(() => {
+    if (!events || !Array.isArray(events)) return []
+    return events.filter((ev) => ev.type === "EventReg")
+  }, [events])
 
   // Determine current year-month (e.g. "2026-09")
   const currentYm = React.useMemo(() => {
@@ -80,13 +141,20 @@ export function EventTimeline({ years }: EventTimelineProps = {}) {
 
   const currentYearStr = React.useMemo(() => new Date().getFullYear().toString(), [])
 
-  // Available academic & liturgical calendar years (defaulting to 2026 and 2027)
+  // Available academic & liturgical calendar years, dynamically expanded by Notion events
   const availableYears = React.useMemo(() => {
-    if (years && years.length > 0) {
-      return [...years].sort()
+    const yearsSet = new Set<string>(years && years.length > 0 ? years : ["2026", "2027"])
+    for (const ev of notionEvents) {
+      const d = ev.startDate || (ev.dateLabel && ev.dateLabel.match(/\d{4}/)?.[0])
+      if (d && d.length >= 4) {
+        const yr = d.substring(0, 4)
+        if (/^\d{4}$/.test(yr)) {
+          yearsSet.add(yr)
+        }
+      }
     }
-    return ["2026", "2027"]
-  }, [years])
+    return Array.from(yearsSet).sort()
+  }, [years, notionEvents])
 
   // Selected year state (defaults to current year or latest available year)
   const defaultYear = availableYears.includes(currentYearStr)
@@ -98,7 +166,7 @@ export function EventTimeline({ years }: EventTimelineProps = {}) {
     ? userSelectedYear
     : defaultYear
 
-  // Combine Catholic events, UTM academic events, and Public Holidays (Notion data disconnected)
+  // Combine Catholic events, UTM academic events, Public Holidays, and Notion EventReg events
   const combinedEvents = React.useMemo<UnifiedTimelineEvent[]>(() => {
     const numericYears = availableYears.map(Number).filter((y) => !isNaN(y))
     const catholicEvents: UnifiedTimelineEvent[] = getCatholicEventsForYears(numericYears).map((ev) => ({
@@ -106,22 +174,32 @@ export function EventTimeline({ years }: EventTimelineProps = {}) {
       isCatholic: true as const,
       isUtm: false as const,
       isHoliday: false as const,
+      isNotion: false as const,
     }))
     const utmEvents: UnifiedTimelineEvent[] = getUtmEventsForYears(numericYears).map((ev) => ({
       ...ev,
       isCatholic: false as const,
       isUtm: true as const,
       isHoliday: false as const,
+      isNotion: false as const,
     }))
     const holidayEvents: UnifiedTimelineEvent[] = getPublicHolidaysForYears(numericYears).map((ev) => ({
       ...ev,
       isCatholic: false as const,
       isUtm: false as const,
       isHoliday: true as const,
+      isNotion: false as const,
+    }))
+    const mcgEvents: UnifiedTimelineEvent[] = notionEvents.map((ev) => ({
+      ...ev,
+      isCatholic: false as const,
+      isUtm: false as const,
+      isHoliday: false as const,
+      isNotion: true as const,
     }))
 
-    return [...catholicEvents, ...utmEvents, ...holidayEvents]
-  }, [availableYears])
+    return [...catholicEvents, ...utmEvents, ...holidayEvents, ...mcgEvents]
+  }, [availableYears, notionEvents])
 
   // Group and sort combined events chronologically ascending from January to December (01 to 12)
   const monthGroups = React.useMemo<MonthGroup[]>(() => {
@@ -201,6 +279,9 @@ export function EventTimeline({ years }: EventTimelineProps = {}) {
     if (event.isUtm || event.isHoliday) {
       return isZh ? event.dateLabel["zh-TW"] : event.dateLabel.en
     }
+    if (event.isNotion && event.dateLabel) {
+      return event.dateLabel
+    }
     const dateStr = event.startDate
     if (!dateStr) return ""
     try {
@@ -217,12 +298,21 @@ export function EventTimeline({ years }: EventTimelineProps = {}) {
 
   const handleAddToCalendar = (e: React.MouseEvent, event: UnifiedTimelineEvent) => {
     e.stopPropagation()
-    const eventTitle = isZh ? event.title["zh-TW"] : event.title.en
-    const eventSummary = isZh ? event.summary["zh-TW"] : event.summary.en
+    const eventTitle =
+      typeof event.title === "string"
+        ? event.title
+        : isZh
+        ? event.title["zh-TW"]
+        : event.title.en
+    const eventSummary =
+      typeof event.summary === "string"
+        ? event.summary
+        : isZh
+        ? event.summary["zh-TW"]
+        : event.summary.en
     const startDate = event.startDate
-    const endDate = event.endDate || event.startDate
-
     if (!startDate) return
+    const endDate = event.endDate || startDate
 
     const dtStart = startDate.replace(/-/g, "")
     const dtEnd = getNextDayDateString(endDate)
@@ -379,8 +469,18 @@ export function EventTimeline({ years }: EventTimelineProps = {}) {
                   {group.events.length > 0 ? (
                     group.events.map((event, idx) => {
                       const displayDate = formatDisplayDate(event)
-                      const eventTitle = isZh ? event.title["zh-TW"] : event.title.en
-                      const eventSummary = isZh ? event.summary["zh-TW"] : event.summary.en
+                      const eventTitle =
+                        typeof event.title === "string"
+                          ? event.title
+                          : isZh
+                          ? event.title["zh-TW"]
+                          : event.title.en
+                      const eventSummary =
+                        typeof event.summary === "string"
+                          ? event.summary
+                          : isZh
+                          ? event.summary["zh-TW"]
+                          : event.summary.en
                       const isFirst = idx === 0 && group.isCurrentMonth
 
                       return (
@@ -418,7 +518,7 @@ export function EventTimeline({ years }: EventTimelineProps = {}) {
                               {/* Top Row: Badges + Date + Quick Actions */}
                               <div className="flex items-center justify-between gap-2 flex-wrap">
                                 <div className="flex items-center gap-2 flex-wrap">
-                                  {/* Event Badge: Catholic vs UTM vs Public Holiday */}
+                                  {/* Event Badge: Catholic vs UTM vs Public Holiday vs MCG Event */}
                                   {event.isCatholic ? (
                                     <span className="px-2 py-0.5 rounded-full bg-primary/10 text-primary text-[11px] font-semibold">
                                       {t("badgeCatholic")}
@@ -427,9 +527,20 @@ export function EventTimeline({ years }: EventTimelineProps = {}) {
                                     <span className="px-2 py-0.5 rounded-full bg-primary/10 text-primary text-[11px] font-semibold">
                                       {t("badgeUtm")}
                                     </span>
-                                  ) : (
+                                  ) : event.isHoliday ? (
                                     <span className="px-2 py-0.5 rounded-full bg-primary/10 text-primary text-[11px] font-semibold">
                                       {t("badgeHoliday")}
+                                    </span>
+                                  ) : (
+                                    <span className="px-2 py-0.5 rounded-full bg-primary/10 text-primary text-[11px] font-semibold">
+                                      {t("badgeMcg")}
+                                    </span>
+                                  )}
+
+                                  {/* Series Badge for Notion event */}
+                                  {event.isNotion && event.seriesName && (
+                                    <span className="px-2 py-0.5 rounded-full bg-muted text-muted-foreground text-[11px] font-medium">
+                                      {event.seriesName}
                                     </span>
                                   )}
 
@@ -438,6 +549,14 @@ export function EventTimeline({ years }: EventTimelineProps = {}) {
                                     <div className="inline-flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
                                       <Calendar className="w-3 h-3 text-primary/80" />
                                       <span>{displayDate}</span>
+                                    </div>
+                                  )}
+
+                                  {/* Location for Notion event */}
+                                  {event.isNotion && event.location && (
+                                    <div className="inline-flex items-center gap-1 text-xs text-muted-foreground">
+                                      <MapPin className="w-3 h-3 text-primary/80 flex-shrink-0" />
+                                      <span>{event.location}</span>
                                     </div>
                                   )}
                                 </div>
@@ -466,6 +585,33 @@ export function EventTimeline({ years }: EventTimelineProps = {}) {
                                 <p className="text-xs sm:text-sm leading-relaxed text-muted-foreground">
                                   {eventSummary}
                                 </p>
+                              )}
+
+                              {/* Attached Photo for Notion Event */}
+                              {event.isNotion && (event.photoUrl || event.coverImageUrl) && (
+                                <div className="pt-1.5">
+                                  <div className="overflow-hidden rounded-lg border border-border/60 bg-muted/20">
+                                    <img
+                                      src={event.photoUrl || event.coverImageUrl}
+                                      alt={eventTitle}
+                                      loading="lazy"
+                                      className="w-full max-h-60 sm:max-h-80 object-cover rounded-lg transition-transform duration-300 hover:scale-[1.01]"
+                                    />
+                                  </div>
+                                </div>
+                              )}
+
+                              {/* View More at bottom for Notion Event */}
+                              {event.isNotion && event.slug && (
+                                <div className="pt-1 flex items-center justify-end">
+                                  <Link
+                                    href={`/events/${event.slug}`}
+                                    className="inline-flex items-center gap-1 text-xs font-semibold text-primary hover:text-primary/80 transition-colors group/viewmore"
+                                  >
+                                    <span>{t("viewMore")}</span>
+                                    <ArrowRight className="w-3.5 h-3.5 transition-transform duration-200 group-hover/viewmore:translate-x-0.5" />
+                                  </Link>
+                                </div>
                               )}
                             </div>
                           </article>
