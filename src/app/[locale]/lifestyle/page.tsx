@@ -3,7 +3,7 @@ import { EventTimeline } from "@/components/EventTimeline"
 import { contentRepository } from "@/content"
 import { getTranslations } from "next-intl/server"
 
-export const revalidate = 300
+export const revalidate = 60
 
 export default async function LifestylePage() {
   const t = await getTranslations("Lifestyle")

@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-09-14T03:03:06.026Z",
+  "generatedAt": "2026-09-28T13:55:44.491Z",
   "terms": [],
   "series": [],
   "people": [],
@@ -1110,12 +1110,27 @@
   ],
   "articles": [
     {
+      "id": "3e3d7fb7-72c9-8077-8a52-fcc2965e7e92",
+      "slug": "prayer-for-study",
+      "title": "Aquinas’ Prayer before Study",
+      "excerpt": "A prayer used when sitting down to study",
+      "publishedAt": "2026-09-22",
+      "authorName": "Gregrory Hong",
+      "section": "spiritual",
+      "tags": [
+        "祷文"
+      ],
+      "eventIds": [],
+      "contentMarkdown": "“**Creator of all things, true source of light and wisdom, origin of all being, graciously let a ray of your light penetrate the darkness of my understanding.”<br>”Take from me the double darkness in which I have been born, an obscurity of sin and ignorance.”<br>”Give me a keen understanding, a retentive memory, and the ability to grasp things correctly and fundamentally.”<br>”Grant me the talent of being exact in my explanations and the ability to express myself with thoroughness and charm. “**\n**“Point out the beginning, direct the progress, and help in the completion. I ask this through Jesus Christ our Lord. Amen.”**",
+      "status": "Published"
+    },
+    {
       "id": "3bdd7fb7-72c9-80eb-9753-f47d10f92b2c",
       "slug": "prayer-before-meals",
       "title": "Before We Eat: A Moment of Gratitude",
       "excerpt": "A simple prayer before meals",
       "publishedAt": "2026-08-15",
-      "authorName": "MCG",
+      "authorName": "Brandon Chan",
       "section": "spiritual",
       "tags": [
         "祷文"

@@ -4,7 +4,7 @@ import { notFound } from "next/navigation"
 import ReactMarkdown from "react-markdown"
 import remarkGfm from "remark-gfm"
 
-export const revalidate = 300
+export const revalidate = 60
 
 export async function generateStaticParams() {
   const repository = await contentRepository()
