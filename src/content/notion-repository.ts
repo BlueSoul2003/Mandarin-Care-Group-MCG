@@ -80,6 +80,9 @@ function plainText(page: PageObjectResponse, name: string): string {
   if (value.type === "email") return value.email?.trim() ?? ""
   if (value.type === "phone_number") return value.phone_number?.trim() ?? ""
   if (value.type === "select") return value.select?.name.trim() ?? ""
+  if (value.type === "multi_select") {
+    return value.multi_select.map((item) => item.name.trim()).join(", ")
+  }
   if (value.type === "status") return value.status?.name.trim() ?? ""
   return ""
 }
@@ -153,13 +156,41 @@ async function queryPublished(
     statusProperty?.type === "status"
       ? { status: { equals: "Published" } }
       : { select: { equals: "Published" } }
+  const typeProperty =
+    "properties" in dataSource ? (dataSource.properties.Type as any) : undefined
+  const hasEventRegSelect =
+    typeProperty?.type === "select" &&
+    Array.isArray(typeProperty.select?.options) &&
+    typeProperty.select.options.some((opt: { name: string }) => opt.name === "EventReg")
+  const hasEventRegMultiSelect =
+    typeProperty?.type === "multi_select" &&
+    Array.isArray(typeProperty.multi_select?.options) &&
+    typeProperty.multi_select.options.some((opt: { name: string }) => opt.name === "EventReg")
+
+  const eventRegFilter = hasEventRegSelect
+    ? { property: "Type", select: { equals: "EventReg" } }
+    : hasEventRegMultiSelect
+      ? { property: "Type", multi_select: { contains: "EventReg" } }
+      : null
+
+  const filter = eventRegFilter
+    ? {
+        or: [
+          {
+            property: "Status",
+            ...statusFilter,
+          },
+          eventRegFilter,
+        ],
+      }
+    : {
+        property: "Status",
+        ...statusFilter,
+      }
 
   const results = await collectPaginatedAPI(notion.dataSources.query, {
     data_source_id: dataSourceId,
-    filter: {
-      property: "Status",
-      ...statusFilter,
-    },
+    filter,
   })
 
   return results.filter(isFullPage)
@@ -266,11 +297,13 @@ export async function loadNotionPublishedSnapshot(
 
   const events = eventPages.map((page) => {
     const dates = dateValue(page, "Dates")
+    const typeValue = plainText(page, "Type") || undefined
     return {
       id: page.id,
       slug: requiredText(page, "Slug"),
       title: requiredText(page, "Title"),
       summary: plainText(page, "Summary"),
+      type: typeValue,
       startDate: dates?.start ?? null,
       endDate: dates?.end ?? undefined,
       dateLabel: plainText(page, "DateLabel") || undefined,

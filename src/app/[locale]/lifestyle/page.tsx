@@ -8,7 +8,10 @@ export const revalidate = 300
 export default async function LifestylePage() {
   const t = await getTranslations("Lifestyle")
   const repository = await contentRepository()
-  const content = await repository.listPublishedArticles("lifestyle")
+  const [content, timelineEvents] = await Promise.all([
+    repository.listPublishedArticles("lifestyle"),
+    repository.listTimelineEvents(),
+  ])
 
   const articles = content.map((article) => ({
     slug: article.slug,
@@ -39,7 +42,7 @@ export default async function LifestylePage() {
 
       {/* Event Timeline */}
       <div className="mb-14 md:mb-16">
-        <EventTimeline />
+        <EventTimeline events={timelineEvents} />
       </div>
 
       {/* Articles Section */}
