@@ -12,7 +12,7 @@ import { GitSnapshotRepository } from "./snapshot-repository"
 
 export class ResilientContentRepository extends SnapshotContentRepository {
   private cachedSnapshot: PublishedContentSnapshot | null = null
-  private lastFetchedAt = 0
+  private refreshAfter = 0
   private pendingFetch: Promise<PublishedContentSnapshot> | null = null
   private readonly ttlMs: number
 
@@ -26,60 +26,42 @@ export class ResilientContentRepository extends SnapshotContentRepository {
   }
 
   async getPublishedSnapshot(): Promise<PublishedContentSnapshot> {
-    const now = Date.now()
-
-    // 1. Fresh cache: return immediately in < 1ms
-    if (this.cachedSnapshot && now - this.lastFetchedAt < this.ttlMs) {
+    if (this.cachedSnapshot && Date.now() < this.refreshAfter) {
       return this.cachedSnapshot
     }
 
-    // 2. No primary Notion config: return fallback immediately
     if (!this.primary) {
       return this.fallback.getPublishedSnapshot()
     }
 
-    // 3. Stale-While-Revalidate: If we have an existing cache, return it immediately
-    // and refresh in the background so the user never waits
-    if (this.cachedSnapshot) {
-      this.refreshInBackground()
-      return this.cachedSnapshot
-    }
-
-    // 4. Cold start / Build: On cold start or during static build (e.g. Vercel deployment),
-    // we must await the primary Notion source so that fresh content is generated and served.
-    // If Notion is offline or throws, fetchFromPrimaryOrFallback catches it and returns fallbackSnapshot.
-    return this.fetchFromPrimaryOrFallback()
-  }
-
-  private async fetchFromPrimaryOrFallback(): Promise<PublishedContentSnapshot> {
-    if (this.pendingFetch) return this.pendingFetch
-    this.pendingFetch = (async () => {
-      try {
-        const snapshot = await this.primary!.getPublishedSnapshot()
-        this.cachedSnapshot = snapshot
-        this.lastFetchedAt = Date.now()
-        return snapshot
-      } catch (error) {
-        console.error(
-          "[MCG content] Notion content failed validation; serving Git snapshot.",
-          error,
-        )
-        const fallbackSnapshot = await this.fallback.getPublishedSnapshot()
-        if (!this.cachedSnapshot) {
-          this.cachedSnapshot = fallbackSnapshot
-          this.lastFetchedAt = Date.now() - this.ttlMs + 60_000 // Retry in 60s
-        }
-        return fallbackSnapshot
-      } finally {
+    // Keep refresh work inside the render lifetime. An unawaited promise can
+    // be suspended on Vercel, and ISR would cache the old Git snapshot again.
+    // Share a single fetch between list/detail calls in this server instance.
+    if (!this.pendingFetch) {
+      this.pendingFetch = this.fetchFromPrimaryOrFallback().finally(() => {
         this.pendingFetch = null
-      }
-    })()
+      })
+    }
     return this.pendingFetch
   }
 
-  private refreshInBackground() {
-    if (this.pendingFetch) return
-    void this.fetchFromPrimaryOrFallback()
+  private async fetchFromPrimaryOrFallback(): Promise<PublishedContentSnapshot> {
+    try {
+      const snapshot = await this.primary!.getPublishedSnapshot()
+      this.cachedSnapshot = snapshot
+      this.refreshAfter = Date.now() + this.ttlMs
+      return snapshot
+    } catch (error) {
+      console.error(
+        "[MCG content] Notion refresh failed; serving the last available snapshot.",
+        error,
+      )
+      if (!this.cachedSnapshot) {
+        this.cachedSnapshot = await this.fallback.getPublishedSnapshot()
+      }
+      this.refreshAfter = Date.now() + 60_000
+      return this.cachedSnapshot
+    }
   }
 }
 
@@ -93,13 +75,6 @@ const repository = new ResilientContentRepository(
   primaryRepository,
   fallbackRepository,
 )
-
-// Warm up the snapshot cache in the background on startup
-if (primaryRepository) {
-  void repository.getPublishedSnapshot().catch((err) => {
-    console.warn("[MCG content] Initial background warm-up deferred:", err)
-  })
-}
 
 const getRepository = cache(async () => repository)
 
