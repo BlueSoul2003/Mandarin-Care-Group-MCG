@@ -51,7 +51,7 @@ describe("Notion refresh lifecycle", () => {
     await repository.getPublishedSnapshot()
     expect(load).toHaveBeenCalledTimes(1)
 
-    vi.setSystemTime(Date.now() + 300_001)
+    vi.setSystemTime(Date.now() + 60_001)
     expect((await repository.listPublishedArticles("spiritual"))[0].slug).toBe("new-prayer")
     expect(await repository.getArticleBySlug("old-prayer")).toBeNull()
     expect(load).toHaveBeenCalledTimes(2)
@@ -66,7 +66,7 @@ describe("Notion refresh lifecycle", () => {
       .mockResolvedValueOnce(snapshot("new-prayer"))
     const repository = new ResilientContentRepository(new Source(load), new Source(async () => snapshot("backup")))
     await repository.getPublishedSnapshot()
-    vi.setSystemTime(Date.now() + 300_001)
+    vi.setSystemTime(Date.now() + 60_001)
     expect((await repository.getPublishedSnapshot()).articles[0].slug).toBe("live-prayer")
     expect((await repository.getPublishedSnapshot()).articles[0].slug).toBe("live-prayer")
     expect(load).toHaveBeenCalledTimes(2)
@@ -90,5 +90,44 @@ describe("Notion refresh lifecycle", () => {
   it("uses the portable snapshot when no Notion connection is configured", async () => {
     const repository = new ResilientContentRepository(null, new Source(async () => snapshot("backup")))
     expect((await repository.getPublishedSnapshot()).articles[0].slug).toBe("backup")
+  })
+
+  it("waits for an expired refresh and shares it across list and detail renders", async () => {
+    vi.useFakeTimers()
+    let finish!: (value: PublishedContentSnapshot) => void
+    const load = vi.fn()
+      .mockResolvedValueOnce(snapshot("existing-prayer"))
+      .mockImplementationOnce(() => new Promise<PublishedContentSnapshot>((resolve) => { finish = resolve }))
+    const repository = new ResilientContentRepository(new Source(load), new Source(async () => snapshot("backup")))
+    await repository.getPublishedSnapshot()
+    vi.setSystemTime(Date.now() + 60_001)
+
+    let returned = false
+    const list = repository.listPublishedArticles("spiritual").then((value) => { returned = true; return value })
+    const detail = repository.getArticleBySlug("existing-prayer")
+    await Promise.resolve()
+    await Promise.resolve()
+    expect(returned).toBe(false)
+    const updated = snapshot("existing-prayer")
+    updated.articles[0].title = "Updated title"
+    updated.articles[0].contentMarkdown = "Updated prayer text"
+    updated.articles.push(snapshot("new-prayer").articles[0])
+    finish(updated)
+
+    expect((await list).map((article) => article.slug)).toEqual(["existing-prayer", "new-prayer"])
+    expect(await detail).toMatchObject({ title: "Updated title", contentMarkdown: "Updated prayer text" })
+    expect(load).toHaveBeenCalledTimes(2)
+  })
+
+  it("removes an unpublished article instead of merging it back from the backup", async () => {
+    vi.useFakeTimers()
+    const empty = snapshot("prayer")
+    empty.articles = []
+    const load = vi.fn().mockResolvedValueOnce(snapshot("prayer")).mockResolvedValueOnce(empty)
+    const repository = new ResilientContentRepository(new Source(load), new Source(async () => snapshot("prayer")))
+    await repository.getPublishedSnapshot()
+    vi.setSystemTime(Date.now() + 60_001)
+    expect(await repository.listPublishedArticles()).toEqual([])
+    expect(await repository.getArticleBySlug("prayer")).toBeNull()
   })
 })
