@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { Play, ExternalLink, Calendar, Sparkles, Video } from "lucide-react"
+import { Play, ExternalLink, Calendar } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
 import { useTranslations } from "next-intl"
 
@@ -65,7 +65,7 @@ export function LatestYouTubeVideo() {
 
   if (isLoading) {
     return (
-      <div className="w-full max-w-5xl mx-auto my-12 p-6 rounded-3xl border border-border/60 bg-card/60 animate-pulse">
+      <div className="w-full max-w-5xl mx-auto my-8 sm:my-10 p-6 rounded-3xl border border-border/60 bg-card/60 animate-pulse">
         <div className="h-6 w-40 bg-muted rounded-full mb-6" />
         <div className="aspect-video w-full bg-muted/70 rounded-2xl" />
       </div>
@@ -83,20 +83,19 @@ export function LatestYouTubeVideo() {
       : ""
 
     return (
-      <section className="w-full max-w-5xl mx-auto my-16 text-left">
+      <section className="w-full max-w-5xl mx-auto my-8 sm:my-10 text-left">
         {/* Section Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 sm:mb-5">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl bg-red-500/10 text-red-500 flex items-center justify-center border border-red-500/20 shadow-sm shrink-0">
-              <YouTubeIcon className="w-5 h-5" />
+            <div className="w-10 h-10 rounded-2xl bg-card border border-border/70 flex items-center justify-center shadow-2xs shrink-0">
+              <YouTubeIcon className="w-5 h-5 text-[#FF0000]" />
             </div>
             <div>
               <div className="flex items-center gap-2">
                 <h2 className="text-xl md:text-2xl font-bold font-heading text-foreground">
                   {t("youtubeLatestTitle")}
                 </h2>
-                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-red-500/10 text-red-500 text-xs font-semibold border border-red-500/20">
-                  <Sparkles className="w-3 h-3" />
+                <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-primary/10 text-primary text-[11px] font-semibold border border-primary/25 tracking-wide">
                   New
                 </span>
               </div>
@@ -111,16 +110,16 @@ export function LatestYouTubeVideo() {
             href={channelUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl border border-red-500/30 text-red-600 dark:text-red-400 hover:bg-red-500/10 transition-colors text-xs font-semibold self-start sm:self-auto shadow-sm"
+            className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full border border-border/70 bg-card hover:bg-muted hover:border-primary/40 text-xs font-medium text-foreground transition-all shadow-2xs self-start sm:self-auto"
           >
-            <YouTubeIcon className="w-3.5 h-3.5" />
+            <YouTubeIcon className="w-3.5 h-3.5 text-[#FF0000]" />
             <span>{t("youtubeVisitChannel")}</span>
-            <ExternalLink className="w-3 h-3 ml-0.5 opacity-70" />
+            <ExternalLink className="w-3 h-3 ml-0.5 opacity-60" />
           </a>
         </div>
 
         {/* Video Card Container */}
-        <div className="relative rounded-3xl border border-border/70 bg-card overflow-hidden shadow-lg shadow-black/5 hover:shadow-xl transition-shadow duration-300">
+        <div className="relative rounded-3xl border border-border/70 bg-card overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-300">
           <div className="relative aspect-video w-full bg-black/90">
             <AnimatePresence mode="wait">
               {isPlaying ? (
@@ -153,7 +152,7 @@ export function LatestYouTubeVideo() {
                     />
                   ) : (
                     <div className="w-full h-full bg-neutral-900 flex items-center justify-center text-neutral-400">
-                      <YouTubeIcon className="w-16 h-16 opacity-40" />
+                      <YouTubeIcon className="w-16 h-16 opacity-40 text-[#FF0000]" />
                     </div>
                   )}
 
@@ -162,7 +161,7 @@ export function LatestYouTubeVideo() {
 
                   {/* Center Play Button */}
                   <div className="absolute inset-0 flex items-center justify-center">
-                    <div className="w-16 h-16 md:w-20 md:h-20 rounded-full bg-red-600/90 text-white flex items-center justify-center shadow-2xl group-hover:scale-110 group-hover:bg-red-600 transition-all duration-300 backdrop-blur-sm ring-4 ring-white/20">
+                    <div className="w-16 h-16 md:w-20 md:h-20 rounded-full bg-[#FF0000]/95 text-white flex items-center justify-center shadow-2xl group-hover:scale-110 group-hover:bg-[#FF0000] transition-all duration-300 backdrop-blur-sm ring-4 ring-white/20">
                       <Play className="w-7 h-7 md:w-8 md:h-8 fill-current ml-1" />
                     </div>
                   </div>
@@ -185,7 +184,7 @@ export function LatestYouTubeVideo() {
           </div>
 
           {/* Description & Action Bar */}
-          <div className="p-5 md:p-6 bg-card flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-t border-border/40">
+          <div className="p-4 sm:p-5 md:p-6 bg-card flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-t border-border/50">
             <div className="min-w-0 flex-1">
               <h3 className="text-base font-semibold text-foreground truncate">
                 {video.title}
@@ -200,10 +199,11 @@ export function LatestYouTubeVideo() {
               href={`https://www.youtube.com/watch?v=${video.videoId}`}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-foreground text-background text-xs font-semibold hover:opacity-90 transition-opacity shrink-0 shadow-sm"
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-[#FF0000] hover:bg-[#CC0000] text-white text-xs font-semibold shadow-2xs transition-colors shrink-0"
             >
+              <YouTubeIcon className="w-3.5 h-3.5 text-white" />
               <span>{t("youtubeWatchDirect")}</span>
-              <ExternalLink className="w-3.5 h-3.5" />
+              <ExternalLink className="w-3.5 h-3.5 opacity-80" />
             </a>
           </div>
         </div>
@@ -213,11 +213,11 @@ export function LatestYouTubeVideo() {
 
   // Fallback Channel Card if no direct video item is loaded
   return (
-    <section className="w-full max-w-5xl mx-auto my-16 text-left">
-      <div className="p-6 md:p-8 rounded-3xl border border-red-500/20 bg-gradient-to-br from-card via-card to-red-500/5 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-6">
+    <section className="w-full max-w-5xl mx-auto my-8 sm:my-10 text-left">
+      <div className="p-6 md:p-8 rounded-3xl border border-border/70 bg-card shadow-2xs flex flex-col sm:flex-row items-center justify-between gap-6">
         <div className="flex items-center gap-4">
-          <div className="w-14 h-14 rounded-2xl bg-red-500 text-white flex items-center justify-center shadow-lg shadow-red-500/20 shrink-0">
-            <YouTubeIcon className="w-7 h-7" />
+          <div className="w-12 h-12 md:w-14 md:h-14 rounded-2xl bg-background border border-border/70 text-[#FF0000] flex items-center justify-center shadow-2xs shrink-0">
+            <YouTubeIcon className="w-6 h-6 md:w-7 md:h-7 text-[#FF0000]" />
           </div>
           <div>
             <div className="flex items-center gap-2">
@@ -236,11 +236,11 @@ export function LatestYouTubeVideo() {
           href={channelUrl}
           target="_blank"
           rel="noopener noreferrer"
-          className="inline-flex items-center gap-2 px-5 py-3 rounded-2xl bg-red-600 text-white text-sm font-semibold hover:bg-red-700 transition-colors shadow-md shadow-red-600/20 shrink-0"
+          className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-[#FF0000] hover:bg-[#CC0000] text-white text-xs sm:text-sm font-semibold transition-colors shadow-2xs shrink-0"
         >
-          <YouTubeIcon className="w-4 h-4" />
+          <YouTubeIcon className="w-4 h-4 text-white" />
           <span>{t("youtubeSubscribe")}</span>
-          <ExternalLink className="w-3.5 h-3.5 ml-0.5" />
+          <ExternalLink className="w-3.5 h-3.5 ml-0.5 opacity-80" />
         </a>
       </div>
     </section>
