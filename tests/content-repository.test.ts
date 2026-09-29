@@ -131,5 +131,66 @@ describe("resilient content repository", () => {
     expect(timelineEvents[0].termName).toBe("2025/2026")
     expect(timelineEvents[0].seriesName).toBe("Camp Series")
   })
+
+  it("filters featured events to only include featured === true", async () => {
+    const snapshot = {
+      schemaVersion: 1,
+      generatedAt: "2026-01-01T00:00:00.000Z",
+      terms: [
+        {
+          id: "term-1",
+          name: "2025/2026",
+          slug: "2025-2026",
+          startDate: "2025-09-01",
+          endDate: "2026-08-31",
+          status: "Published",
+        },
+      ],
+      series: [
+        {
+          id: "series-1",
+          name: "Camp Series",
+          slug: "camp-series",
+          summary: "Camp series events",
+          status: "Published",
+        },
+      ],
+      people: [],
+      committeeRoles: [],
+      events: [
+        {
+          id: "event-1",
+          slug: "featured-camp",
+          title: "Featured Camp",
+          summary: "Highlight event",
+          featured: true,
+          startDate: "2026-08-01",
+          termId: "term-1",
+          seriesId: "series-1",
+          status: "Published",
+        },
+        {
+          id: "event-2",
+          slug: "regular-event",
+          title: "Regular Event",
+          summary: "Not featured",
+          featured: false,
+          startDate: "2026-07-01",
+          status: "Published",
+        },
+      ],
+      media: [],
+      articles: [],
+    } satisfies PublishedContentSnapshot
+
+    const repository = new TestContentRepository(async () => snapshot)
+    const featured = await repository.listFeaturedEvents()
+
+    expect(featured).toHaveLength(1)
+    expect(featured[0].slug).toBe("featured-camp")
+    expect(featured[0].featured).toBe(true)
+    expect(featured[0].termName).toBe("2025/2026")
+    expect(featured[0].seriesName).toBe("Camp Series")
+  })
 })
 

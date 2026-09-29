@@ -173,20 +173,20 @@ async function queryPublished(
       ? { property: "Type", multi_select: { contains: "EventReg" } }
       : null
 
-  const filter = eventRegFilter
-    ? {
-        or: [
-          {
-            property: "Status",
-            ...statusFilter,
-          },
-          eventRegFilter,
-        ],
-      }
-    : {
-        property: "Status",
-        ...statusFilter,
-      }
+  const hasFeaturedCheckbox =
+    "properties" in dataSource &&
+    (dataSource.properties.Featured as any)?.type === "checkbox"
+
+  const conditions = [
+    {
+      property: "Status",
+      ...statusFilter,
+    },
+    ...(hasFeaturedCheckbox ? [{ property: "Featured", checkbox: { equals: true } }] : []),
+    ...(eventRegFilter ? [eventRegFilter] : []),
+  ]
+
+  const filter = conditions.length > 1 ? { or: conditions } : conditions[0]
 
   const results = await collectPaginatedAPI(notion.dataSources.query, {
     data_source_id: dataSourceId,

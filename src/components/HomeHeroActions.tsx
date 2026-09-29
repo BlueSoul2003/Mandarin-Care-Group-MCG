@@ -32,49 +32,50 @@ export function HomeHeroActions() {
   // Avoid hydration layout shift before mounting
   if (!mounted) {
     return (
-      <div className="flex flex-wrap justify-center gap-3 min-h-[44px]">
+      <div className="flex flex-wrap items-center justify-center gap-2.5 sm:gap-3 min-h-[42px]">
         <Link
           href="/events"
-          className="inline-flex items-center rounded-full bg-foreground px-6 py-3 text-sm font-semibold text-background transition-opacity hover:opacity-90 shadow-sm"
+          className="inline-flex items-center justify-center rounded-full bg-foreground px-6 py-2.5 text-sm font-semibold text-background hover:bg-foreground/90 shadow-2xs transition-all active:scale-[0.98]"
         >
-          {t("exploreEvents")} <ArrowRight className="ml-2 h-4 w-4" />
+          {t("exploreEvents")} <ArrowRight className="ml-1.5 h-4 w-4" />
         </Link>
       </div>
     )
   }
 
   return (
-    <div className="flex flex-wrap justify-center gap-3">
+    <div className="flex flex-wrap items-center justify-center gap-2.5 sm:gap-3">
+      {/* Primary Action */}
       <Link
         href="/events"
-        className="inline-flex items-center rounded-full bg-foreground px-6 py-3 text-sm font-semibold text-background transition-opacity hover:opacity-90 shadow-sm"
+        className="inline-flex items-center justify-center rounded-full bg-foreground px-6 py-2.5 text-sm font-semibold text-background hover:bg-foreground/90 shadow-2xs transition-all active:scale-[0.98]"
       >
-        {t("exploreEvents")} <ArrowRight className="ml-2 h-4 w-4" />
+        {t("exploreEvents")} <ArrowRight className="ml-1.5 h-4 w-4" />
       </Link>
 
       {user ? (
         /* Logged in state: Replace register/login with Go to Profile */
         <Link
           href="/profile"
-          className="inline-flex items-center rounded-full border border-border px-6 py-3 text-sm font-semibold transition-colors hover:bg-muted"
+          className="inline-flex items-center justify-center rounded-full border border-border/80 bg-card/60 backdrop-blur-xs px-5 py-2.5 text-sm font-medium text-foreground hover:bg-muted/70 hover:border-primary/40 transition-all shadow-2xs active:scale-[0.98]"
         >
-          <UserIcon className="mr-2 h-4 w-4 text-primary" />
+          <UserIcon className="mr-1.5 h-4 w-4 text-primary" />
           <span>{t("viewProfile") || "My Profile"}</span>
         </Link>
       ) : (
-        /* Guest state: Show Register and Login */
+        /* Guest state: Secondary actions */
         <>
           <Link
             href="/join"
-            className="inline-flex items-center rounded-full border border-border px-6 py-3 text-sm font-semibold transition-colors hover:bg-muted"
+            className="inline-flex items-center justify-center rounded-full border border-border/80 bg-card/60 backdrop-blur-xs px-5 py-2.5 text-sm font-medium text-foreground hover:bg-muted/70 hover:border-primary/40 transition-all shadow-2xs active:scale-[0.98]"
           >
-            <UserPlus className="mr-2 h-4 w-4" /> {t("register")}
+            <UserPlus className="mr-1.5 h-4 w-4 text-muted-foreground" /> {t("register")}
           </Link>
           <Link
             href="/login"
-            className="inline-flex items-center rounded-full border border-border px-6 py-3 text-sm font-semibold transition-colors hover:bg-muted"
+            className="inline-flex items-center justify-center rounded-full border border-border/80 bg-card/60 backdrop-blur-xs px-5 py-2.5 text-sm font-medium text-foreground hover:bg-muted/70 hover:border-primary/40 transition-all shadow-2xs active:scale-[0.98]"
           >
-            <LogIn className="mr-2 h-4 w-4" /> {t("login")}
+            <LogIn className="mr-1.5 h-4 w-4 text-muted-foreground" /> {t("login")}
           </Link>
         </>
       )}

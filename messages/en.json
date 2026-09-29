@@ -18,8 +18,9 @@
   },
   "Home": {
     "title": "MCG UTM",
+    "tagline": "Faith. Community. University life.",
     "description": "UTM Mandarin-speaking Catholic university students' community, memories, and shared space for growth.",
-    "exploreEvents": "Explore past events",
+    "exploreEvents": "Explore Events",
     "joinUs": "Join Us",
     "login": "Login",
     "register": "Register",
@@ -39,7 +40,16 @@
     "youtubeWatchDirect": "Watch on YouTube",
     "youtubeChannelDesc": "Subscribe to our official YouTube channel for spiritual songs, camp recaps, and fellowship videos.",
     "youtubeSubscribe": "Subscribe & Watch",
-    "viewProfile": "My Profile"
+    "viewProfile": "My Profile",
+    "upcomingEventsTag": "Events & Gatherings",
+    "upcomingEventsTitle": "Upcoming Events",
+    "upcomingEventsSubtitle": "Join us in upcoming fellowships, faith gatherings, and campus activities.",
+    "stayTunedTitle": "Stay tuned for more events",
+    "stayTunedDesc": "Check back soon or explore our community timeline.",
+    "viewCalendar": "View Timeline & Calendar",
+    "viewEventDetails": "View Details",
+    "featuredBadge": "Featured Event",
+    "eventRegBadge": "Registration Open"
   },
   "Footer": {
     "desc": "Mandarin Care Group (MCG) at Universiti Teknologi Malaysia is a welcoming spiritual home for Catholic students, walking together in faith, friendship, and campus life.",

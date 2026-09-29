@@ -18,8 +18,9 @@
   },
   "Home": {
     "title": "MCG UTM",
+    "tagline": "信仰 · 團契 · 校園生活",
     "description": "UTM 華語天主教大學生的團體、回憶與共同成長空間。",
-    "exploreEvents": "歷年活動",
+    "exploreEvents": "探索活動",
     "joinUs": "加入我們",
     "login": "登入",
     "register": "註冊",
@@ -39,7 +40,16 @@
     "youtubeWatchDirect": "在 YouTube 上觀看",
     "youtubeChannelDesc": "訂閱我們的 YouTube 官方頻道，不錯過任何最新活動紀錄與音樂分享。",
     "youtubeSubscribe": "訂閱與觀看",
-    "viewProfile": "個人檔案"
+    "viewProfile": "個人檔案",
+    "upcomingEventsTag": "活動與聚會",
+    "upcomingEventsTitle": "最新活動",
+    "upcomingEventsSubtitle": "與我們一起在即將到來的共融、信仰聚會與校園生活中同行。",
+    "stayTunedTitle": "敬請期待更多精彩活動",
+    "stayTunedDesc": "敬請持續關注，或瀏覽社群行事曆與過往活動回顧。",
+    "viewCalendar": "瀏覽活動時間軸與行事曆",
+    "viewEventDetails": "查看詳情",
+    "featuredBadge": "精選活動",
+    "eventRegBadge": "開放報名"
   },
   "Footer": {
     "desc": "馬來西亞工藝大學（UTM）華語天主教同學會，凝聚青年信徒的心靈港灣，在信仰、愛德與共融中一同成長。",
