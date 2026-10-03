@@ -9,6 +9,7 @@ import {
   type ContentRepository,
 } from "./repository"
 import { GitSnapshotRepository } from "./snapshot-repository"
+import { ContentRefreshError, restrictSnapshot } from "./publication"
 
 export class ResilientContentRepository extends SnapshotContentRepository {
   private cachedSnapshot: PublishedContentSnapshot | null = null
@@ -58,6 +59,9 @@ export class ResilientContentRepository extends SnapshotContentRepository {
       )
       if (!this.cachedSnapshot) {
         this.cachedSnapshot = await this.fallback.getPublishedSnapshot()
+      }
+      if (error instanceof ContentRefreshError) {
+        this.cachedSnapshot = restrictSnapshot(this.cachedSnapshot, error.visibility)
       }
       this.refreshAfter = Date.now() + 60_000
       return this.cachedSnapshot

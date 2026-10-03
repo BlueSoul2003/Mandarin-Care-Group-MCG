@@ -4,6 +4,7 @@ import { useEffect, useState, useRef } from "react"
 import { useFavoritesStore } from "@/store/useFavoritesStore"
 import { usePlayerStore } from "@/store/usePlayerStore"
 import { createClient, createRecoveryClient } from "@/lib/supabase"
+import { logoutWithFeedback } from "@/lib/logout"
 import { createClient as createIsolatedClient } from "@supabase/supabase-js"
 import type { User } from "@supabase/supabase-js"
 import { Link, useRouter } from "@/i18n/routing"
@@ -48,6 +49,8 @@ function getInitials(name: string): string {
 
 export default function ProfilePage() {
   const t = useTranslations("Profile")
+  const authText = useTranslations("Auth")
+  const [logoutFailed, setLogoutFailed] = useState(false)
   const locale = useLocale()
   const router = useRouter()
   const [user, setUser] = useState<User | null>(null)
@@ -104,8 +107,8 @@ export default function ProfilePage() {
 
   const handleLogout = async () => {
     const supabase = createClient()
-    await supabase.auth.signOut()
-    setUser(null)
+    setLogoutFailed(false)
+    await logoutWithFeedback(supabase.auth, () => setUser(null), () => setLogoutFailed(true))
   }
 
   // Handle local image file upload & compression
@@ -165,9 +168,9 @@ export default function ProfilePage() {
         setShowAvatarModal(false)
         setAvatarSuccessMsg("")
       }, 1200)
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error("Failed to update avatar:", err)
-      alert(err?.message || "Failed to update avatar")
+      alert(err instanceof Error ? err.message : "Failed to update avatar")
     } finally {
       setIsUpdatingAvatar(false)
     }
@@ -230,9 +233,9 @@ export default function ProfilePage() {
 
       setEmailSentSuccess(true)
       setCurrentPassword("")
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error("Failed to send reset email:", err)
-      setPasswordError(err?.message || "Failed to send reset email.")
+      setPasswordError(err instanceof Error ? err.message : "Failed to send reset email.")
     } finally {
       setIsSendingResetEmail(false)
     }
@@ -277,9 +280,9 @@ export default function ProfilePage() {
       clearFavorites()
       setShowDeleteModal(false)
       router.replace("/")
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error("Account deletion failed:", err)
-      setDeleteError(err?.message || "Failed to delete account.")
+      setDeleteError(err instanceof Error ? err.message : "Failed to delete account.")
     } finally {
       setIsDeletingAccount(false)
     }
@@ -294,6 +297,7 @@ export default function ProfilePage() {
 
   return (
     <div className="container mx-auto px-4 py-8 md:py-16 max-w-4xl min-h-[85vh]">
+      {logoutFailed && <p role="alert" className="mb-4 text-sm text-destructive">{authText("logoutFailed")}</p>}
       {/* Profile Header: Distinct & Beautiful for Member vs Guest */}
       {user ? (
         /* Member Profile Card */

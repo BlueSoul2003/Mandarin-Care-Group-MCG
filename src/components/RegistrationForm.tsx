@@ -19,6 +19,7 @@ import {
   ChevronDown,
 } from "lucide-react"
 import { createClient } from "@/lib/supabase"
+import { createRegistrationSubmission } from "@/lib/registration-submission"
 import { useTranslations, useLocale } from "next-intl"
 import { Link } from "@/i18n/routing"
 
@@ -27,6 +28,7 @@ type Status = "idle" | "loading" | "success" | "error"
 export function RegistrationForm() {
   const t = useTranslations("JoinPage.form")
   const locale = useLocale()
+  const submitRegistration = React.useRef(createRegistrationSubmission())
   const [status, setStatus] = React.useState<Status>("idle")
   const [errorMsg, setErrorMsg] = React.useState("")
   const [showPassword, setShowPassword] = React.useState(false)
@@ -236,33 +238,30 @@ export function RegistrationForm() {
     try {
       const isChristianBackground = isCatholic || isChristianNonCatholic
       const sacramentsPayload = isCatholic
-        ? sacraments.map((k) => t(`sacraments.${k}` as any))
+        ? sacraments.map((k) => t(`sacraments.${k}`))
         : []
       const parishServicesPayload = isChristianBackground
-        ? parishServices.map((k) => t(`parishServiceOptions.${k}` as any))
+        ? parishServices.map((k) => t(`parishServiceOptions.${k}`))
         : []
       const giftsPayload = isChristianBackground
-        ? gifts.map((k) => t(`giftOptions.${k}` as any))
+        ? gifts.map((k) => t(`giftOptions.${k}`))
         : []
       const expectationsPayload = expectations.map((k) =>
-        t(`expectationOptions.${k}` as any)
+        t(`expectationOptions.${k}`)
       )
       const activitiesPayload = activities.map((k) =>
-        t(`activityInterestOptions.${k}` as any)
+        t(`activityInterestOptions.${k}`)
       )
 
       // 1. First validate & push registration details to Notion via /api/register
-      const res = await fetch("/api/register", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
+      await submitRegistration.current(JSON.stringify({
           name: cleanName,
           email: cleanEmail,
           phone: form.phone.trim(),
           birthday: form.birthday.trim(),
           majorYear: form.majorYear.trim(),
           faithStatus: form.faithStatus
-            ? t(`faithOptions.${form.faithStatus}` as any)
+            ? t(`faithOptions.${form.faithStatus}`)
             : "",
           sacraments: sacramentsPayload,
           parishServices: parishServicesPayload,
@@ -276,21 +275,7 @@ export function RegistrationForm() {
           message: form.message.trim(),
           consent: form.consent,
           website: form.website,
-        }),
-      })
-
-      if (!res.ok) {
-        const data = await res.json()
-        console.error("Registration API error:", data)
-        const message =
-          typeof data.error === "string"
-            ? data.error
-            : data.message
-              ? String(data.message)
-              : "Failed to submit. Please try again."
-
-        throw new Error(message)
-      }
+      }))
 
       // 2. Only after registration is accepted by Notion, create the Supabase Auth account
       const supabase = createClient()
@@ -311,7 +296,7 @@ export function RegistrationForm() {
         console.error("Supabase signup error:", signUpError)
         setStatus("error")
         setErrorMsg(
-          signUpError.message || "Supabase registration failed."
+          `${t("accountSetupFailed")} ${signUpError.message}`
         )
         return
       }
