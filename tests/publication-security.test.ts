@@ -28,7 +28,7 @@ beforeEach(() => {
     series: [page("series", { Name: text("Series") })],
     people: [page("person", { Name: text("Person"), ConsentToPublish: { type: "checkbox", checkbox: true } })],
     roles: [page("role", { Role: text("Chair"), Person: relation("person"), Term: relation("term") })],
-    events: [page("event", { Type: select("EventReg"), Term: relation("term"), Series: relation("series") })],
+    events: [page("event", { Type: select("EventReg"), Featured: { type: "checkbox", checkbox: true }, Term: relation("term"), Series: relation("series") })],
     media: [page("photo", { Event: relation("event"), URL: text("https://res.cloudinary.com/test/image.jpg"), AltText: text("Photo") })],
     articles: [page("prayer", { Excerpt: text("Prayer"), Section: select("spiritual"), PublishedAt: { type: "date", date: { start: "2026-10-03" } }, Events: relation("event") })],
   }
@@ -53,6 +53,7 @@ describe("Notion public-content boundary", () => {
     const repository = new NotionContentRepository(config)
     expect((await repository.listTimelineEvents()).map((event) => event.id)).toEqual(["event"])
     expect(await repository.getEventBySlug("draft")).toBeNull()
+    expect((await repository.listFeaturedEvents()).map((event) => event.id)).toEqual(["event"])
   })
 
   it("removes revoked people and roles while retaining unrelated published content", async () => {
