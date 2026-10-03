@@ -2,6 +2,7 @@
 
 import * as React from "react"
 import { usePlayerStore } from "@/store/usePlayerStore"
+import { sameTrack } from "@/lib/track-identity"
 import { Play, Pause, X, Music, SkipBack, SkipForward, Heart } from "lucide-react"
 import { AnimatePresence, motion } from "framer-motion"
 import { useTranslations } from "next-intl"
@@ -135,7 +136,7 @@ export function GlobalAudioPlayer() {
                     )}
                     {playlist.length > 1 && (
                       <span className="opacity-60 text-[10px]">
-                        • {playlist.findIndex((t) => t.id === currentTrack.id || t.url === currentTrack.url) + 1}/{playlist.length}
+                        • {playlist.findIndex((t) => sameTrack(t, currentTrack)) + 1}/{playlist.length}
                       </span>
                     )}
                   </div>

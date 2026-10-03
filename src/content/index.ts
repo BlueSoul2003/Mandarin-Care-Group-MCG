@@ -55,7 +55,7 @@ export class ResilientContentRepository extends SnapshotContentRepository {
     } catch (error) {
       console.error(
         "[MCG content] Notion refresh failed; serving the last available snapshot.",
-        error,
+        { code: error instanceof ContentRefreshError ? "NOTION_REFRESH_FAILED" : "CONTENT_SOURCE_FAILED" },
       )
       if (!this.cachedSnapshot) {
         this.cachedSnapshot = await this.fallback.getPublishedSnapshot()

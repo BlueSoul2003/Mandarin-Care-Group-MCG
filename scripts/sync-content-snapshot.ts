@@ -14,7 +14,7 @@ async function main() {
     )
   }
 
-  const snapshot = await loadNotionPublishedSnapshot(config)
+  const snapshot = await loadNotionPublishedSnapshot(config, { strictArticles: true })
   const outputPath = resolve(process.cwd(), "src/content/snapshot.json")
 
   await writeFile(outputPath, `${JSON.stringify(snapshot, null, 2)}\n`, "utf8")
@@ -24,4 +24,7 @@ async function main() {
   )
 }
 
-void main()
+void main().catch(() => {
+  console.error("Content sync failed; snapshot was not saved. Run npm run content:check for diagnostics.")
+  process.exitCode = 1
+})

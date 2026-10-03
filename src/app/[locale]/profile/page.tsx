@@ -3,6 +3,7 @@
 import { useEffect, useState, useRef } from "react"
 import { useFavoritesStore } from "@/store/useFavoritesStore"
 import { usePlayerStore } from "@/store/usePlayerStore"
+import { sameTrack } from "@/lib/track-identity"
 import { createClient, createRecoveryClient } from "@/lib/supabase"
 import { logoutWithFeedback } from "@/lib/logout"
 import { createClient as createIsolatedClient } from "@supabase/supabase-js"
@@ -511,7 +512,7 @@ export default function ProfilePage() {
             <AnimatePresence>
               {favorites.map((track) => {
                 const isThisTrackPlaying =
-                  currentTrack?.id === track.id || currentTrack?.url === track.url
+                  sameTrack(currentTrack, track)
 
                 return (
                   <motion.div
@@ -565,7 +566,7 @@ export default function ProfilePage() {
                       <button
                         type="button"
                         onClick={() => {
-                          if (currentTrack?.id === track.id || currentTrack?.url === track.url) {
+                          if (sameTrack(currentTrack, track)) {
                             togglePlay()
                           } else {
                             play(track, favorites, "favorites")

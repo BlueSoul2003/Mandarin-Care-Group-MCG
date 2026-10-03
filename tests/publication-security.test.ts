@@ -36,6 +36,7 @@ beforeEach(() => {
   api.query.mockImplementation(async ({ data_source_id }) => ({ results: rows[data_source_id], has_more: false }))
   api.markdown.mockResolvedValue({ markdown: "Prayer text" })
   vi.spyOn(console, "error").mockImplementation(() => {})
+  vi.spyOn(console, "warn").mockImplementation(() => {})
 })
 afterEach(() => { vi.useRealTimers(); vi.restoreAllMocks(); vi.resetAllMocks() })
 
@@ -96,7 +97,7 @@ describe("Notion public-content boundary", () => {
     expect(snapshot.committeeRoles).toEqual([])
     expect(snapshot.events).toEqual([])
     expect(snapshot.media).toEqual([])
-    expect(snapshot.articles[0].eventIds).toEqual([])
+    expect(snapshot.articles).toEqual([])
     expect(() => parsePublishedContentSnapshot(snapshot)).not.toThrow()
     // A later outage must not resurrect the previously scrubbed identity.
     api.retrieve.mockRejectedValue(new Error("offline"))
@@ -115,5 +116,58 @@ describe("Notion public-content boundary", () => {
     const repository = new ResilientContentRepository(new NotionContentRepository(config), new Backup())
     expect((await repository.getPublishedSnapshot()).people).toEqual([])
     expect((await repository.getPublishedSnapshot()).committeeRoles).toEqual([])
+  })
+
+  it("publishes valid new articles even when another article has invalid fields", async () => {
+    rows.articles.push(page("invalid", { Excerpt: text("Private raw input should not be logged"), Section: select("unsupported") }))
+    const onIssue = vi.fn()
+    const snapshot = await loadNotionPublishedSnapshot(config, { onIssue })
+    expect(snapshot.articles.map((a) => a.id)).toEqual(["prayer"])
+    expect(api.markdown).toHaveBeenCalledTimes(1)
+    expect(onIssue).toHaveBeenCalledWith({ collection: "articles", pageId: "invalid", code: "INVALID_FIELDS", fields: ["publishedAt", "section"] })
+    expect(JSON.stringify(onIssue.mock.calls)).not.toContain("Private raw input")
+  })
+
+  it("omits every duplicate slug while keeping unrelated routes", async () => {
+    rows.articles.push(
+      page("duplicate-a", { ...rows.articles[0].properties, Slug: text("collision") }),
+      page("duplicate-b", { ...rows.articles[0].properties, Slug: text("collision") }),
+    )
+    const onIssue = vi.fn()
+    const snapshot = await loadNotionPublishedSnapshot(config, { onIssue })
+    expect(snapshot.articles.map((a) => a.id)).toEqual(["prayer"])
+    expect(onIssue.mock.calls.map(([issue]) => issue.code)).toEqual(["DUPLICATE_SLUG", "DUPLICATE_SLUG"])
+  })
+
+  it.each(["unavailable", "empty", "truncated", "unknown-block"])("isolates an article body that is %s", async (failure) => {
+    rows.articles.push(page("new-prayer", { ...rows.articles[0].properties, Slug: text("new-prayer") }))
+    api.markdown.mockImplementation(async ({ page_id }) => {
+      if (page_id === "new-prayer") return { markdown: "New valid prayer" }
+      if (failure === "unavailable") throw new Error("sensitive provider response")
+      return { markdown: failure === "empty" ? " " : "Partial body", truncated: failure === "truncated", unknown_block_ids: failure === "unknown-block" ? ["unknown"] : [] }
+    })
+    const onIssue = vi.fn()
+    const snapshot = await loadNotionPublishedSnapshot(config, { onIssue })
+    expect(snapshot.articles.map((a) => a.id)).toEqual(["new-prayer"])
+    expect(onIssue.mock.calls[0][0].pageId).toBe("prayer")
+    expect(JSON.stringify(onIssue.mock.calls)).not.toContain("sensitive provider response")
+  })
+
+  it("refuses to produce a strict backup when any article was skipped", async () => {
+    rows.articles.push(page("invalid"))
+    await expect(loadNotionPublishedSnapshot(config, { strictArticles: true })).rejects.toMatchObject({
+      cause: { issueCount: 1 }, visibility: { articles: ["prayer"] },
+    })
+  })
+
+  it("does not resurrect invalid articles if whole-snapshot validation later fails", async () => {
+    const backup = await loadNotionPublishedSnapshot(config)
+    class Backup extends SnapshotContentRepository { async getPublishedSnapshot() { return backup } }
+    rows.articles[0].properties.Section = select("invalid")
+    rows.events.push(page("other-event", { Slug: text("event") }))
+    const repository = new ResilientContentRepository(new NotionContentRepository(config), new Backup())
+    const snapshot = await repository.getPublishedSnapshot()
+    expect(snapshot.articles).toEqual([])
+    expect(snapshot.events.map((event) => event.id)).toEqual(["event"])
   })
 })

@@ -6,12 +6,16 @@ import {
 } from "@notionhq/client"
 import {
   parsePublishedContentSnapshot,
+  articleSchema,
+  type Article,
   type PublishedContentSnapshot,
 } from "./model"
 import { SnapshotContentRepository } from "./repository"
 import { ContentRefreshError, type PublicationVisibility } from "./publication"
+import { ArticleValidationError, reportContentIssue, type ContentIssue } from "./diagnostics"
 
 type Property = PageObjectResponse["properties"][string]
+const articleMetadataSchema = articleSchema.omit({ contentMarkdown: true })
 
 export interface NotionContentConfig {
   apiKey: string
@@ -188,6 +192,7 @@ async function resolveLegacyDataSourceId(
 
 export async function loadNotionPublishedSnapshot(
   config: NotionContentConfig,
+  options: { strictArticles?: boolean; onIssue?: (issue: ContentIssue) => void } = {},
 ): Promise<PublishedContentSnapshot> {
   const notion = new Client({
     auth: config.apiKey,
@@ -313,22 +318,62 @@ export async function loadNotionPublishedSnapshot(
       }
     })
 
-    const articles: unknown[] = []
+    const articles: Article[] = []
+    const issues: ContentIssue[] = []
+    const onIssue = options.onIssue ?? reportContentIssue
+    const reject = (issue: ContentIssue) => {
+      issues.push(issue)
+      visibility.articles = visibility.articles?.filter((id) => id !== issue.pageId)
+      onIssue(issue)
+    }
+    // Omit every conflicting route, not an arbitrary winner based on query order.
+    const slugCounts = new Map<string, number>()
     for (const page of articlePages) {
-      const markdown = await notion.pages.retrieveMarkdown({ page_id: page.id })
-      articles.push({
+      const slug = plainText(page, "Slug")
+      slugCounts.set(slug, (slugCounts.get(slug) ?? 0) + 1)
+    }
+    for (const page of articlePages) {
+      const metadata = articleMetadataSchema.safeParse({
         id: page.id,
-        slug: requiredText(page, "Slug"),
-        title: requiredText(page, "Title"),
-        excerpt: requiredText(page, "Excerpt"),
+        slug: plainText(page, "Slug"),
+        title: plainText(page, "Title"),
+        excerpt: plainText(page, "Excerpt"),
         publishedAt: dateValue(page, "PublishedAt")?.start ?? "",
         authorName: plainText(page, "Author") || "MCG Team",
         section: plainText(page, "Section").toLowerCase(),
         tags: multiSelect(page, "Tags"),
         eventIds: relationIds(page, "Events").filter((id) => eventIds.has(id)),
-        contentMarkdown: markdown.markdown,
         status: "Published",
       })
+      if (!metadata.success) {
+        reject({ collection: "articles", pageId: page.id, code: "INVALID_FIELDS", fields: [...new Set(metadata.error.issues.map((issue) => issue.path.join(".")))] })
+        continue
+      }
+      if (slugCounts.get(metadata.data.slug)! > 1) {
+        reject({ collection: "articles", pageId: page.id, code: "DUPLICATE_SLUG", fields: ["slug"] })
+        continue
+      }
+      let body: string
+      try {
+        const markdown = await notion.pages.retrieveMarkdown({ page_id: page.id })
+        if (markdown.truncated || markdown.unknown_block_ids?.length) {
+          reject({ collection: "articles", pageId: page.id, code: "INVALID_BODY", fields: ["contentMarkdown"] })
+          continue
+        }
+        body = markdown.markdown
+      } catch {
+        reject({ collection: "articles", pageId: page.id, code: "BODY_UNAVAILABLE" })
+        continue
+      }
+      const article = articleSchema.safeParse({ ...metadata.data, contentMarkdown: body })
+      if (!article.success) {
+        reject({ collection: "articles", pageId: page.id, code: "INVALID_BODY", fields: ["contentMarkdown"] })
+        continue
+      }
+      articles.push(article.data)
+    }
+    if (options.strictArticles && issues.length > 0) {
+      throw new ArticleValidationError(issues.length)
     }
 
     return parsePublishedContentSnapshot({
