@@ -5,6 +5,7 @@ import { Moon, Sun, Menu, X, User as UserIcon } from "lucide-react"
 import { useTheme } from "next-themes"
 import { Link } from "@/i18n/routing"
 import { createClient } from "@/lib/supabase"
+import { logoutWithFeedback } from "@/lib/logout"
 import type { User } from "@supabase/supabase-js"
 import { useTranslations } from "next-intl"
 import { LanguageSwitcher } from "./LanguageSwitcher"
@@ -24,6 +25,8 @@ export function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false)
   const menuRef = React.useRef<HTMLDivElement>(null)
   const t = useTranslations("Navbar")
+  const authText = useTranslations("Auth")
+  const [logoutFailed, setLogoutFailed] = React.useState(false)
   // Prevent background scrolling when mobile menu is open
   React.useEffect(() => {
     if (mobileMenuOpen) {
@@ -76,10 +79,12 @@ export function Navbar() {
 
   const handleLogout = async () => {
     const supabase = createClient()
-    await supabase.auth.signOut()
-    setUser(null)
-    setMenuOpen(false)
-    setMobileMenuOpen(false)
+    setLogoutFailed(false)
+    await logoutWithFeedback(supabase.auth, () => {
+      setUser(null)
+      setMenuOpen(false)
+      setMobileMenuOpen(false)
+    }, () => setLogoutFailed(true))
   }
 
   const navLinks = [
@@ -92,6 +97,7 @@ export function Navbar() {
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+      {logoutFailed && <p role="alert" className="relative z-[80] bg-background px-4 py-3 text-sm text-destructive">{authText("logoutFailed")}</p>}
       <div className="container flex h-16 max-w-screen-2xl items-center px-4 md:px-8 mx-auto">
         <div className="flex flex-1 items-center justify-between">
           <Link href="/" className="flex items-center space-x-2 z-[60]">

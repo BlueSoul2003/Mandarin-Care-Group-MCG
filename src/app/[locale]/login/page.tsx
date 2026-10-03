@@ -11,7 +11,6 @@ export default function LoginPage() {
   const t = useTranslations("LoginPage")
   const router = useRouter()
   const [showPassword, setShowPassword] = React.useState(false)
-  const [rememberMe, setRememberMe] = React.useState(false)
   const [form, setForm] = React.useState({ email: "", password: "" })
   const [status, setStatus] = React.useState<"idle" | "loading" | "success" | "error">("idle")
   const [errorMsg, setErrorMsg] = React.useState("")
@@ -90,14 +89,16 @@ export default function LoginPage() {
 
               {/* Email */}
               <div className="space-y-1.5">
-                <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground block">
+                <label htmlFor="login-email" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground block">
                   {t("email")}
                 </label>
                 <div className="relative">
                   <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                   <input
                     type="email"
+                    id="login-email"
                     name="email"
+                    autoComplete="email"
                     required
                     value={form.email}
                     onChange={handleChange}
@@ -109,14 +110,16 @@ export default function LoginPage() {
 
               {/* Password */}
               <div className="space-y-1.5">
-                <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground block">
+                <label htmlFor="login-password" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground block">
                   {t("password")}
                 </label>
                 <div className="relative">
                   <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                   <input
                     type={showPassword ? "text" : "password"}
+                    id="login-password"
                     name="password"
+                    autoComplete="current-password"
                     required
                     value={form.password}
                     onChange={handleChange}
@@ -126,6 +129,8 @@ export default function LoginPage() {
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
+                    aria-label={t("password")}
+                    aria-pressed={showPassword}
                     className="absolute right-3.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
                   >
                     {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
@@ -133,17 +138,7 @@ export default function LoginPage() {
                 </div>
               </div>
 
-              {/* Remember Me & Forgot Password */}
-              <div className="flex items-center justify-between text-xs py-1">
-                <label className="flex items-center gap-2 cursor-pointer text-muted-foreground hover:text-foreground transition-colors">
-                  <input
-                    type="checkbox"
-                    checked={rememberMe}
-                    onChange={(e) => setRememberMe(e.target.checked)}
-                    className="rounded border-input text-primary focus:ring-primary/50"
-                  />
-                  {t("remember")}
-                </label>
+              <div className="flex items-center justify-end text-xs py-1">
                 <Link href="/forgot-password" className="text-primary hover:underline font-medium">
                   {t("forgot")}
                 </Link>

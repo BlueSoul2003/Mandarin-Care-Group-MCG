@@ -9,6 +9,7 @@ import {
   type ContentRepository,
 } from "./repository"
 import { GitSnapshotRepository } from "./snapshot-repository"
+import { ContentRefreshError, restrictSnapshot } from "./publication"
 
 export class ResilientContentRepository extends SnapshotContentRepository {
   private cachedSnapshot: PublishedContentSnapshot | null = null
@@ -54,10 +55,13 @@ export class ResilientContentRepository extends SnapshotContentRepository {
     } catch (error) {
       console.error(
         "[MCG content] Notion refresh failed; serving the last available snapshot.",
-        error,
+        { code: error instanceof ContentRefreshError ? "NOTION_REFRESH_FAILED" : "CONTENT_SOURCE_FAILED" },
       )
       if (!this.cachedSnapshot) {
         this.cachedSnapshot = await this.fallback.getPublishedSnapshot()
+      }
+      if (error instanceof ContentRefreshError) {
+        this.cachedSnapshot = restrictSnapshot(this.cachedSnapshot, error.visibility)
       }
       this.refreshAfter = Date.now() + 60_000
       return this.cachedSnapshot

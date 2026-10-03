@@ -1,7 +1,8 @@
 "use client"
 
-import { useEffect, useState, useMemo } from "react"
+import { useEffect, useState, useMemo, useSyncExternalStore } from "react"
 import { usePlayerStore } from "@/store/usePlayerStore"
+import { sameTrack, normalizeTrack } from "@/lib/track-identity"
 import { useFavoritesStore } from "@/store/useFavoritesStore"
 import { Play, Pause, Disc3, Search, Heart, X, Music } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
@@ -29,20 +30,23 @@ const FALLBACK_TRACKS: AudioTrack[] = [
   { id: "12", title: "12 小白花", url: encodeURI("/api/audio/12 小白花.mp3") },
   { id: "13", title: "13 奇迹", url: encodeURI("/api/audio/13 奇迹.mp3") },
   { id: "14", title: "14 我今欢喜", url: encodeURI("/api/audio/14 我今欢喜.mp3") },
-]
+].map(normalizeTrack)
+
+const subscribeToHydration = () => () => {}
+const clientHydrated = () => true
+const serverHydrated = () => false
 
 export default function TaizePage() {
   const t = useTranslations("Taize")
   const { currentTrack, isPlaying, play, togglePlay } = usePlayerStore()
-  const { favorites, toggleFavorite, isFavorite } = useFavoritesStore()
+  const { favorites, toggleFavorite } = useFavoritesStore()
 
-  const [mounted, setMounted] = useState(false)
+  const mounted = useSyncExternalStore(subscribeToHydration, clientHydrated, serverHydrated)
   const [tracks, setTracks] = useState<AudioTrack[]>(FALLBACK_TRACKS)
   const [searchQuery, setSearchQuery] = useState("")
   const [activeTab, setActiveTab] = useState<"all" | "favorites">("all")
 
   useEffect(() => {
-    setMounted(true)
     let isMounted = true
     async function loadTracks() {
       try {
@@ -50,7 +54,7 @@ export default function TaizePage() {
         if (res.ok) {
           const data = await res.json()
           if (data.tracks && data.tracks.length > 0 && isMounted) {
-            setTracks(data.tracks)
+            setTracks(data.tracks.map(normalizeTrack))
           }
         }
       } catch (err) {
@@ -69,7 +73,7 @@ export default function TaizePage() {
 
     if (activeTab === "favorites") {
       if (!mounted) return []
-      list = tracks.filter((track) => isFavorite(track.url) || isFavorite(track.id) || isFavorite(track.title))
+      list = tracks.filter((track) => favorites.some((favorite) => sameTrack(favorite, track)))
     }
 
     if (searchQuery.trim()) {
@@ -78,12 +82,12 @@ export default function TaizePage() {
     }
 
     return list
-  }, [tracks, searchQuery, activeTab, favorites, isFavorite, mounted])
+  }, [tracks, searchQuery, activeTab, favorites, mounted])
 
   const favoriteCount = useMemo(() => {
     if (!mounted) return 0
-    return tracks.filter((track) => isFavorite(track.url) || isFavorite(track.id) || isFavorite(track.title)).length
-  }, [tracks, favorites, isFavorite, mounted])
+    return tracks.filter((track) => favorites.some((favorite) => sameTrack(favorite, track))).length
+  }, [tracks, favorites, mounted])
 
   return (
     <div className="container mx-auto px-4 py-12 md:py-20 max-w-4xl relative min-h-[85vh]">
@@ -179,8 +183,8 @@ export default function TaizePage() {
       <div className="space-y-3.5">
         <AnimatePresence mode="popLayout">
           {filteredTracks.map((track) => {
-            const isThisTrackPlaying = currentTrack?.id === track.id || currentTrack?.url === track.url
-            const favorited = mounted && (isFavorite(track.url) || isFavorite(track.id) || isFavorite(track.title))
+            const isThisTrackPlaying = sameTrack(currentTrack, track)
+            const favorited = mounted && favorites.some((favorite) => sameTrack(favorite, track))
 
             return (
               <motion.div
@@ -239,7 +243,7 @@ export default function TaizePage() {
                   {/* Play / Pause Button */}
                   <button
                     onClick={() => {
-                      if (currentTrack?.id === track.id || currentTrack?.url === track.url) {
+                      if (sameTrack(currentTrack, track)) {
                         togglePlay()
                       } else {
                         play(track, filteredTracks, activeTab)

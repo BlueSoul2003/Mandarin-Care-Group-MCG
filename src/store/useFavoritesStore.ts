@@ -1,5 +1,6 @@
 import { create } from "zustand"
 import { persist, createJSONStorage } from "zustand/middleware"
+import { normalizeTrack, restoreFavorites, sameTrack } from "../lib/track-identity"
 
 export interface FavoriteTrack {
   id: string
@@ -10,7 +11,7 @@ export interface FavoriteTrack {
 interface FavoritesState {
   favorites: FavoriteTrack[]
   toggleFavorite: (track: FavoriteTrack) => void
-  isFavorite: (trackUrlOrId: string) => boolean
+  isFavorite: (track: Pick<FavoriteTrack, "url">) => boolean
   clearFavorites: () => void
 }
 
@@ -21,24 +22,24 @@ export const useFavoritesStore = create<FavoritesState>()(
       toggleFavorite: (track: FavoriteTrack) => {
         const { favorites } = get()
         const exists = favorites.some(
-          (f) => f.id === track.id || f.url === track.url || f.title === track.title
+          (f) => sameTrack(f, track)
         )
         if (exists) {
           set({
             favorites: favorites.filter(
-              (f) => f.id !== track.id && f.url !== track.url && f.title !== track.title
+              (f) => !sameTrack(f, track)
             ),
           })
         } else {
           set({
-            favorites: [...favorites, track],
+            favorites: [...favorites, normalizeTrack(track)],
           })
         }
       },
-      isFavorite: (trackUrlOrId: string) => {
+      isFavorite: (track) => {
         const { favorites } = get()
         return favorites.some(
-          (f) => f.id === trackUrlOrId || f.url === trackUrlOrId || f.title === trackUrlOrId
+          (f) => sameTrack(f, track)
         )
       },
       clearFavorites: () => set({ favorites: [] }),
@@ -46,6 +47,10 @@ export const useFavoritesStore = create<FavoritesState>()(
     {
       name: "mcg_favorite_songs",
       storage: createJSONStorage(() => localStorage),
+      version: 1,
+      migrate: (persisted) => ({ favorites: restoreFavorites(persisted) }),
+      merge: (persisted, current) => ({ ...current, favorites: restoreFavorites(persisted) }),
+      partialize: (state) => ({ favorites: state.favorites }),
     }
   )
 )

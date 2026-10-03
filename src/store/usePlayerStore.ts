@@ -1,4 +1,5 @@
 import { create } from "zustand"
+import { sameTrack } from "../lib/track-identity"
 
 export interface Track {
   id: string
@@ -46,7 +47,7 @@ export const usePlayerStore = create<PlayerState>((set, get) => ({
     const { playlist, currentTrack } = get()
     if (!playlist.length || !currentTrack) return
     const currentIndex = playlist.findIndex(
-      (t) => t.id === currentTrack.id || t.url === currentTrack.url || t.title === currentTrack.title
+      (t) => sameTrack(t, currentTrack)
     )
     const nextIndex = (currentIndex + 1) % playlist.length
     set({ currentTrack: playlist[nextIndex], isPlaying: true, currentTime: 0 })
@@ -59,9 +60,9 @@ export const usePlayerStore = create<PlayerState>((set, get) => ({
       return
     }
     const currentIndex = playlist.findIndex(
-      (t) => t.id === currentTrack.id || t.url === currentTrack.url || t.title === currentTrack.title
+      (t) => sameTrack(t, currentTrack)
     )
-    const prevIndex = (currentIndex - 1 + playlist.length) % playlist.length
+    const prevIndex = currentIndex < 0 ? playlist.length - 1 : (currentIndex - 1 + playlist.length) % playlist.length
     set({ currentTrack: playlist[prevIndex], isPlaying: true, currentTime: 0 })
   },
   setCurrentTime: (time) => set({ currentTime: time }),

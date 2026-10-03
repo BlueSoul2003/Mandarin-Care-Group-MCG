@@ -6,11 +6,16 @@ import {
 } from "@notionhq/client"
 import {
   parsePublishedContentSnapshot,
+  articleSchema,
+  type Article,
   type PublishedContentSnapshot,
 } from "./model"
 import { SnapshotContentRepository } from "./repository"
+import { ContentRefreshError, type PublicationVisibility } from "./publication"
+import { ArticleValidationError, reportContentIssue, type ContentIssue } from "./diagnostics"
 
 type Property = PageObjectResponse["properties"][string]
+const articleMetadataSchema = articleSchema.omit({ contentMarkdown: true })
 
 export interface NotionContentConfig {
   apiKey: string
@@ -156,44 +161,16 @@ async function queryPublished(
     statusProperty?.type === "status"
       ? { status: { equals: "Published" } }
       : { select: { equals: "Published" } }
-  const typeProperty =
-    "properties" in dataSource ? (dataSource.properties.Type as any) : undefined
-  const hasEventRegSelect =
-    typeProperty?.type === "select" &&
-    Array.isArray(typeProperty.select?.options) &&
-    typeProperty.select.options.some((opt: { name: string }) => opt.name === "EventReg")
-  const hasEventRegMultiSelect =
-    typeProperty?.type === "multi_select" &&
-    Array.isArray(typeProperty.multi_select?.options) &&
-    typeProperty.multi_select.options.some((opt: { name: string }) => opt.name === "EventReg")
-
-  const eventRegFilter = hasEventRegSelect
-    ? { property: "Type", select: { equals: "EventReg" } }
-    : hasEventRegMultiSelect
-      ? { property: "Type", multi_select: { contains: "EventReg" } }
-      : null
-
-  const hasFeaturedCheckbox =
-    "properties" in dataSource &&
-    (dataSource.properties.Featured as any)?.type === "checkbox"
-
-  const conditions = [
-    {
-      property: "Status",
-      ...statusFilter,
-    },
-    ...(hasFeaturedCheckbox ? [{ property: "Featured", checkbox: { equals: true } }] : []),
-    ...(eventRegFilter ? [eventRegFilter] : []),
-  ]
-
-  const filter = conditions.length > 1 ? { or: conditions } : conditions[0]
+  const filter = { property: "Status", ...statusFilter }
 
   const results = await collectPaginatedAPI(notion.dataSources.query, {
     data_source_id: dataSourceId,
     filter,
   })
 
-  return results.filter(isFullPage)
+  return results.filter(isFullPage).filter((page) =>
+    !page.archived && !page.in_trash && plainText(page, "Status") === "Published",
+  )
 }
 
 async function resolveLegacyDataSourceId(
@@ -215,6 +192,7 @@ async function resolveLegacyDataSourceId(
 
 export async function loadNotionPublishedSnapshot(
   config: NotionContentConfig,
+  options: { strictArticles?: boolean; onIssue?: (issue: ContentIssue) => void } = {},
 ): Promise<PublishedContentSnapshot> {
   const notion = new Client({
     auth: config.apiKey,
@@ -223,149 +201,195 @@ export async function loadNotionPublishedSnapshot(
     retry: { maxRetries: 2 },
   })
 
-  const articlesDataSourceId =
-    config.articlesDataSourceId ??
-    (config.legacyArticlesDatabaseId
-      ? await resolveLegacyDataSourceId(
-          notion,
-          config.legacyArticlesDatabaseId,
-        )
-      : undefined)
+  const visibility: PublicationVisibility = {}
+  const query = async (id: string | undefined, collection: keyof PublicationVisibility) => {
+    const pages = id ? await queryPublished(notion, id) : []
+    const visible = collection === "people"
+      ? pages.filter((page) => checkboxValue(page, "ConsentToPublish"))
+      : pages
+    visibility[collection] = visible.map((page) => page.id)
+    return visible
+  }
+  try {
+    const articlesDataSourceId =
+      config.articlesDataSourceId ??
+      (config.legacyArticlesDatabaseId
+        ? await resolveLegacyDataSourceId(
+            notion,
+            config.legacyArticlesDatabaseId,
+          )
+        : undefined)
 
-  // Keep these calls sequential to stay comfortably below Notion's API rate limit.
-  const termPages = config.termsDataSourceId
-    ? await queryPublished(notion, config.termsDataSourceId)
-    : []
-  const seriesPages = config.seriesDataSourceId
-    ? await queryPublished(notion, config.seriesDataSourceId)
-    : []
-  const peoplePages = config.peopleDataSourceId
-    ? await queryPublished(notion, config.peopleDataSourceId)
-    : []
-  const rolePages = config.committeeRolesDataSourceId
-    ? await queryPublished(notion, config.committeeRolesDataSourceId)
-    : []
-  const eventPages = config.eventsDataSourceId
-    ? await queryPublished(notion, config.eventsDataSourceId)
-    : []
-  const mediaPages = config.mediaDataSourceId
-    ? await queryPublished(notion, config.mediaDataSourceId)
-    : []
-  const articlePages = articlesDataSourceId
-    ? await queryPublished(notion, articlesDataSourceId)
-    : []
+    // Keep these calls sequential to stay comfortably below Notion's API rate limit.
+    const termPages = await query(config.termsDataSourceId, "terms")
+    const seriesPages = await query(config.seriesDataSourceId, "series")
+    const peoplePages = await query(config.peopleDataSourceId, "people")
+    const rolePages = await query(config.committeeRolesDataSourceId, "committeeRoles")
+    const eventPages = await query(config.eventsDataSourceId, "events")
+    const mediaPages = await query(config.mediaDataSourceId, "media")
+    const articlePages = await query(articlesDataSourceId, "articles")
+    const termIds = new Set(termPages.map((page) => page.id))
+    const seriesIds = new Set(seriesPages.map((page) => page.id))
+    const personIds = new Set(peoplePages.map((page) => page.id))
+    const eventIds = new Set(eventPages.map((page) => page.id))
 
-  const terms = termPages.map((page) => {
-    const range = dateValue(page, "Dates")
-    return {
+    const terms = termPages.map((page) => {
+      const range = dateValue(page, "Dates")
+      return {
+        id: page.id,
+        slug: requiredText(page, "Slug"),
+        name: requiredText(page, "Name"),
+        startDate: range?.start ?? "",
+        endDate: range?.end ?? range?.start ?? "",
+        status: "Published",
+      }
+    })
+
+    const series = seriesPages.map((page) => ({
       id: page.id,
       slug: requiredText(page, "Slug"),
       name: requiredText(page, "Name"),
-      startDate: range?.start ?? "",
-      endDate: range?.end ?? range?.start ?? "",
-      status: "Published",
-    }
-  })
-
-  const series = seriesPages.map((page) => ({
-    id: page.id,
-    slug: requiredText(page, "Slug"),
-    name: requiredText(page, "Name"),
-    summary: plainText(page, "Summary"),
-    status: "Published",
-  }))
-
-  const people = peoplePages
-    .filter((page) => checkboxValue(page, "ConsentToPublish"))
-    .map((page) => ({
-      id: page.id,
-      slug: requiredText(page, "Slug"),
-      name: requiredText(page, "Name"),
-      portraitUrl: optionalUrl(page, "PortraitURL"),
-      bio: plainText(page, "Bio") || undefined,
+      summary: plainText(page, "Summary"),
       status: "Published",
     }))
 
-  const committeeRoles = rolePages.map((page) => ({
-    id: page.id,
-    personId: requireRelation(page, "Person"),
-    termId: requireRelation(page, "Term"),
-    title: requiredText(page, "Role"),
-    sortOrder: numberValue(page, "SortOrder"),
-    status: "Published",
-  }))
+    const people = peoplePages
+      .filter((page) => checkboxValue(page, "ConsentToPublish"))
+      .map((page) => ({
+        id: page.id,
+        slug: requiredText(page, "Slug"),
+        name: requiredText(page, "Name"),
+        portraitUrl: optionalUrl(page, "PortraitURL"),
+        bio: plainText(page, "Bio") || undefined,
+        status: "Published",
+      }))
 
-  const events = eventPages.map((page) => {
-    const dates = dateValue(page, "Dates")
-    const typeValue = plainText(page, "Type") || undefined
-    return {
+    const committeeRoles = rolePages.filter((page) =>
+      personIds.has(relationIds(page, "Person")[0]) &&
+      termIds.has(relationIds(page, "Term")[0]),
+    ).map((page) => ({
       id: page.id,
-      slug: requiredText(page, "Slug"),
-      title: requiredText(page, "Title"),
-      summary: plainText(page, "Summary"),
-      type: typeValue,
-      startDate: dates?.start ?? null,
-      endDate: dates?.end ?? undefined,
-      dateLabel: plainText(page, "DateLabel") || undefined,
-      location: plainText(page, "Location") || undefined,
-      termId: relationIds(page, "Term")[0],
-      seriesId: relationIds(page, "Series")[0],
-      coverImageUrl: optionalUrl(page, "CoverImageURL"),
-      magazineManifestUrl: optionalUrl(page, "MagazineManifestURL"),
-      featured: checkboxValue(page, "Featured"),
-      status: "Published",
-    }
-  })
-
-  const media = mediaPages.map((page) => {
-    const url = requiredText(page, "URL")
-    const selectedType = plainText(page, "Type").toLowerCase()
-    const inferredVideo =
-      url.includes("/video/upload/") || /\.(mp4|mov|webm|ogg)$/i.test(url)
-
-    return {
-      id: page.id,
-      eventId: requireRelation(page, "Event"),
-      title: requiredText(page, "Title"),
-      url,
-      alt: requiredText(page, "AltText"),
-      takenAt: dateValue(page, "Date")?.start ?? null,
-      posterUrl: optionalUrl(page, "PosterImageURL"),
-      type: selectedType === "video" || inferredVideo ? "video" : "image",
+      personId: requireRelation(page, "Person"),
+      termId: requireRelation(page, "Term"),
+      title: requiredText(page, "Role"),
       sortOrder: numberValue(page, "SortOrder"),
       status: "Published",
-    }
-  })
+    }))
 
-  const articles: unknown[] = []
-  for (const page of articlePages) {
-    const markdown = await notion.pages.retrieveMarkdown({ page_id: page.id })
-    articles.push({
-      id: page.id,
-      slug: requiredText(page, "Slug"),
-      title: requiredText(page, "Title"),
-      excerpt: requiredText(page, "Excerpt"),
-      publishedAt: dateValue(page, "PublishedAt")?.start ?? "",
-      authorName: plainText(page, "Author") || "MCG Team",
-      section: plainText(page, "Section").toLowerCase(),
-      tags: multiSelect(page, "Tags"),
-      eventIds: relationIds(page, "Events"),
-      contentMarkdown: markdown.markdown,
-      status: "Published",
+    const events = eventPages.map((page) => {
+      const dates = dateValue(page, "Dates")
+      const typeValue = plainText(page, "Type") || undefined
+      return {
+        id: page.id,
+        slug: requiredText(page, "Slug"),
+        title: requiredText(page, "Title"),
+        summary: plainText(page, "Summary"),
+        type: typeValue,
+        startDate: dates?.start ?? null,
+        endDate: dates?.end ?? undefined,
+        dateLabel: plainText(page, "DateLabel") || undefined,
+        location: plainText(page, "Location") || undefined,
+        termId: relationIds(page, "Term").find((id) => termIds.has(id)),
+        seriesId: relationIds(page, "Series").find((id) => seriesIds.has(id)),
+        coverImageUrl: optionalUrl(page, "CoverImageURL"),
+        magazineManifestUrl: optionalUrl(page, "MagazineManifestURL"),
+        featured: checkboxValue(page, "Featured"),
+        status: "Published",
+      }
     })
-  }
 
-  return parsePublishedContentSnapshot({
-    schemaVersion: 1,
-    generatedAt: new Date().toISOString(),
-    terms,
-    series,
-    people,
-    committeeRoles,
-    events,
-    media,
-    articles,
-  })
+    const media = mediaPages.filter((page) => eventIds.has(relationIds(page, "Event")[0])).map((page) => {
+      const url = requiredText(page, "URL")
+      const selectedType = plainText(page, "Type").toLowerCase()
+      const inferredVideo =
+        url.includes("/video/upload/") || /\.(mp4|mov|webm|ogg)$/i.test(url)
+
+      return {
+        id: page.id,
+        eventId: requireRelation(page, "Event"),
+        title: requiredText(page, "Title"),
+        url,
+        alt: requiredText(page, "AltText"),
+        takenAt: dateValue(page, "Date")?.start ?? null,
+        posterUrl: optionalUrl(page, "PosterImageURL"),
+        type: selectedType === "video" || inferredVideo ? "video" : "image",
+        sortOrder: numberValue(page, "SortOrder"),
+        status: "Published",
+      }
+    })
+
+    const articles: Article[] = []
+    const issues: ContentIssue[] = []
+    const onIssue = options.onIssue ?? reportContentIssue
+    const reject = (issue: ContentIssue) => {
+      issues.push(issue)
+      visibility.articles = visibility.articles?.filter((id) => id !== issue.pageId)
+      onIssue(issue)
+    }
+    // Omit every conflicting route, not an arbitrary winner based on query order.
+    const slugCounts = new Map<string, number>()
+    for (const page of articlePages) {
+      const slug = plainText(page, "Slug")
+      slugCounts.set(slug, (slugCounts.get(slug) ?? 0) + 1)
+    }
+    for (const page of articlePages) {
+      const metadata = articleMetadataSchema.safeParse({
+        id: page.id,
+        slug: plainText(page, "Slug"),
+        title: plainText(page, "Title"),
+        excerpt: plainText(page, "Excerpt"),
+        publishedAt: dateValue(page, "PublishedAt")?.start ?? "",
+        authorName: plainText(page, "Author") || "MCG Team",
+        section: plainText(page, "Section").toLowerCase(),
+        tags: multiSelect(page, "Tags"),
+        eventIds: relationIds(page, "Events").filter((id) => eventIds.has(id)),
+        status: "Published",
+      })
+      if (!metadata.success) {
+        reject({ collection: "articles", pageId: page.id, code: "INVALID_FIELDS", fields: [...new Set(metadata.error.issues.map((issue) => issue.path.join(".")))] })
+        continue
+      }
+      if (slugCounts.get(metadata.data.slug)! > 1) {
+        reject({ collection: "articles", pageId: page.id, code: "DUPLICATE_SLUG", fields: ["slug"] })
+        continue
+      }
+      let body: string
+      try {
+        const markdown = await notion.pages.retrieveMarkdown({ page_id: page.id })
+        if (markdown.truncated || markdown.unknown_block_ids?.length) {
+          reject({ collection: "articles", pageId: page.id, code: "INVALID_BODY", fields: ["contentMarkdown"] })
+          continue
+        }
+        body = markdown.markdown
+      } catch {
+        reject({ collection: "articles", pageId: page.id, code: "BODY_UNAVAILABLE" })
+        continue
+      }
+      const article = articleSchema.safeParse({ ...metadata.data, contentMarkdown: body })
+      if (!article.success) {
+        reject({ collection: "articles", pageId: page.id, code: "INVALID_BODY", fields: ["contentMarkdown"] })
+        continue
+      }
+      articles.push(article.data)
+    }
+    if (options.strictArticles && issues.length > 0) {
+      throw new ArticleValidationError(issues.length)
+    }
+
+    return parsePublishedContentSnapshot({
+      schemaVersion: 1,
+      generatedAt: new Date().toISOString(),
+      terms,
+      series,
+      people,
+      committeeRoles,
+      events,
+      media,
+      articles,
+    })
+  } catch (error) {
+    throw new ContentRefreshError(error, visibility)
+  }
 }
 
 export class NotionContentRepository extends SnapshotContentRepository {

@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server"
 import { ListObjectsV2Command } from "@aws-sdk/client-s3"
+import { normalizeTrack, type AudioTrack } from "@/lib/track-identity"
 import {
   filebaseS3,
   FILEBASE_BUCKET,
@@ -8,7 +9,7 @@ import {
 } from "@/lib/filebase"
 
 // In-memory cache for audio tracks
-let cachedTracks: any[] | null = null
+let cachedTracks: AudioTrack[] | null = null
 let cacheTimestamp = 0
 const CACHE_TTL_MS = 15 * 60 * 1000 // 15 minutes
 
@@ -69,17 +70,17 @@ export async function GET(req: Request) {
         const nameB = b.Key || ""
         return nameA.localeCompare(nameB, undefined, { numeric: true, sensitivity: "base" })
       })
-      .map((item, index) => {
+      .map((item) => {
         const key = item.Key!
         const title = key.replace(/\.[^/.]+$/, "").replace(/^\d+[\s._-]*/, "")
-        return {
-          id: String(index + 1),
+        return normalizeTrack({
+          id: "",
           title,
           filename: key,
           url: `/api/audio/${encodeURIComponent(key)}`,
           size: item.Size,
           lastModified: item.LastModified,
-        }
+        })
       })
 
     cachedTracks = tracks
