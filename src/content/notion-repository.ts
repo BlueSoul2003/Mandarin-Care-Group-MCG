@@ -66,25 +66,42 @@ function property(page: PageObjectResponse, name: string): Property | undefined 
   return page.properties[name]
 }
 
+export function normalizeNotionText(text: string): string {
+  if (!text) return ""
+  return text
+    .replace(/\\r\\n/g, "\n")
+    .replace(/\\n/g, "\n")
+    .replace(/\r\n/g, "\n")
+    .split("\n")
+    .map((line) => line.trim())
+    .join("\n")
+    .trim()
+}
+
 function plainText(page: PageObjectResponse, name: string): string {
   const value = property(page, name)
   if (!value) return ""
 
+  let text = ""
   if (value.type === "title") {
-    return value.title.map((item) => item.plain_text).join("").trim()
+    text = value.title.map((item) => item.plain_text).join("")
+  } else if (value.type === "rich_text") {
+    text = value.rich_text.map((item) => item.plain_text).join("")
+  } else if (value.type === "url") {
+    return value.url?.trim() ?? ""
+  } else if (value.type === "email") {
+    return value.email?.trim() ?? ""
+  } else if (value.type === "phone_number") {
+    return value.phone_number?.trim() ?? ""
+  } else if (value.type === "select") {
+    text = value.select?.name ?? ""
+  } else if (value.type === "multi_select") {
+    text = value.multi_select.map((item) => item.name).join(", ")
+  } else if (value.type === "status") {
+    text = value.status?.name ?? ""
   }
-  if (value.type === "rich_text") {
-    return value.rich_text.map((item) => item.plain_text).join("").trim()
-  }
-  if (value.type === "url") return value.url?.trim() ?? ""
-  if (value.type === "email") return value.email?.trim() ?? ""
-  if (value.type === "phone_number") return value.phone_number?.trim() ?? ""
-  if (value.type === "select") return value.select?.name.trim() ?? ""
-  if (value.type === "multi_select") {
-    return value.multi_select.map((item) => item.name.trim()).join(", ")
-  }
-  if (value.type === "status") return value.status?.name.trim() ?? ""
-  return ""
+
+  return normalizeNotionText(text)
 }
 
 function requiredText(page: PageObjectResponse, name: string): string {

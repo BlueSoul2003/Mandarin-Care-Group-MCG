@@ -37,7 +37,7 @@ export function ArticleReader({ title, date, author, category, children }: Artic
       </Link>
       
       <header className="mb-12">
-        <h1 className="text-3xl md:text-5xl font-bold font-heading text-foreground mb-6 leading-tight">
+        <h1 className="text-3xl md:text-5xl font-bold font-heading text-foreground mb-6 leading-tight whitespace-pre-line">
           {title}
         </h1>
         <div className="flex items-center gap-6 text-sm text-muted-foreground border-b border-border/50 pb-8">

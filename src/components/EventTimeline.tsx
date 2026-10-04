@@ -546,7 +546,7 @@ export function EventTimeline({ years, events }: EventTimelineProps = {}) {
 
                                   {/* Date */}
                                   {displayDate && (
-                                    <div className="inline-flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
+                                    <div className="inline-flex items-center gap-1.5 text-xs font-medium text-muted-foreground whitespace-pre-line">
                                       <Calendar className="w-3 h-3 text-primary/80" />
                                       <span>{displayDate}</span>
                                     </div>
@@ -554,7 +554,7 @@ export function EventTimeline({ years, events }: EventTimelineProps = {}) {
 
                                   {/* Location for Notion event */}
                                   {event.isNotion && event.location && (
-                                    <div className="inline-flex items-center gap-1 text-xs text-muted-foreground">
+                                    <div className="inline-flex items-center gap-1 text-xs text-muted-foreground whitespace-pre-line">
                                       <MapPin className="w-3 h-3 text-primary/80 flex-shrink-0" />
                                       <span>{event.location}</span>
                                     </div>
@@ -576,13 +576,13 @@ export function EventTimeline({ years, events }: EventTimelineProps = {}) {
                               </div>
 
                               {/* Title */}
-                              <h4 className="font-heading text-sm sm:text-base font-bold text-foreground leading-snug group-hover/event:text-primary transition-colors">
+                              <h4 className="font-heading text-sm sm:text-base font-bold text-foreground leading-snug group-hover/event:text-primary transition-colors whitespace-pre-line">
                                 {eventTitle}
                               </h4>
 
                               {/* Description - Preserved in full */}
                               {eventSummary && (
-                                <p className="text-xs sm:text-sm leading-relaxed text-muted-foreground">
+                                <p className="text-xs sm:text-sm leading-relaxed text-muted-foreground whitespace-pre-line">
                                   {eventSummary}
                                 </p>
                               )}

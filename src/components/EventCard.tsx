@@ -40,26 +40,26 @@ export function EventCard({
 
       <div className="p-6 md:p-8">
         <div className="mb-4 flex flex-wrap gap-x-4 gap-y-2 text-xs text-muted-foreground">
-          <span className="flex items-center gap-1.5">
+          <span className="flex items-center gap-1.5 whitespace-pre-line">
             <Calendar className="h-3.5 w-3.5" />
             {event.dateLabel || event.startDate || gallery("dateUnknown")}
           </span>
           {event.location && (
-            <span className="flex items-center gap-1.5">
+            <span className="flex items-center gap-1.5 whitespace-pre-line">
               <MapPin className="h-3.5 w-3.5" />
               {event.location}
             </span>
           )}
-          {term && <span>{term.name}</span>}
+          {term && <span className="whitespace-pre-line">{term.name}</span>}
         </div>
 
-        <h2 className="font-heading text-2xl font-semibold leading-snug">
+        <h2 className="font-heading text-2xl font-semibold leading-snug whitespace-pre-line">
           <Link href={`/events/${event.slug}`} className="hover:text-primary transition-colors">
             {event.title}
           </Link>
         </h2>
         {event.summary && (
-          <p className="mt-4 line-clamp-3 leading-relaxed text-muted-foreground">
+          <p className="mt-4 line-clamp-3 leading-relaxed text-muted-foreground whitespace-pre-line">
             {event.summary}
           </p>
         )}

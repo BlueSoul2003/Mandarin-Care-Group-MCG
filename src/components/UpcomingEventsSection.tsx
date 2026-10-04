@@ -99,24 +99,51 @@ export function UpcomingEventsSection({ events }: UpcomingEventsSectionProps) {
                 className="group relative flex flex-col sm:flex-row items-stretch overflow-hidden rounded-2xl border border-border/70 bg-card hover:border-primary/40 shadow-2xs hover:shadow-xs transition-all duration-200"
               >
                 {/* Media Container */}
-                <div className="relative w-full sm:w-5/12 sm:min-w-[220px] aspect-[16/9] sm:aspect-auto bg-muted/20 overflow-hidden flex-shrink-0">
+                <Link
+                  href={`/events/${event.slug}`}
+                  className="relative w-full sm:w-1/2 min-h-[280px] sm:min-h-[340px] md:min-h-[380px] bg-muted/20 overflow-hidden flex-shrink-0 flex items-center justify-center p-2 group/media block"
+                  aria-label={event.title}
+                >
                   {photo ? (
-                    isCloudinary ? (
-                      <Image
-                        src={photo}
-                        alt={event.title}
-                        fill
-                        sizes="(max-width: 640px) 100vw, 320px"
-                        className="object-cover transition-transform duration-500 group-hover:scale-105"
-                      />
-                    ) : (
-                      <img
-                        src={photo}
-                        alt={event.title}
-                        loading="lazy"
-                        className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
-                      />
-                    )
+                    <>
+                      {/* Ambient blur backdrop to fill container edges naturally */}
+                      <div className="absolute inset-0 overflow-hidden">
+                        {isCloudinary ? (
+                          <Image
+                            src={photo}
+                            alt=""
+                            fill
+                            aria-hidden="true"
+                            className="object-cover blur-2xl opacity-25 scale-110 pointer-events-none"
+                          />
+                        ) : (
+                          <img
+                            src={photo}
+                            alt=""
+                            aria-hidden="true"
+                            className="h-full w-full object-cover blur-2xl opacity-25 scale-110 pointer-events-none"
+                          />
+                        )}
+                      </div>
+
+                      {/* Full Picture: object-contain ensures the entire image is displayed without cropping */}
+                      {isCloudinary ? (
+                        <Image
+                          src={photo}
+                          alt={event.title}
+                          fill
+                          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 480px"
+                          className="object-contain p-1 drop-shadow-sm transition-transform duration-500 group-hover:scale-[1.02]"
+                        />
+                      ) : (
+                        <img
+                          src={photo}
+                          alt={event.title}
+                          loading="lazy"
+                          className="absolute inset-0 h-full w-full object-contain p-1 drop-shadow-sm transition-transform duration-500 group-hover:scale-[1.02]"
+                        />
+                      )}
+                    </>
                   ) : (
                     <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-muted/30 to-background flex items-center justify-center">
                       <Calendar className="w-8 h-8 text-primary/30" />
@@ -124,7 +151,7 @@ export function UpcomingEventsSection({ events }: UpcomingEventsSectionProps) {
                   )}
 
                   {/* Badges on Cover */}
-                  <div className="absolute top-2.5 left-2.5 flex items-center gap-1.5 flex-wrap">
+                  <div className="absolute top-2.5 left-2.5 flex items-center gap-1.5 flex-wrap z-10">
                     <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-primary text-primary-foreground text-[10px] font-semibold shadow-2xs">
                       <span>{t("featuredBadge")}</span>
                     </span>
@@ -135,7 +162,7 @@ export function UpcomingEventsSection({ events }: UpcomingEventsSectionProps) {
                       </span>
                     )}
                   </div>
-                </div>
+                </Link>
 
                 {/* Content Details */}
                 <div className="p-4 sm:p-5 flex-1 flex flex-col justify-between">
@@ -143,28 +170,28 @@ export function UpcomingEventsSection({ events }: UpcomingEventsSectionProps) {
                     {/* Date and Meta */}
                     <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground mb-2">
                       {displayDate && (
-                        <span className="inline-flex items-center gap-1 font-medium text-foreground">
+                        <span className="inline-flex items-center gap-1 font-medium text-foreground whitespace-pre-line">
                           <Calendar className="w-3 h-3 text-primary flex-shrink-0" />
                           <span>{displayDate}</span>
                         </span>
                       )}
 
                       {event.location && (
-                        <span className="inline-flex items-center gap-1">
+                        <span className="inline-flex items-center gap-1 whitespace-pre-line">
                           <MapPin className="w-3 h-3 text-primary/80 flex-shrink-0" />
                           <span>{event.location}</span>
                         </span>
                       )}
 
                       {event.seriesName && (
-                        <span className="px-2 py-0.5 rounded-full bg-muted text-[10px] font-medium text-muted-foreground">
+                        <span className="px-2 py-0.5 rounded-full bg-muted text-[10px] font-medium text-muted-foreground whitespace-pre-line">
                           {event.seriesName}
                         </span>
                       )}
                     </div>
 
                     {/* Title */}
-                    <h3 className="font-heading text-base sm:text-lg font-bold text-foreground leading-snug group-hover:text-primary transition-colors">
+                    <h3 className="font-heading text-base sm:text-lg font-bold text-foreground leading-snug group-hover:text-primary transition-colors whitespace-pre-line">
                       <Link href={`/events/${event.slug}`} className="hover:underline">
                         {event.title}
                       </Link>
@@ -172,7 +199,7 @@ export function UpcomingEventsSection({ events }: UpcomingEventsSectionProps) {
 
                     {/* Summary */}
                     {event.summary && (
-                      <p className="mt-1.5 text-xs sm:text-sm text-muted-foreground leading-relaxed line-clamp-2">
+                      <p className="mt-1.5 text-xs sm:text-sm text-muted-foreground leading-relaxed line-clamp-2 whitespace-pre-line">
                         {event.summary}
                       </p>
                     )}
@@ -201,24 +228,51 @@ export function UpcomingEventsSection({ events }: UpcomingEventsSectionProps) {
             >
               <div>
                 {/* Media Container */}
-                <div className="relative w-full aspect-[16/9] bg-muted/20 overflow-hidden">
+                <Link
+                  href={`/events/${event.slug}`}
+                  className="relative w-full aspect-[4/3] sm:aspect-[16/10] min-h-[220px] bg-muted/20 overflow-hidden flex items-center justify-center p-2 block group/media"
+                  aria-label={event.title}
+                >
                   {photo ? (
-                    isCloudinary ? (
-                      <Image
-                        src={photo}
-                        alt={event.title}
-                        fill
-                        sizes="(max-width: 768px) 100vw, 50vw"
-                        className="object-cover transition-transform duration-500 group-hover:scale-105"
-                      />
-                    ) : (
-                      <img
-                        src={photo}
-                        alt={event.title}
-                        loading="lazy"
-                        className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
-                      />
-                    )
+                    <>
+                      {/* Ambient blur backdrop to fill container edges naturally */}
+                      <div className="absolute inset-0 overflow-hidden">
+                        {isCloudinary ? (
+                          <Image
+                            src={photo}
+                            alt=""
+                            fill
+                            aria-hidden="true"
+                            className="object-cover blur-2xl opacity-25 scale-110 pointer-events-none"
+                          />
+                        ) : (
+                          <img
+                            src={photo}
+                            alt=""
+                            aria-hidden="true"
+                            className="h-full w-full object-cover blur-2xl opacity-25 scale-110 pointer-events-none"
+                          />
+                        )}
+                      </div>
+
+                      {/* Full Picture: object-contain ensures the entire image is displayed without cropping */}
+                      {isCloudinary ? (
+                        <Image
+                          src={photo}
+                          alt={event.title}
+                          fill
+                          sizes="(max-width: 768px) 100vw, 50vw"
+                          className="object-contain p-1 drop-shadow-sm transition-transform duration-500 group-hover:scale-[1.02]"
+                        />
+                      ) : (
+                        <img
+                          src={photo}
+                          alt={event.title}
+                          loading="lazy"
+                          className="absolute inset-0 h-full w-full object-contain p-1 drop-shadow-sm transition-transform duration-500 group-hover:scale-[1.02]"
+                        />
+                      )}
+                    </>
                   ) : (
                     <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-muted/30 to-background flex items-center justify-center">
                       <Calendar className="w-8 h-8 text-primary/30" />
@@ -226,7 +280,7 @@ export function UpcomingEventsSection({ events }: UpcomingEventsSectionProps) {
                   )}
 
                   {/* Badges on Cover */}
-                  <div className="absolute top-2.5 left-2.5 flex items-center gap-1.5 flex-wrap">
+                  <div className="absolute top-2.5 left-2.5 flex items-center gap-1.5 flex-wrap z-10">
                     <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-primary text-primary-foreground text-[10px] font-semibold shadow-2xs">
                       <span>{t("featuredBadge")}</span>
                     </span>
@@ -237,34 +291,34 @@ export function UpcomingEventsSection({ events }: UpcomingEventsSectionProps) {
                       </span>
                     )}
                   </div>
-                </div>
+                </Link>
 
                 {/* Content */}
                 <div className="p-4 sm:p-5">
                   <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground mb-2">
                     {displayDate && (
-                      <span className="inline-flex items-center gap-1 font-medium text-foreground">
+                      <span className="inline-flex items-center gap-1 font-medium text-foreground whitespace-pre-line">
                         <Calendar className="w-3 h-3 text-primary flex-shrink-0" />
                         <span>{displayDate}</span>
                       </span>
                     )}
 
                     {event.location && (
-                      <span className="inline-flex items-center gap-1">
+                      <span className="inline-flex items-center gap-1 whitespace-pre-line">
                         <MapPin className="w-3 h-3 text-primary/80 flex-shrink-0" />
                         <span>{event.location}</span>
                       </span>
                     )}
                   </div>
 
-                  <h3 className="font-heading text-base font-bold text-foreground leading-snug group-hover:text-primary transition-colors">
+                  <h3 className="font-heading text-base font-bold text-foreground leading-snug group-hover:text-primary transition-colors whitespace-pre-line">
                     <Link href={`/events/${event.slug}`} className="hover:underline">
                       {event.title}
                     </Link>
                   </h3>
 
                   {event.summary && (
-                    <p className="mt-1.5 text-xs text-muted-foreground leading-relaxed line-clamp-2">
+                    <p className="mt-1.5 text-xs text-muted-foreground leading-relaxed line-clamp-2 whitespace-pre-line">
                       {event.summary}
                     </p>
                   )}

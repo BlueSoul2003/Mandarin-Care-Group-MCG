@@ -1,5 +1,8 @@
 import { describe, expect, it } from "vitest"
-import { getNotionContentConfig } from "../src/content/notion-repository"
+import {
+  getNotionContentConfig,
+  normalizeNotionText,
+} from "../src/content/notion-repository"
 
 const completeEnvironment: NodeJS.ProcessEnv = {
   NODE_ENV: "test",
@@ -40,5 +43,25 @@ describe("Notion content configuration", () => {
       apiKey: "secret",
       legacyArticlesDatabaseId: "legacy-articles-database",
     })
+  })
+})
+
+describe("Notion text newline normalization", () => {
+  it("converts literal \\n in Notion property text to real next line", () => {
+    expect(normalizeNotionText("Line 1\\nLine 2")).toBe("Line 1\nLine 2")
+    expect(normalizeNotionText("Line 1 \\n Line 2")).toBe("Line 1\nLine 2")
+    expect(normalizeNotionText("First\\nSecond\\nThird")).toBe(
+      "First\nSecond\nThird",
+    )
+  })
+
+  it("preserves existing real newlines and trims each line", () => {
+    expect(normalizeNotionText("Line 1\nLine 2")).toBe("Line 1\nLine 2")
+    expect(normalizeNotionText("Line 1\r\nLine 2")).toBe("Line 1\nLine 2")
+  })
+
+  it("handles empty or blank text gracefully", () => {
+    expect(normalizeNotionText("")).toBe("")
+    expect(normalizeNotionText("   ")).toBe("")
   })
 })

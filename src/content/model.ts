@@ -19,10 +19,35 @@ export const publishingStatusSchema = z.enum([
   "Archived",
 ])
 
+export function normalizeContentText(text: string): string {
+  if (!text) return ""
+  return text
+    .replace(/\\r\\n/g, "\n")
+    .replace(/\\n/g, "\n")
+    .replace(/\r\n/g, "\n")
+    .split("\n")
+    .map((line) => line.trim())
+    .join("\n")
+    .trim()
+}
+
+const contentText = z.preprocess(
+  (val) => (typeof val === "string" ? normalizeContentText(val) : val),
+  z.string().trim(),
+)
+const requiredContentText = z.preprocess(
+  (val) => (typeof val === "string" ? normalizeContentText(val) : val),
+  z.string().trim().min(1),
+)
+const optionalContentText = z.preprocess(
+  (val) => (typeof val === "string" ? normalizeContentText(val) : val),
+  z.string().trim().optional(),
+)
+
 export const termSchema = z.object({
   id,
   slug,
-  name: z.string().trim().min(1),
+  name: requiredContentText,
   startDate: isoDate,
   endDate: isoDate,
   status: published,
@@ -31,17 +56,17 @@ export const termSchema = z.object({
 export const seriesSchema = z.object({
   id,
   slug,
-  name: z.string().trim().min(1),
-  summary: z.string().trim(),
+  name: requiredContentText,
+  summary: contentText,
   status: published,
 })
 
 export const personSchema = z.object({
   id,
   slug,
-  name: z.string().trim().min(1),
+  name: requiredContentText,
   portraitUrl: cloudinaryUrl.optional(),
-  bio: z.string().trim().optional(),
+  bio: optionalContentText,
   status: published,
 })
 
@@ -49,7 +74,7 @@ export const committeeRoleSchema = z.object({
   id,
   personId: id,
   termId: id,
-  title: z.string().trim().min(1),
+  title: requiredContentText,
   sortOrder: z.number().int().nonnegative(),
   status: published,
 })
@@ -57,13 +82,13 @@ export const committeeRoleSchema = z.object({
 export const eventSchema = z.object({
   id,
   slug,
-  title: z.string().trim().min(1),
-  summary: z.string().trim(),
+  title: requiredContentText,
+  summary: contentText,
   type: z.string().trim().optional(),
   startDate: isoDate.nullable(),
   endDate: isoDate.optional(),
-  dateLabel: z.string().trim().optional(),
-  location: z.string().trim().optional(),
+  dateLabel: optionalContentText,
+  location: optionalContentText,
   termId: id.optional(),
   seriesId: id.optional(),
   coverImageUrl: cloudinaryUrl.optional(),
@@ -75,9 +100,9 @@ export const eventSchema = z.object({
 export const mediaItemSchema = z.object({
   id,
   eventId: id,
-  title: z.string().trim().min(1),
+  title: requiredContentText,
   url: cloudinaryUrl,
-  alt: z.string().trim().min(1),
+  alt: requiredContentText,
   takenAt: isoDate.nullable(),
   posterUrl: cloudinaryUrl.optional(),
   type: z.enum(["image", "video"]),
@@ -88,10 +113,10 @@ export const mediaItemSchema = z.object({
 export const articleSchema = z.object({
   id,
   slug,
-  title: z.string().trim().min(1),
-  excerpt: z.string().trim().min(1),
+  title: requiredContentText,
+  excerpt: requiredContentText,
   publishedAt: isoDate,
-  authorName: z.string().trim().min(1),
+  authorName: requiredContentText,
   section: z.enum(["lifestyle", "spiritual", "community", "news"]),
   tags: z.array(z.string().trim().min(1)),
   eventIds: z.array(id),

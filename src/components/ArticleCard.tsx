@@ -38,13 +38,13 @@ export function ArticleCard({ title, excerpt, date, author, tags, slug, category
         ))}
       </div>
       <div className="group relative max-w-xl">
-        <h3 className="mt-3 text-xl md:text-2xl font-semibold leading-snug text-foreground group-hover:text-primary transition-colors">
+        <h3 className="mt-3 text-xl md:text-2xl font-semibold leading-snug text-foreground group-hover:text-primary transition-colors whitespace-pre-line">
           <Link href={href}>
             <span className="absolute inset-0" />
             {title}
           </Link>
         </h3>
-        <p className="mt-5 line-clamp-3 text-sm md:text-base leading-relaxed text-muted-foreground">
+        <p className="mt-5 line-clamp-3 text-sm md:text-base leading-relaxed text-muted-foreground whitespace-pre-line">
           {excerpt}
         </p>
       </div>
