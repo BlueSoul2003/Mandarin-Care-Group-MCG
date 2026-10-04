@@ -75,9 +75,12 @@ const primaryRepository = notionConfig
   ? new NotionContentRepository(notionConfig)
   : null
 
+const defaultTtlSeconds = Number(process.env.NOTION_CACHE_TTL_SECONDS) || 300
+
 const repository = new ResilientContentRepository(
   primaryRepository,
   fallbackRepository,
+  defaultTtlSeconds,
 )
 
 const getRepository = cache(async () => repository)
