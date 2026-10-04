@@ -53,8 +53,8 @@ export default async function HistoryPage() {
                         )}
                       </div>
                       <div>
-                        <h3 className="font-semibold">{person.name}</h3>
-                        <p className="text-sm text-muted-foreground">{role.title}</p>
+                        <h3 className="font-semibold whitespace-pre-line">{person.name}</h3>
+                        <p className="text-sm text-muted-foreground whitespace-pre-line">{role.title}</p>
                       </div>
                     </article>
                   ))}

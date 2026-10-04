@@ -53,22 +53,24 @@ export default async function EventPage({
             {series.name}
           </Link>
         )}
-        <h1 className="mt-4 font-heading text-4xl font-bold leading-tight md:text-6xl">
+        <h1 className="mt-4 font-heading text-4xl font-bold leading-tight md:text-6xl whitespace-pre-line">
           {event.title}
         </h1>
         <div className="mt-6 flex flex-wrap justify-center gap-5 text-sm text-muted-foreground">
-          <span className="flex items-center gap-2">
+          <span className="flex items-center gap-2 whitespace-pre-line">
             <Calendar className="h-4 w-4" /> {event.dateLabel || event.startDate || gallery("dateUnknown")}
           </span>
           {event.location && (
-            <span className="flex items-center gap-2">
+            <span className="flex items-center gap-2 whitespace-pre-line">
               <MapPin className="h-4 w-4" /> {event.location}
             </span>
           )}
-          {term && <span>{term.name}</span>}
+          {term && <span className="whitespace-pre-line">{term.name}</span>}
         </div>
         {event.summary && (
-          <EventSummary text={event.summary} />
+          <p className="mx-auto mt-8 max-w-3xl text-lg leading-relaxed text-muted-foreground whitespace-pre-line">
+            {event.summary}
+          </p>
         )}
         {magazine && <a className="mt-6 inline-block rounded-full border px-6 py-3 text-sm hover:bg-muted" href="#magazine">{gallery("readMagazine")}</a>}
         {media.some(item => item.type === "video") && <a className="mt-6 mx-2 inline-block rounded-full border px-6 py-3 text-sm hover:bg-muted" href="#videos">{gallery("activityVideos")}</a>}

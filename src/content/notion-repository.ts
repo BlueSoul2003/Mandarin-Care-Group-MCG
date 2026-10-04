@@ -71,25 +71,42 @@ function property(page: PageObjectResponse, name: string): Property | undefined 
   return page.properties[name]
 }
 
+export function normalizeNotionText(text: string): string {
+  if (!text) return ""
+  return text
+    .replace(/\\r\\n/g, "\n")
+    .replace(/\\n/g, "\n")
+    .replace(/\r\n/g, "\n")
+    .split("\n")
+    .map((line) => line.trim())
+    .join("\n")
+    .trim()
+}
+
 function plainText(page: PageObjectResponse, name: string): string {
   const value = property(page, name)
   if (!value) return ""
 
+  let text = ""
   if (value.type === "title") {
-    return value.title.map((item) => item.plain_text).join("").trim()
+    text = value.title.map((item) => item.plain_text).join("")
+  } else if (value.type === "rich_text") {
+    text = value.rich_text.map((item) => item.plain_text).join("")
+  } else if (value.type === "url") {
+    return value.url?.trim() ?? ""
+  } else if (value.type === "email") {
+    return value.email?.trim() ?? ""
+  } else if (value.type === "phone_number") {
+    return value.phone_number?.trim() ?? ""
+  } else if (value.type === "select") {
+    text = value.select?.name ?? ""
+  } else if (value.type === "multi_select") {
+    text = value.multi_select.map((item) => item.name).join(", ")
+  } else if (value.type === "status") {
+    text = value.status?.name ?? ""
   }
-  if (value.type === "rich_text") {
-    return value.rich_text.map((item) => item.plain_text).join("").trim()
-  }
-  if (value.type === "url") return value.url?.trim() ?? ""
-  if (value.type === "email") return value.email?.trim() ?? ""
-  if (value.type === "phone_number") return value.phone_number?.trim() ?? ""
-  if (value.type === "select") return value.select?.name.trim() ?? ""
-  if (value.type === "multi_select") {
-    return value.multi_select.map((item) => item.name.trim()).join(", ")
-  }
-  if (value.type === "status") return value.status?.name.trim() ?? ""
-  return ""
+
+  return normalizeNotionText(text)
 }
 
 function requiredText(page: PageObjectResponse, name: string): string {
@@ -220,14 +237,30 @@ export async function loadNotionPublishedSnapshot(
           )
         : undefined)
 
-    // Keep these calls sequential to stay comfortably below Notion's API rate limit.
-    const termPages = await query(config.termsDataSourceId, "terms")
-    const seriesPages = await query(config.seriesDataSourceId, "series")
-    const peoplePages = await query(config.peopleDataSourceId, "people")
-    const rolePages = await query(config.committeeRolesDataSourceId, "committeeRoles")
-    const eventPages = await query(config.eventsDataSourceId, "events")
-    const mediaPages = await query(config.mediaDataSourceId, "media")
-    const articlePages = await query(articlesDataSourceId, "articles")
+    // Query data sources concurrently to minimize round-trip latency.
+    const queries = [
+      query(config.termsDataSourceId, "terms"),
+      query(config.seriesDataSourceId, "series"),
+      query(config.peopleDataSourceId, "people"),
+      query(config.committeeRolesDataSourceId, "committeeRoles"),
+      query(config.eventsDataSourceId, "events"),
+      query(config.mediaDataSourceId, "media"),
+      query(articlesDataSourceId, "articles"),
+    ] as const
+
+    const [
+      termPages,
+      seriesPages,
+      peoplePages,
+      rolePages,
+      eventPages,
+      mediaPages,
+      articlePages,
+    ] = await Promise.all(queries.map((p) => p.catch(async (err) => {
+      // Allow other concurrent queries to finish registering their visibility
+      await Promise.allSettled(queries)
+      throw err
+    })))
     const termIds = new Set(termPages.map((page) => page.id))
     const seriesIds = new Set(seriesPages.map((page) => page.id))
     const personIds = new Set(peoplePages.map((page) => page.id))
@@ -332,6 +365,11 @@ export async function loadNotionPublishedSnapshot(
       const slug = plainText(page, "Slug")
       slugCounts.set(slug, (slugCounts.get(slug) ?? 0) + 1)
     }
+    const validArticles: Array<{
+      page: PageObjectResponse
+      metadata: NonNullable<ReturnType<typeof articleMetadataSchema.safeParse>["data"]>
+    }> = []
+
     for (const page of articlePages) {
       const metadata = articleMetadataSchema.safeParse({
         id: page.id,
@@ -346,31 +384,58 @@ export async function loadNotionPublishedSnapshot(
         status: "Published",
       })
       if (!metadata.success) {
-        reject({ collection: "articles", pageId: page.id, code: "INVALID_FIELDS", fields: [...new Set(metadata.error.issues.map((issue) => issue.path.join(".")))] })
+        reject({
+          collection: "articles",
+          pageId: page.id,
+          code: "INVALID_FIELDS",
+          fields: [...new Set(metadata.error.issues.map((issue) => issue.path.join(".")))],
+        })
         continue
       }
       if (slugCounts.get(metadata.data.slug)! > 1) {
         reject({ collection: "articles", pageId: page.id, code: "DUPLICATE_SLUG", fields: ["slug"] })
         continue
       }
-      let body: string
-      try {
-        const markdown = await notion.pages.retrieveMarkdown({ page_id: page.id })
-        if (markdown.truncated || markdown.unknown_block_ids?.length) {
-          reject({ collection: "articles", pageId: page.id, code: "INVALID_BODY", fields: ["contentMarkdown"] })
-          continue
-        }
-        body = markdown.markdown
-      } catch {
-        reject({ collection: "articles", pageId: page.id, code: "BODY_UNAVAILABLE" })
-        continue
-      }
-      const article = articleSchema.safeParse({ ...metadata.data, contentMarkdown: body })
-      if (!article.success) {
-        reject({ collection: "articles", pageId: page.id, code: "INVALID_BODY", fields: ["contentMarkdown"] })
-        continue
-      }
-      articles.push(article.data)
+      validArticles.push({ page, metadata: metadata.data })
+    }
+
+    // Fetch markdown in controlled concurrent batches (pool size: 4) to eliminate sequential latency
+    // while staying comfortably within Notion API rate limits.
+    const concurrency = 4
+    for (let i = 0; i < validArticles.length; i += concurrency) {
+      const batch = validArticles.slice(i, i + concurrency)
+      await Promise.all(
+        batch.map(async ({ page, metadata }) => {
+          let body: string
+          try {
+            const markdown = await notion.pages.retrieveMarkdown({ page_id: page.id })
+            if (markdown.truncated || markdown.unknown_block_ids?.length) {
+              reject({
+                collection: "articles",
+                pageId: page.id,
+                code: "INVALID_BODY",
+                fields: ["contentMarkdown"],
+              })
+              return
+            }
+            body = markdown.markdown
+          } catch {
+            reject({ collection: "articles", pageId: page.id, code: "BODY_UNAVAILABLE" })
+            return
+          }
+          const article = articleSchema.safeParse({ ...metadata, contentMarkdown: body })
+          if (!article.success) {
+            reject({
+              collection: "articles",
+              pageId: page.id,
+              code: "INVALID_BODY",
+              fields: ["contentMarkdown"],
+            })
+            return
+          }
+          articles.push(article.data)
+        }),
+      )
     }
     if (options.strictArticles && issues.length > 0) {
       throw new ArticleValidationError(issues.length)

@@ -35,9 +35,9 @@ export default async function SeriesPage({
         <p className="mb-4 text-sm font-medium uppercase tracking-widest text-primary">
           {t("tag")}
         </p>
-        <h1 className="font-heading text-4xl font-bold md:text-5xl">{series.name}</h1>
+        <h1 className="font-heading text-4xl font-bold md:text-5xl whitespace-pre-line">{series.name}</h1>
         {series.summary && (
-          <p className="mt-6 text-lg leading-relaxed text-muted-foreground">{series.summary}</p>
+          <p className="mt-6 text-lg leading-relaxed text-muted-foreground whitespace-pre-line">{series.summary}</p>
         )}
       </header>
 

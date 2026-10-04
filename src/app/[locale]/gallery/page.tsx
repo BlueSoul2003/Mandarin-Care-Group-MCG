@@ -27,9 +27,9 @@ export default async function GalleryPage() {
               <div className="relative mb-5 aspect-[3/4] overflow-hidden rounded-lg border bg-muted/30">
                 {event.coverImageUrl && <Image src={event.coverImageUrl} alt={event.title} fill sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw" className="object-contain transition-transform duration-500 group-hover:scale-[1.02] motion-reduce:transform-none" />}
               </div>
-              <p className="mb-2 text-xs text-muted-foreground">{event.dateLabel || event.startDate || t("dateUnknown")}</p>
-              <h2 className="font-heading text-xl font-semibold leading-snug">{event.title}</h2>
-              <p className="mt-3 line-clamp-3 text-sm leading-relaxed text-muted-foreground">{event.summary}</p>
+              <p className="mb-2 text-xs text-muted-foreground whitespace-pre-line">{event.dateLabel || event.startDate || t("dateUnknown")}</p>
+              <h2 className="font-heading text-xl font-semibold leading-snug whitespace-pre-line">{event.title}</h2>
+              <p className="mt-3 line-clamp-3 text-sm leading-relaxed text-muted-foreground whitespace-pre-line">{event.summary}</p>
               <p className="mt-4 text-xs text-primary">{t("mediaCount", { count: media.filter((item) => item.eventId === event.id).length })}{event.magazineManifestUrl ? ` · ${t("magazine")}` : ""}</p>
             </Link>
           ))}

@@ -131,4 +131,16 @@ describe("published content snapshot", () => {
       /Duplicate slug/,
     )
   })
+
+  it("converts literal \\n into actual newline in property text", () => {
+    const snapshot = validSnapshot()
+    snapshot.events[0].summary = "First line\\nSecond line\\nThird line"
+    snapshot.events[0].title = "Event Title\\nSubtitle"
+    snapshot.series[0].summary = "Series intro\\nDetails"
+
+    const parsed = parsePublishedContentSnapshot(snapshot)
+    expect(parsed.events[0].summary).toBe("First line\nSecond line\nThird line")
+    expect(parsed.events[0].title).toBe("Event Title\nSubtitle")
+    expect(parsed.series[0].summary).toBe("Series intro\nDetails")
+  })
 })
