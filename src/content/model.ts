@@ -1,4 +1,5 @@
 import { z } from "zod"
+import { normalizeSummary } from "./plain-text"
 
 const id = z.string().trim().min(1)
 const slug = z.string().trim().regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/)
@@ -58,7 +59,7 @@ export const eventSchema = z.object({
   id,
   slug,
   title: z.string().trim().min(1),
-  summary: z.string().trim(),
+  summary: z.string().transform(normalizeSummary),
   type: z.string().trim().optional(),
   startDate: isoDate.nullable(),
   endDate: isoDate.optional(),

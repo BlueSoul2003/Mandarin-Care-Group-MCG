@@ -4,7 +4,6 @@ import * as React from "react"
 import { useEffect, useState } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import Image from "next/image"
-import { CldImage } from "next-cloudinary"
 import { X, PlayCircle } from "lucide-react"
 import { useTranslations } from "next-intl"
 
@@ -67,14 +66,12 @@ export function MasonryGrid({ images }: { images: GalleryImage[] }) {
                 className="aspect-video w-full object-contain bg-black"
               />
             ) : (
-              <CldImage
+              <Image
                 src={img.url}
                 alt={img.alt ?? img.title}
                 width={800}
                 height={800}
-                quality={90}
-                preserveTransformations
-                crop="limit"
+                sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
                 className="w-full h-auto object-cover transition-transform duration-700 group-hover:scale-105"
               />
             )}
