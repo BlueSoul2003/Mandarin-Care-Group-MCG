@@ -8,6 +8,7 @@ import { MasonryGrid } from "@/components/MasonryGrid"
 import { getTranslations } from "next-intl/server"
 import { loadMagazine } from "@/content/magazine"
 import { MagazineReader } from "@/components/MagazineReader"
+import { EventSummary } from "@/components/EventSummary"
 
 export const revalidate = 300
 
@@ -67,9 +68,7 @@ export default async function EventPage({
           {term && <span>{term.name}</span>}
         </div>
         {event.summary && (
-          <p className="mx-auto mt-8 max-w-3xl text-lg leading-relaxed text-muted-foreground">
-            {event.summary}
-          </p>
+          <EventSummary text={event.summary} />
         )}
         {magazine && <a className="mt-6 inline-block rounded-full border px-6 py-3 text-sm hover:bg-muted" href="#magazine">{gallery("readMagazine")}</a>}
         {media.some(item => item.type === "video") && <a className="mt-6 mx-2 inline-block rounded-full border px-6 py-3 text-sm hover:bg-muted" href="#videos">{gallery("activityVideos")}</a>}

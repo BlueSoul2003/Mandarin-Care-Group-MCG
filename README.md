@@ -171,6 +171,10 @@ GitHub 的 Tests workflow 在 pull request 與 main 更新時自動執行 `npm t
 
 ### 活動相簿與電子雜誌
 
+活動 Summary 支援正常換行，也會將匯入資料中的文字 `\n` 轉成換行；活動詳情頁的 HTTP／HTTPS 網址可直接點擊。報名網址可填在 Summary，網站不會自動提交報名。
+
+相簿縮圖保留 Media URL 原本的 Cloudinary 帳號、檔名及轉換路徑，由 Next.js 調整縮圖大小；不會把其他 Cloudinary 帳號的圖片改寫到環境設定中的預設帳號。放大預覽仍使用原始網址。
+
 Gallery 以活動封面進入 Event 頁面，可觀看精選照片、播放影片、逐頁閱讀雜誌及開啟 PDF。Events 可增設 `MagazineManifestURL` URL 與 `DateLabel` Text；Media 可增設 `PosterImageURL` URL 作為影片預覽。雜誌清單為 Cloudinary 上的 JSON：`{"version":1,"pdfUrl":"https://res.cloudinary.com/.../magazine.pdf","pages":["https://res.cloudinary.com/.../page-001.webp"]}`。清單只記錄檔案連結；活動名稱與描述仍由 Notion 管理。
 
 照片牆使用縮圖；點開照片後直接讀取 Media URL，並提供原始尺寸連結，避免再次縮圖。Media URL 應指向原始解析度的瀏覽版本；原始 HEIC 等檔案留在私人素材庫。活動影片另列一區，不放入照片雜誌；只有影片的相簿不設定 MagazineManifestURL。雜誌頁面建議使用 A4 300 dpi 圖片，點選頁面可放大閱讀，PDF 可附活動影片連結。
