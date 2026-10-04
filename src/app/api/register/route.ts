@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
-import { Client, type CreatePageParameters } from "@notionhq/client"
+import { Client, APIErrorCode, isNotionClientError } from "@notionhq/client"
 
-const notion = new Client({ auth: process.env.NOTION_API_KEY })
+const notion = new Client({ auth: process.env.NOTION_API_KEY, retry: { maxRetries: 0 } })
 const REGISTRATION_DATA_SOURCE_ID = process.env.NOTION_REGISTRATION_DATA_SOURCE_ID
 
 const requestLog = new Map<string, number[]>()
@@ -142,18 +142,6 @@ export async function POST(req: NextRequest) {
       .join("\n")
       .trim()
 
-    const detailedMessage = [
-      sacramentsList ? `[Sacraments Received: ${sacramentsList}]` : "",
-      parishServiceList ? `[Past Parish Service: ${parishServiceList}]` : "",
-      giftsList ? `[Gifts & Skills to Share: ${giftsList}]` : "",
-      expectationsList ? `[Expectations from MCG: ${expectationsList}]` : "",
-      activitiesList ? `[Interested Activities: ${activitiesList}]` : "",
-      payload.message,
-    ]
-      .filter(Boolean)
-      .join("\n")
-      .trim()
-
     const messageWithBirthday = [
       sacramentsList ? `[Sacraments Received: ${sacramentsList}]` : "",
       parishServiceList ? `[Past Parish Service: ${parishServiceList}]` : "",
@@ -263,6 +251,7 @@ export async function POST(req: NextRequest) {
       })
       return NextResponse.json({ success: true })
     } catch (firstErr) {
+      if (!isNotionClientError(firstErr) || firstErr.code !== APIErrorCode.ValidationError) throw firstErr
       console.warn("[Notion attempt 1 with dedicated columns failed, trying fallback]:", firstErr)
 
       try {
@@ -311,6 +300,7 @@ export async function POST(req: NextRequest) {
           },
         })
       } catch (secondErr) {
+        if (!isNotionClientError(secondErr) || secondErr.code !== APIErrorCode.ValidationError) throw secondErr
         // Step 3: Try lowercase 'faithstatus' if FaithStatus was not recognized
         console.warn("[Notion attempt 2 failed, retrying with lowercase faithstatus]:", secondErr)
         try {
@@ -359,6 +349,7 @@ export async function POST(req: NextRequest) {
             },
           })
         } catch (finalErr) {
+          if (!isNotionClientError(finalErr) || finalErr.code !== APIErrorCode.ValidationError) throw finalErr
           // Final fallback: append everything to Message so registration is never lost
           console.warn("[Notion all property attempts failed, using Message fallback]:", finalErr)
           await notion.pages.create({

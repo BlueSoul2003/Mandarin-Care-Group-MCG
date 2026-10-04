@@ -1,4 +1,5 @@
 import { z } from "zod"
+import { normalizeSummary } from "./plain-text"
 
 const id = z.string().trim().min(1)
 const slug = z.string().trim().regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/)

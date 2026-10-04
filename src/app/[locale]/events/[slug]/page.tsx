@@ -8,6 +8,7 @@ import { MasonryGrid } from "@/components/MasonryGrid"
 import { getTranslations } from "next-intl/server"
 import { loadMagazine } from "@/content/magazine"
 import { MagazineReader } from "@/components/MagazineReader"
+import { EventSummary } from "@/components/EventSummary"
 
 export const revalidate = 300
 

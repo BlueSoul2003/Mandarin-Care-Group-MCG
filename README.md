@@ -33,7 +33,19 @@
 2. 填寫好上述的 `Title`、`Slug`、`PublishedAt` 等欄位。
 3. **點開該頁面**，直接在下方像平常使用 Notion 一樣撰寫文章內容。
 4. 網站支援大部分的 Notion 區塊（包含大小標題、粗體、清單、引言等）。
-5. 審核後把 `Status` 改為 `Published`，再由技術負責人執行 `npm run content:sync` 保存可攜快照。
+5. 審核後把 `Status` 改為 `Published`。網站會自動讀取 Notion；一般團員不需要執行命令或重新部署。`spiritual` 分類的文章會出現在靈修頁。
+6. 更新不是即時推送：靈修頁及內文的頁面快取、網站內容快取各約 1 分鐘。Notion 正常且欄位有效時，通常在約 1–2 分鐘加上同步時間後的瀏覽出現；低流量時由下一次瀏覽觸發更新，再重新整理確認。標題卡片與文章內文都應更新。技術負責人可另外執行 `npm run content:sync` 保存離線備份，這不是日常發布的必要步驟。
+
+若等待數分鐘仍未顯示，先核對 `Status = Published`、`Section = spiritual`、唯一的英文 `Slug`、發布日期、簡介與非空白內文。單篇欄位錯誤、正文讀取失敗、空白或不完整正文只會暫時隱藏該篇，其他有效文章仍可更新；重複 Slug 的所有文章都會暫時隱藏，避免網址指向錯誤文章。改正後會在後續同步重試。
+
+技術負責人可執行 `npm run content:check`，唯讀檢查 Notion 的公開內容；不改動 Notion 或本地快照。輸出 `ok`、`partial` 或 `failed`，以及問題頁面的 ID 與欄位名稱；不是正式部署快取的即時狀態。Vercel 日誌也會出現 `[MCG content] Article skipped` 或 `[MCG content] Notion refresh failed`。不要反覆重新部署來排除文章欄位問題。
+
+| 診斷代碼 | 處理方式 |
+|---|---|
+| `INVALID_FIELDS` | 對照 fields 檢查 Slug、Title、Excerpt、PublishedAt、Section 等欄位 |
+| `DUPLICATE_SLUG` | 將同名網址改為唯一的 Slug |
+| `BODY_UNAVAILABLE` | 檢查 Notion 權限、連線，稍後重試 |
+| `INVALID_BODY` | 確認正文非空白，沒有被 API 截短或含 API 無法輸出的區塊 |
 
 ---
 
@@ -82,6 +94,10 @@
 | Registration | `Name` Title、`Email` Email、`Phone` Phone、`MajorYear` Text、`Message` Text、`Consent` Checkbox |
 
 請分享原始 data source 給 Notion integration；不要只分享 linked view。一般參與者不放入 People，People 只有在 `ConsentToPublish` 勾選後才可進入公開快照。
+
+`EventReg` 和 `Featured` 也必須同時是 `Published`，才會顯示在時間軸／首頁精選。人物取消公開同意後，相關職務會一起隱藏；活動下架後，其媒體也會隱藏，文章只移除該活動的關聯。
+
+撤回也受內容及頁面快取影響：靈修相關頁面約 1 分鐘，部分活動／歷史頁面約 5 分鐘，再加上同步時間。單一執行個體已讀到的撤回狀態不會被後續同步錯誤的備援覆蓋；若 Notion 完全無法連線、網站尚未讀到撤回，或新執行個體只有舊 Git 備份，仍可能顯示之前的內容，不能視為立即下架保證。跨執行個體的持久化撤回與故障時最長公開期限尚未實作。
 
 ---
 
@@ -145,9 +161,19 @@ npm run dev
 npm run content:sync
 ```
 
-此命令只在所有公開資料通過 schema、關聯、slug 唯一性與每場 30 個媒體上限後，才會更新 `src/content/snapshot.json`。網站連不上 Notion 或資料驗證失敗時，會繼續展示這份最後成功快照；快照不包含報名個資、密鑰或照片原檔。公開頁面最長約 5 分鐘重新驗證一次內容。
+此命令只在所有公開資料通過 schema、關聯、slug 唯一性與每場 30 個媒體上限後，才會更新 `src/content/snapshot.json`。網站首次讀取及內容快取到期時會等待 Notion 完成，避免 Vercel 暫停背景工作後持續顯示舊備份。同一執行個體的並行請求共用一次同步；成功資料快取 1 分鐘。Notion 連線或驗證失敗時保留該執行個體最後成功的資料；若沒有才使用 Git 快照，1 分鐘後允許重試。頁面另有快取（靈修列表及內文為 1 分鐘，其他部分頁面為 5 分鐘），實際更新由後續瀏覽觸發。快照不包含報名個資、密鑰或照片原檔。
+
+網站執行時可隔離單篇文章錯誤；`content:sync` 則採嚴格模式，只要有文章被略過就退出失敗，保留現有備份。`content:check` 適合先診斷，`partial`／`failed` 也會以非零狀態退出。它們需要技術負責人自己的 Notion 環境設定，金鑰不可分享給一般瀏覽者。
+
+GitHub 的 Tests workflow 在 pull request 與 main 更新時自動執行 `npm test`、`npx tsc --noEmit` 與 `npm audit --omit=dev --audit-level=high`，包含文章錯誤隔離、下架、快取到期、並行讀取、斷線恢復及收藏舊資料轉換測試。正式依賴出現 high／critical 公告時檢查會失敗，需更新依賴及重新驗證，不應直接略過。合併前確認 Tests 與 Vercel 檢查成功。
+
+歌曲收藏以音檔網址對應的穩定 ID 識別，新增歌曲或同名歌曲不會互相覆蓋；舊數字 ID 的收藏會在瀏覽器載入時按已保存的網址自動轉換。請保持音檔 key 穩定：改檔名等同新歌曲。收藏目前仍只保存在該瀏覽器，尚未按帳號分開或跨裝置同步。
 
 ### 活動相簿與電子雜誌
+
+活動 Summary 支援正常換行，也會將匯入資料中的文字 `\n` 轉成換行；活動詳情頁的 HTTP／HTTPS 網址可直接點擊。報名網址可填在 Summary，網站不會自動提交報名。
+
+相簿縮圖保留 Media URL 原本的 Cloudinary 帳號、檔名及轉換路徑，由 Next.js 調整縮圖大小；不會把其他 Cloudinary 帳號的圖片改寫到環境設定中的預設帳號。放大預覽仍使用原始網址。
 
 Gallery 以活動封面進入 Event 頁面，可觀看精選照片、播放影片、逐頁閱讀雜誌及開啟 PDF。Events 可增設 `MagazineManifestURL` URL 與 `DateLabel` Text；Media 可增設 `PosterImageURL` URL 作為影片預覽。雜誌清單為 Cloudinary 上的 JSON：`{"version":1,"pdfUrl":"https://res.cloudinary.com/.../magazine.pdf","pages":["https://res.cloudinary.com/.../page-001.webp"]}`。清單只記錄檔案連結；活動名稱與描述仍由 Notion 管理。
 
