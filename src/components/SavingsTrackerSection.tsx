@@ -1,8 +1,8 @@
 "use client"
 
-import { useState, useEffect, useCallback } from "react"
+import { useState, useEffect, useCallback, useMemo } from "react"
 import { useTranslations } from "next-intl"
-import { Coins, CheckCircle2, TrendingUp, Loader2, Calendar, User, AlertCircle, PlusCircle } from "lucide-react"
+import { Coins, CheckCircle2, TrendingUp, Loader2, Calendar, User, AlertCircle } from "lucide-react"
 import { createClient } from "@/lib/supabase"
 
 const KNOWN_MEMBERS = [
@@ -22,62 +22,77 @@ interface WeekOption {
   label: string
 }
 
-const DEFAULT_WEEKS: WeekOption[] = [
-  { code: "W11", label: "W11 (6月第1周)" },
-  { code: "W12", label: "W12 (6月第2周)" },
-  { code: "W10", label: "W10 (5月第5周)" },
-  { code: "W7", label: "W7 (5月第2周)" },
-  { code: "W6", label: "W6 (5月第1周)" },
-  { code: "W5", label: "W5 (4月第4周)" },
-]
+function calculateCurrentWeekInfo() {
+  const now = new Date()
+  const month = now.getMonth() + 1
+  const date = now.getDate()
+  const weekOfMonth = Math.ceil(date / 7)
+  const tag = `${month}月第${weekOfMonth}周`
+  return {
+    month,
+    weekOfMonth,
+    tag,
+  }
+}
 
 interface MemberProgress {
   exists: boolean
   totalSaved: number
   totalWeeksSaved: number
   savedWeeks: string[]
+  currentWeek?: WeekOption
   allWeeks?: WeekOption[]
 }
 
 export function SavingsTrackerSection() {
   const t = useTranslations("SavingsTracker")
   const [name, setName] = useState("")
-  const [weeks, setWeeks] = useState<WeekOption[]>(DEFAULT_WEEKS)
-  const [selectedWeek, setSelectedWeek] = useState("W11")
-  const [isAddingNewWeek, setIsAddingNewWeek] = useState(false)
-  const [newWeekCode, setNewWeekCode] = useState("")
-  const [newWeekLabel, setNewWeekLabel] = useState("")
+
+  // Calculate current week from date (e.g. Nov 2 -> 11月第1周)
+  const currentWeekDateInfo = useMemo(() => calculateCurrentWeekInfo(), [])
+  const defaultCurrentWeekLabel = `W12 (${currentWeekDateInfo.tag})`
+
+  const [currentWeek, setCurrentWeek] = useState<WeekOption>({
+    code: "W12",
+    label: defaultCurrentWeekLabel,
+  })
+  const [weeksList, setWeeksList] = useState<WeekOption[]>([
+    { code: "W12", label: defaultCurrentWeekLabel },
+    { code: "W11", label: "W11 (6月第1周)" },
+    { code: "W10", label: "W10 (5月第5周)" },
+    { code: "W7", label: "W7 (5月第2周)" },
+    { code: "W6", label: "W6 (5月第1周)" },
+    { code: "W5", label: "W5 (4月第4周)" },
+  ])
+  const [selectedWeek, setSelectedWeek] = useState<string>("W12")
+
   const [progress, setProgress] = useState<MemberProgress | null>(null)
   const [isLoadingProgress, setIsLoadingProgress] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [successMessage, setSuccessMessage] = useState("")
   const [errorMessage, setErrorMessage] = useState("")
 
-  // Fetch all existing week columns from Google Sheets
+  // Fetch week columns and active week from Google Sheets webhook
   const fetchAvailableWeeks = useCallback(async () => {
     try {
       const res = await fetch("/api/savings?action=weeks")
       if (res.ok) {
         const data = await res.json()
+        if (data.currentWeek) {
+          setCurrentWeek(data.currentWeek)
+          setSelectedWeek(data.currentWeek.code)
+        }
         if (Array.isArray(data.allWeeks) && data.allWeeks.length > 0) {
-          // Merge unique weeks from sheet
-          setWeeks((prev) => {
-            const map = new Map<string, string>()
-            data.allWeeks.forEach((w: WeekOption) => map.set(w.code, w.label))
-            prev.forEach((w) => {
-              if (!map.has(w.code)) map.set(w.code, w.label)
-            })
-            return Array.from(map.entries()).map(([code, label]) => ({ code, label }))
-          })
-          // Default to the latest week from the sheet
-          const latest = data.allWeeks[data.allWeeks.length - 1]
-          if (latest) {
-            setSelectedWeek(latest.code)
+          const map = new Map<string, string>()
+          if (data.currentWeek) {
+            map.set(data.currentWeek.code, data.currentWeek.label)
           }
+          data.allWeeks.forEach((w: WeekOption) => map.set(w.code, w.label))
+          setWeeksList(Array.from(map.entries()).map(([code, label]) => ({ code, label })))
         }
       }
     } catch {
-      // Fallback to DEFAULT_WEEKS if webhook not yet configured
+      // Fallback to local calculation
     }
   }, [])
 
@@ -120,8 +135,17 @@ export function SavingsTrackerSection() {
       if (res.ok) {
         const data = await res.json()
         setProgress(data)
+        if (data.currentWeek) {
+          setCurrentWeek(data.currentWeek)
+          setSelectedWeek(data.currentWeek.code)
+        }
         if (Array.isArray(data.allWeeks) && data.allWeeks.length > 0) {
-          setWeeks(data.allWeeks)
+          const map = new Map<string, string>()
+          if (data.currentWeek) {
+            map.set(data.currentWeek.code, data.currentWeek.label)
+          }
+          data.allWeeks.forEach((w: WeekOption) => map.set(w.code, w.label))
+          setWeeksList(Array.from(map.entries()).map(([code, label]) => ({ code, label })))
         }
       } else {
         setProgress(null)
@@ -145,8 +169,7 @@ export function SavingsTrackerSection() {
     return () => clearTimeout(timer)
   }, [name, fetchProgress])
 
-  const activeWeekCode = isAddingNewWeek ? newWeekCode.trim().toUpperCase() : selectedWeek
-  const isCurrentWeekSaved = progress?.savedWeeks?.includes(activeWeekCode) ?? false
+  const isCurrentWeekSaved = progress?.savedWeeks?.includes(selectedWeek) ?? false
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -156,22 +179,11 @@ export function SavingsTrackerSection() {
       return
     }
 
-    let submitWeek = selectedWeek
-    let submitLabel = ""
-
-    if (isAddingNewWeek) {
-      const cleanCode = newWeekCode.trim().toUpperCase()
-      if (!/^W\d+$/i.test(cleanCode)) {
-        setErrorMessage("Please enter a valid week code, e.g. W12")
-        return
-      }
-      submitWeek = cleanCode
-      submitLabel = newWeekLabel.trim() || cleanCode
-    }
-
     setIsSubmitting(true)
     setErrorMessage("")
     setSuccessMessage("")
+
+    const weekItem = weeksList.find((w) => w.code === selectedWeek) || currentWeek
 
     try {
       const res = await fetch("/api/savings", {
@@ -179,31 +191,21 @@ export function SavingsTrackerSection() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           name: trimmedName,
-          week: submitWeek,
-          weekLabel: submitLabel,
+          week: selectedWeek,
+          weekLabel: weekItem.label,
         }),
       })
 
       const data = await res.json()
       if (res.ok && data.success) {
-        setSuccessMessage(t("successMessage", { name: trimmedName, week: submitWeek }))
-
-        // If a new week was added, include it in the weeks dropdown
-        if (isAddingNewWeek) {
-          const newOption: WeekOption = { code: submitWeek, label: submitLabel || submitWeek }
-          setWeeks((prev) => [newOption, ...prev.filter((w) => w.code !== submitWeek)])
-          setSelectedWeek(submitWeek)
-          setIsAddingNewWeek(false)
-          setNewWeekCode("")
-          setNewWeekLabel("")
-        }
+        setSuccessMessage(t("successMessage", { name: trimmedName, week: selectedWeek }))
 
         // Update local progress immediately
         setProgress((prev) => {
           const currentWeeks = prev?.savedWeeks ?? []
-          const updatedWeeks = currentWeeks.includes(submitWeek)
+          const updatedWeeks = currentWeeks.includes(selectedWeek)
             ? currentWeeks
-            : [...currentWeeks, submitWeek]
+            : [...currentWeeks, selectedWeek]
           return {
             exists: true,
             totalWeeksSaved: updatedWeeks.length,
@@ -243,7 +245,7 @@ export function SavingsTrackerSection() {
         </div>
 
         {/* Live Status Badge */}
-        {name.trim().length >= 2 && !isAddingNewWeek && (
+        {name.trim().length >= 2 && (
           <div className="flex items-center gap-2 self-start sm:self-auto">
             {isLoadingProgress ? (
               <span className="inline-flex items-center gap-1.5 text-xs text-muted-foreground bg-muted/60 px-3 py-1.5 rounded-full">
@@ -314,55 +316,24 @@ export function SavingsTrackerSection() {
             </datalist>
           </div>
 
-          {/* Week Selector / Creator */}
+          {/* Week Selector (Automatically defaults to current week) */}
           <div>
-            <div className="flex items-center justify-between mb-1.5">
-              <label htmlFor="week-selector-input" className="block text-xs font-medium text-foreground">
-                <Calendar className="inline h-3.5 w-3.5 mr-1 text-muted-foreground" />
-                {t("weekLabel")}
-              </label>
-              <button
-                type="button"
-                onClick={() => setIsAddingNewWeek(!isAddingNewWeek)}
-                className="text-xs text-primary hover:underline font-medium inline-flex items-center gap-1"
-              >
-                <PlusCircle className="h-3 w-3" />
-                {isAddingNewWeek ? "Select existing week" : t("addNewWeek")}
-              </button>
-            </div>
-
-            {!isAddingNewWeek ? (
-              <select
-                id="week-selector-input"
-                value={selectedWeek}
-                onChange={(e) => setSelectedWeek(e.target.value)}
-                className="w-full rounded-xl border border-input bg-background px-3.5 py-2.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition"
-              >
-                {weeks.map((w) => (
-                  <option key={w.code} value={w.code}>
-                    {w.label}
-                  </option>
-                ))}
-              </select>
-            ) : (
-              <div className="grid grid-cols-2 gap-2">
-                <input
-                  type="text"
-                  placeholder="e.g. W12"
-                  value={newWeekCode}
-                  onChange={(e) => setNewWeekCode(e.target.value)}
-                  required
-                  className="rounded-xl border border-input bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition"
-                />
-                <input
-                  type="text"
-                  placeholder={t("customWeekPlaceholder")}
-                  value={newWeekLabel}
-                  onChange={(e) => setNewWeekLabel(e.target.value)}
-                  className="rounded-xl border border-input bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition"
-                />
-              </div>
-            )}
+            <label htmlFor="week-selector-input" className="block text-xs font-medium text-foreground mb-1.5">
+              <Calendar className="inline h-3.5 w-3.5 mr-1 text-muted-foreground" />
+              {t("weekLabel")}
+            </label>
+            <select
+              id="week-selector-input"
+              value={selectedWeek}
+              onChange={(e) => setSelectedWeek(e.target.value)}
+              className="w-full rounded-xl border border-input bg-background px-3.5 py-2.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition"
+            >
+              {weeksList.map((w) => (
+                <option key={w.code} value={w.code}>
+                  {w.label} {w.code === currentWeek.code ? "(Current)" : ""}
+                </option>
+              ))}
+            </select>
           </div>
         </div>
 
@@ -385,9 +356,9 @@ export function SavingsTrackerSection() {
         <div className="pt-2">
           <button
             type="submit"
-            disabled={isSubmitting || (!isAddingNewWeek && isCurrentWeekSaved)}
+            disabled={isSubmitting || isCurrentWeekSaved}
             className={`w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-xl px-6 py-3 text-sm font-semibold transition shadow-xs ${
-              !isAddingNewWeek && isCurrentWeekSaved
+              isCurrentWeekSaved
                 ? "bg-muted text-muted-foreground cursor-not-allowed border border-border/60"
                 : "bg-primary text-primary-foreground hover:bg-primary/90 active:scale-[0.99]"
             }`}
@@ -397,7 +368,7 @@ export function SavingsTrackerSection() {
                 <Loader2 className="h-4 w-4 animate-spin" />
                 {t("submitting")}
               </>
-            ) : !isAddingNewWeek && isCurrentWeekSaved ? (
+            ) : isCurrentWeekSaved ? (
               <>
                 <CheckCircle2 className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
                 {t("savedForWeek", { week: selectedWeek })}
