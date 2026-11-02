@@ -2,9 +2,10 @@
  * MCG 出游 Tabung 梦想基金 - Google Apps Script Webhook
  *
  * This script runs inside Google Sheets as a deployed Web App.
- * - doGet(e): Queries a member's savings progress and automatically detects current week.
- * - doPost(e): Records RM10 savings for a member by setting the checkbox in their corresponding row to TRUE.
- *              Automatically creates the new week column based on current date (e.g. 2 Nov -> "W12 (11月第1周)").
+ * - doGet(e): Queries a member's savings progress and returns all week columns.
+ * - doPost(e): Records RM10 savings for a member by setting the checkbox to TRUE.
+ *              AUTOMATICALLY CREATES the new week column if it does not exist yet!
+ *              Management NEVER needs to manually create columns in Google Sheets.
  */
 
 function getCurrentWeekInfo() {
@@ -21,62 +22,43 @@ function getCurrentWeekInfo() {
   };
 }
 
-function findOrCreateCurrentWeekColumn(sheet) {
+/**
+ * Finds the week column in Row 1.
+ * If it does NOT exist, AUTOMATICALLY CREATES IT with checkboxes for all members!
+ */
+function findOrCreateWeekColumn(sheet, targetWeek, weekLabel) {
   var lastCol = sheet.getLastColumn();
   var lastRow = sheet.getLastRow();
-  var currentInfo = getCurrentWeekInfo();
   var headers = lastCol > 0 ? sheet.getRange(1, 1, 1, lastCol).getValues()[0] : [];
+  
+  var weekColIndex = -1;
+  var weekCode = (targetWeek || "W12").trim().toUpperCase();
 
-  var highestWNumber = 0;
-  var existingColIndex = -1;
-  var existingLabel = "";
-
-  for (var c = 1; c < headers.length; c++) {
+  // 1. Search for existing column matching week code (e.g. "W12")
+  for (var c = 0; c < headers.length; c++) {
     var headerText = String(headers[c]).trim();
-    var wMatch = headerText.match(/^W(\d+)/i);
-    if (wMatch) {
-      var num = parseInt(wMatch[1], 10);
-      if (num > highestWNumber) {
-        highestWNumber = num;
-      }
-    }
-    // Check if column for current week tag already exists (e.g. "11月第1周")
-    if (headerText.indexOf(currentInfo.weekTag) !== -1) {
-      existingColIndex = c + 1;
-      existingLabel = headerText;
+    if (headerText.toUpperCase().indexOf(weekCode) === 0) {
+      weekColIndex = c + 1;
       break;
     }
   }
 
-  if (existingColIndex !== -1) {
-    var matchCode = existingLabel.match(/^(W\d+)/i);
-    return {
-      colIndex: existingColIndex,
-      code: matchCode ? matchCode[1].toUpperCase() : "W" + highestWNumber,
-      label: existingLabel,
-      isNew: false
-    };
+  // 2. If not found, AUTOMATICALLY CREATE THE NEW WEEK COLUMN
+  if (weekColIndex === -1) {
+    weekColIndex = lastCol + 1;
+    var currentInfo = getCurrentWeekInfo();
+    var newHeader = weekLabel || (weekCode + " (" + currentInfo.weekTag + ")");
+    
+    // Set Header
+    sheet.getRange(1, weekColIndex).setValue(newHeader);
+    
+    // Insert checkboxes for all member rows
+    if (lastRow > 1) {
+      sheet.getRange(2, weekColIndex, lastRow - 1, 1).insertCheckboxes();
+    }
   }
 
-  // Column for current week does not exist yet -> Automatically create it!
-  var nextWNumber = highestWNumber + 1;
-  var newCode = "W" + nextWNumber;
-  var newLabel = newCode + " (" + currentInfo.weekTag + ")";
-  var newColIndex = lastCol + 1;
-
-  sheet.getRange(1, newColIndex).setValue(newLabel);
-
-  // Insert checkboxes for all member rows
-  if (lastRow > 1) {
-    sheet.getRange(2, newColIndex, lastRow - 1, 1).insertCheckboxes();
-  }
-
-  return {
-    colIndex: newColIndex,
-    code: newCode,
-    label: newLabel,
-    isNew: true
-  };
+  return weekColIndex;
 }
 
 function doGet(e) {
@@ -86,7 +68,7 @@ function doGet(e) {
     var lastRow = sheet.getLastRow();
     var lastCol = sheet.getLastColumn();
 
-    // 1. Map all week column headers in Row 1 (e.g., W1, W5, W11)
+    // Map all week column headers in Row 1
     var weekColumns = [];
     if (lastCol >= 2) {
       var headers = sheet.getRange(1, 1, 1, lastCol).getValues()[0];
@@ -105,7 +87,6 @@ function doGet(e) {
 
     var currentInfo = getCurrentWeekInfo();
     var activeWeek = null;
-    // Check if a column matching current week tag exists
     for (var i = 0; i < weekColumns.length; i++) {
       if (weekColumns[i].label.indexOf(currentInfo.weekTag) !== -1) {
         activeWeek = weekColumns[i];
@@ -113,7 +94,6 @@ function doGet(e) {
       }
     }
 
-    // If current week not yet created, calculate what it will be
     if (!activeWeek) {
       var highestNum = 0;
       for (var j = 0; j < weekColumns.length; j++) {
@@ -123,15 +103,13 @@ function doGet(e) {
           if (n > highestNum) highestNum = n;
         }
       }
-      var nextNum = highestNum + 1;
+      var nextNum = Math.max(highestNum + 1, 12);
       activeWeek = {
         code: "W" + nextNum,
-        label: "W" + nextNum + " (" + currentInfo.weekTag + ")",
-        isPendingCreation: true
+        label: "W" + nextNum + " (" + currentInfo.weekTag + ")"
       };
     }
 
-    // If no name is supplied, return all available week headers and active current week
     if (!targetName) {
       return ContentService.createTextOutput(JSON.stringify({
         success: true,
@@ -153,7 +131,7 @@ function doGet(e) {
       })).setMimeType(ContentService.MimeType.JSON);
     }
 
-    // 2. Locate member row in Column A (Row 2 onwards)
+    // Locate member row in Column A
     var nameRange = sheet.getRange(2, 1, lastRow - 1, 1).getValues();
     var targetRow = -1;
     for (var r = 0; r < nameRange.length; r++) {
@@ -177,7 +155,7 @@ function doGet(e) {
       })).setMimeType(ContentService.MimeType.JSON);
     }
 
-    // 3. Inspect saved status for all week columns
+    // Inspect saved status for all week columns
     var rowValues = sheet.getRange(targetRow, 1, 1, lastCol).getValues()[0];
     var savedWeeks = [];
     for (var w = 0; w < weekColumns.length; w++) {
@@ -225,7 +203,8 @@ function doPost(e) {
     }
 
     var targetName = (data.name || "").trim();
-    var targetWeek = (data.week || "").trim().toUpperCase();
+    var targetWeek = (data.week || "W12").trim().toUpperCase();
+    var weekLabel = (data.weekLabel || "").trim();
 
     if (!targetName) {
       return ContentService.createTextOutput(JSON.stringify({
@@ -235,46 +214,12 @@ function doPost(e) {
     }
 
     var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
+
+    // 1. Locate or AUTOMATICALLY CREATE week column
+    var weekColIndex = findOrCreateWeekColumn(sheet, targetWeek, weekLabel);
+
     var lastRow = sheet.getLastRow();
     var lastCol = sheet.getLastColumn();
-
-    // 1. Locate or automatically create the week column
-    var weekColIndex = -1;
-    var finalWeekCode = targetWeek;
-
-    // If week is "CURRENT" or matches current week, find or create automatically
-    var currentInfo = getCurrentWeekInfo();
-    var isCurrentTarget = !targetWeek || targetWeek === "CURRENT" || targetWeek.indexOf(currentInfo.weekTag) !== -1;
-
-    if (isCurrentTarget) {
-      var weekResult = findOrCreateCurrentWeekColumn(sheet);
-      weekColIndex = weekResult.colIndex;
-      finalWeekCode = weekResult.code;
-    } else {
-      // Find matching week header
-      var headers = lastCol > 0 ? sheet.getRange(1, 1, 1, lastCol).getValues()[0] : [];
-      for (var c = 0; c < headers.length; c++) {
-        var headerText = String(headers[c]).trim();
-        if (headerText.toUpperCase().indexOf(targetWeek) === 0) {
-          weekColIndex = c + 1;
-          break;
-        }
-      }
-
-      // If specified week not found, create it automatically
-      if (weekColIndex === -1) {
-        weekColIndex = lastCol + 1;
-        var newLabel = data.weekLabel || targetWeek;
-        sheet.getRange(1, weekColIndex).setValue(newLabel);
-        if (lastRow > 1) {
-          sheet.getRange(2, weekColIndex, lastRow - 1, 1).insertCheckboxes();
-        }
-      }
-    }
-
-    // Refresh last row and column after potential column addition
-    lastRow = sheet.getLastRow();
-    lastCol = sheet.getLastColumn();
 
     // 2. Locate member row in Column A
     var nameRange = lastRow > 1 ? sheet.getRange(2, 1, lastRow - 1, 1).getValues() : [];
@@ -313,7 +258,7 @@ function doPost(e) {
     return ContentService.createTextOutput(JSON.stringify({
       success: true,
       name: targetName,
-      week: finalWeekCode,
+      week: targetWeek,
       message: "Savings recorded successfully"
     })).setMimeType(ContentService.MimeType.JSON);
 
