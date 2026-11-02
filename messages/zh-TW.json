@@ -447,5 +447,24 @@
     "tryAgain": "重新申請",
     "verifying": "正在驗證重設連結…",
     "mismatchError": "二次輸入密碼不一致！"
+  },
+  "SavingsTracker": {
+    "title": "MCG 出游 Tabung 梦想基金",
+    "subtitle": "每周存入 RM10，携手迈向我们的团体出游梦想之旅。",
+    "nameLabel": "团员名字",
+    "namePlaceholder": "选择或输入你的名字",
+    "weekLabel": "周次",
+    "progressTitle": "个人储蓄进度",
+    "totalSaved": "累计储蓄",
+    "weeksCount": "完成周数",
+    "statusSaved": "本周已存",
+    "statusPending": "本周未记录",
+    "submitButton": "是的，我本周已存入 RM10",
+    "submitting": "正在记录...",
+    "checkingProgress": "正在查询进度...",
+    "savedForWeek": "{week} 已存入",
+    "successMessage": "记录成功！太棒了，{name}（{week}）。",
+    "errorMessage": "记录失败，请稍后重试。",
+    "networkError": "网络连接错误，请检查网络后重试。"
   }
 }

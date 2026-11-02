@@ -447,5 +447,24 @@
     "tryAgain": "Request New Link",
     "verifying": "Verifying reset link…",
     "mismatchError": "Passwords do not match!"
+  },
+  "SavingsTracker": {
+    "title": "MCG Tabung Dream Fund",
+    "subtitle": "Save RM10 every week towards our group outing journey.",
+    "nameLabel": "Member Name",
+    "namePlaceholder": "Select or enter your name",
+    "weekLabel": "Week",
+    "progressTitle": "Your Savings Progress",
+    "totalSaved": "Total Saved",
+    "weeksCount": "Weeks Completed",
+    "statusSaved": "Completed",
+    "statusPending": "Not Recorded",
+    "submitButton": "Yes, I have saved RM10 for this week",
+    "submitting": "Recording...",
+    "checkingProgress": "Checking progress...",
+    "savedForWeek": "Saved for {week}",
+    "successMessage": "Saved successfully! Great job, {name} ({week}).",
+    "errorMessage": "Failed to record savings. Please try again.",
+    "networkError": "Network error. Please check your connection."
   }
 }
