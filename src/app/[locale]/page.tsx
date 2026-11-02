@@ -1,6 +1,7 @@
 import { Link } from "@/i18n/routing"
 import { getTranslations } from "next-intl/server"
 import { LatestYouTubeVideo } from "@/components/LatestYouTubeVideo"
+import { SavingsTrackerSection } from "@/components/SavingsTrackerSection"
 import { HomeHeroActions } from "@/components/HomeHeroActions"
 import { UpcomingEventsSection } from "@/components/UpcomingEventsSection"
 import { contentRepository } from "@/content"
@@ -38,6 +39,9 @@ export default async function Home() {
 
       {/* Latest YouTube Video Section */}
       <LatestYouTubeVideo />
+
+      {/* Weekly Savings Tracker Section */}
+      <SavingsTrackerSection />
 
       {/* Content Navigation Section */}
       <section className="grid grid-cols-1 gap-5 pt-6 pb-2 text-left md:grid-cols-3" aria-label={t("contentNavigation")}>
