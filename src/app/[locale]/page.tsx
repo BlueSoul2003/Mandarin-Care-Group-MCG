@@ -1,4 +1,3 @@
-import { Link } from "@/i18n/routing"
 import { getTranslations } from "next-intl/server"
 import { LatestYouTubeVideo } from "@/components/LatestYouTubeVideo"
 import { SavingsTrackerSection } from "@/components/SavingsTrackerSection"
@@ -12,12 +11,6 @@ export default async function Home() {
   const t = await getTranslations("Home")
   const repository = await contentRepository()
   const featuredEvents = await repository.listFeaturedEvents()
-
-  const LANDING_LINKS = [
-    { href: "/events", label: t("pastEvents"), description: t("pastEventsDesc") },
-    { href: "/articles", label: t("articlesAndStories"), description: t("articlesAndStoriesDesc") },
-    { href: "/history", label: t("pastCommittees"), description: t("pastCommitteesDesc") },
-  ]
 
   return (
     <div className="container mx-auto max-w-5xl px-4 pt-3 pb-6 md:pt-6 md:pb-8 text-center">
@@ -42,22 +35,6 @@ export default async function Home() {
 
       {/* Weekly Savings Tracker Section */}
       <SavingsTrackerSection />
-
-      {/* Content Navigation Section */}
-      <section className="grid grid-cols-1 gap-5 pt-6 pb-2 text-left md:grid-cols-3" aria-label={t("contentNavigation")}>
-        {LANDING_LINKS.map((item) => (
-          <Link
-            key={item.href}
-            href={item.href}
-            className="group rounded-3xl border border-border/50 bg-card p-6 transition-all hover:-translate-y-0.5 hover:shadow-md"
-          >
-            <h2 className="font-heading text-xl font-semibold group-hover:text-primary transition-colors">
-              {item.label}
-            </h2>
-            <p className="mt-3 text-sm leading-relaxed text-muted-foreground">{item.description}</p>
-          </Link>
-        ))}
-      </section>
     </div>
   )
 }
