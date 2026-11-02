@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, useMemo } from "react"
 import { useTranslations } from "next-intl"
-import { Coins, CheckCircle2, TrendingUp, Loader2, Calendar, User, AlertCircle } from "lucide-react"
+import { Plane, CheckCircle2, TrendingUp, Loader2, Calendar, User, AlertCircle } from "lucide-react"
 import { createClient } from "@/lib/supabase"
 
 const KNOWN_MEMBERS = [
@@ -232,7 +232,7 @@ export function SavingsTrackerSection() {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-6 border-b border-border/40">
         <div className="flex items-center gap-3">
           <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-primary/10 text-primary">
-            <Coins className="h-6 w-6" aria-hidden="true" />
+            <Plane className="h-6 w-6" aria-hidden="true" />
           </div>
           <div>
             <h2 id="savings-tracker-title" className="font-heading text-xl sm:text-2xl font-bold tracking-tight text-foreground">
@@ -375,7 +375,7 @@ export function SavingsTrackerSection() {
               </>
             ) : (
               <>
-                <Coins className="h-4 w-4" />
+                <Plane className="h-4 w-4" />
                 {t("submitButton")}
               </>
             )}
