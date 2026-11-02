@@ -310,6 +310,7 @@
       "message": "Message for us (Optional)",
       "messagePlaceholder": "Why you want to join, what you expect...",
       "consent": "I agree that MCG committee can use this data to contact me regarding activities.",
+      "subscribeNewsletter": "Subscribe to MCG email newsletter for upcoming events and updates",
       "submit": "Submit Registration",
       "loading": "Submitting...",
       "successTitle": "Thank you for registering!",

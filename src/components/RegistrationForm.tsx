@@ -67,6 +67,7 @@ export function RegistrationForm() {
     faithStatus: "",
     message: "",
     consent: false,
+    subscribeNewsletter: true,
     website: "",
   })
 
@@ -286,6 +287,7 @@ export function RegistrationForm() {
           data: {
             full_name: cleanName,
             birthday: form.birthday.trim(),
+            newsletter_subscribed: form.subscribeNewsletter,
           },
           // Redirect the user back to our site after email confirmation
           emailRedirectTo: `${window.location.origin}/${locale}/login`,
@@ -299,6 +301,15 @@ export function RegistrationForm() {
           `${t("accountSetupFailed")} ${signUpError.message}`
         )
         return
+      }
+
+      // 3. If opted in to newsletter, sync to Resend Audience in the background
+      if (form.subscribeNewsletter) {
+        fetch("/api/newsletter/subscribe", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email: cleanEmail, name: cleanName }),
+        }).catch((err) => console.warn("[Newsletter Sync Warning]:", err))
       }
 
       setCountdown(60)
@@ -945,7 +956,7 @@ export function RegistrationForm() {
                 />
               </div>
 
-              <label className="flex items-start gap-3 text-xs leading-relaxed text-muted-foreground pt-1">
+              <label className="flex items-start gap-3 text-xs leading-relaxed text-muted-foreground pt-1 cursor-pointer">
                 <input
                   name="consent"
                   type="checkbox"
@@ -956,6 +967,19 @@ export function RegistrationForm() {
                 />
                 <span>
                   {t("consent")}
+                </span>
+              </label>
+
+              <label className="flex items-start gap-3 text-xs leading-relaxed text-muted-foreground cursor-pointer">
+                <input
+                  name="subscribeNewsletter"
+                  type="checkbox"
+                  checked={form.subscribeNewsletter}
+                  onChange={handleChange}
+                  className="mt-0.5 h-4 w-4 rounded border-border accent-primary"
+                />
+                <span>
+                  {t("subscribeNewsletter")}
                 </span>
               </label>
 
