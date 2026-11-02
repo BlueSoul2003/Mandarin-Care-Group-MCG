@@ -463,6 +463,9 @@
     "submitting": "正在记录...",
     "checkingProgress": "正在查询进度...",
     "savedForWeek": "{week} 已存入",
+    "addNewWeek": "+ 新增周次",
+    "customWeekLabel": "新周次名称",
+    "customWeekPlaceholder": "例如：W12 (6月第2周)",
     "successMessage": "记录成功！太棒了，{name}（{week}）。",
     "errorMessage": "记录失败，请稍后重试。",
     "networkError": "网络连接错误，请检查网络后重试。"

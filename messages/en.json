@@ -449,7 +449,7 @@
     "mismatchError": "Passwords do not match!"
   },
   "SavingsTracker": {
-    "title": "MCG Tabung Dream Fund",
+    "title": "MCG 出游 Tabung 梦想基金",
     "subtitle": "Save RM10 every week towards our group outing journey.",
     "nameLabel": "Member Name",
     "namePlaceholder": "Select or enter your name",
@@ -463,6 +463,9 @@
     "submitting": "Recording...",
     "checkingProgress": "Checking progress...",
     "savedForWeek": "Saved for {week}",
+    "addNewWeek": "+ Add New Week",
+    "customWeekLabel": "New Week Label",
+    "customWeekPlaceholder": "e.g. W12 (6月第2周)",
     "successMessage": "Saved successfully! Great job, {name} ({week}).",
     "errorMessage": "Failed to record savings. Please try again.",
     "networkError": "Network error. Please check your connection."

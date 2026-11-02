@@ -44,6 +44,7 @@ export async function POST(req: NextRequest) {
 
     const name = typeof body.name === "string" ? body.name.trim() : ""
     const week = typeof body.week === "string" ? body.week.trim().toUpperCase() : ""
+    const weekLabel = typeof body.weekLabel === "string" ? body.weekLabel.trim() : ""
 
     if (name.length < 2 || name.length > 100) {
       return NextResponse.json(
@@ -59,10 +60,15 @@ export async function POST(req: NextRequest) {
       )
     }
 
+    const payload: { name: string; week: string; weekLabel?: string } = { name, week }
+    if (weekLabel) {
+      payload.weekLabel = weekLabel
+    }
+
     const response = await fetch(webhookUrl, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name, week }),
+      body: JSON.stringify(payload),
       redirect: "follow",
     })
 
@@ -96,15 +102,19 @@ export async function GET(req: NextRequest) {
 
     const { searchParams } = new URL(req.url)
     const name = searchParams.get("name")?.trim()
+    const action = searchParams.get("action")?.trim()
 
-    if (!name || name.length < 2) {
+    if (action !== "weeks" && (!name || name.length < 2)) {
       return NextResponse.json(
         { error: "A valid name query parameter is required." },
         { status: 400 }
       )
     }
 
-    const queryUrl = `${webhookUrl}${webhookUrl.includes("?") ? "&" : "?"}name=${encodeURIComponent(name)}`
+    const queryUrl = name
+      ? `${webhookUrl}${webhookUrl.includes("?") ? "&" : "?"}name=${encodeURIComponent(name)}`
+      : webhookUrl
+
     const response = await fetch(queryUrl, {
       method: "GET",
       redirect: "follow",
