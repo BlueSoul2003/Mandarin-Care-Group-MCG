@@ -35,7 +35,7 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    let body: { name?: unknown; week?: unknown }
+    let body: { name?: unknown; week?: unknown; weekLabel?: unknown }
     try {
       body = await req.json()
     } catch {
@@ -43,7 +43,7 @@ export async function POST(req: NextRequest) {
     }
 
     const name = typeof body.name === "string" ? body.name.trim() : ""
-    const week = typeof body.week === "string" ? body.week.trim().toUpperCase() : ""
+    const rawWeek = typeof body.week === "string" ? body.week.trim() : ""
     const weekLabel = typeof body.weekLabel === "string" ? body.weekLabel.trim() : ""
 
     if (name.length < 2 || name.length > 100) {
@@ -53,12 +53,14 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    if (!/^W\d+$/i.test(week)) {
+    const weekMatch = rawWeek.match(/^W\d+/i)
+    if (!weekMatch) {
       return NextResponse.json(
         { error: "Invalid week format. Expected format like 'W11'." },
         { status: 400 }
       )
     }
+    const week = weekMatch[0].toUpperCase()
 
     const payload: { name: string; week: string; weekLabel?: string } = { name, week }
     if (weekLabel) {
@@ -80,6 +82,13 @@ export async function POST(req: NextRequest) {
     }
 
     const result = await response.json()
+    if (result && result.success === false) {
+      return NextResponse.json(
+        { error: result.error || "Failed to record savings in Google Sheets." },
+        { status: 400 }
+      )
+    }
+
     return NextResponse.json(result, { status: 200 })
   } catch (error) {
     console.error("[Savings API POST Error]:", error)
