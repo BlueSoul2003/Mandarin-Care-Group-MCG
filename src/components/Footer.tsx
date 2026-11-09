@@ -132,8 +132,8 @@ export function Footer() {
               </h4>
               <ul className="space-y-1.5 text-sm">
                 <li>
-                  <Link href="/spiritual" className="text-[#5C4C38] hover:text-[#84632C] dark:text-[#B5AA98] dark:hover:text-[#FAF6EE] transition-colors inline-block">
-                    {t("spiritual")}
+                  <Link href="/articles" className="text-[#5C4C38] hover:text-[#84632C] dark:text-[#B5AA98] dark:hover:text-[#FAF6EE] transition-colors inline-block">
+                    {t("articles")}
                   </Link>
                 </li>
                 <li>

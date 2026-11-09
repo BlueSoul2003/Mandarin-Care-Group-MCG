@@ -3,6 +3,7 @@
   "Navbar": {
     "gallery": "Gallery",
     "spiritual": "Spiritual",
+    "articles": "Articles",
     "taize": "Songs",
     "rosary": "Rosary",
     "lifestyle": "Lifestyle",
@@ -195,13 +196,9 @@
   },
   "Lifestyle": {
     "title": "Lifestyle",
-    "desc": "From faith to everyday life, sharing practical knowledge and experiences to support university students in their growth.",
-    "all": "All",
-    "noArticles": "No articles yet",
+    "desc": "Stay connected with upcoming gatherings, liturgical celebrations, UTM academic dates, and campus life activities.",
     "timelineTitle": "Community Events Timeline",
     "timelineSubtitle": "Stay connected with upcoming gatherings, dinners, and student life activities.",
-    "articlesTitle": "Articles & Stories",
-    "articlesSubtitle": "Practical tips, personal stories, and perspectives on university life and faith.",
     "viewDetails": "View details",
     "hideDetails": "Hide details",
     "time": "Time",
@@ -401,10 +398,15 @@
     "tag": "MCG Journal",
     "readMore": "Read more",
     "noArticles": "No articles yet",
+    "all": "All",
+    "allArticles": "All Articles",
     "backTo": "Back to {category}",
     "categories": {
+      "all": "All",
       "lifestyle": "Lifestyle",
       "spiritual": "Spiritual",
+      "community": "Community",
+      "news": "News",
       "articles": "Articles"
     },
     "discussionTitle": "Discussion Prompts",
