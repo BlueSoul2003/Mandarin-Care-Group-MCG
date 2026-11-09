@@ -14,17 +14,8 @@ interface ArticleReaderProps {
 export function ArticleReader({ title, date, author, category, children }: ArticleReaderProps) {
   const t = useTranslations("Articles")
 
-  const backLink =
-    category === "lifestyle" || category === "spiritual"
-      ? `/${category}`
-      : "/articles"
-
-  const categoryName =
-    category === "lifestyle"
-      ? t("categories.lifestyle")
-      : category === "spiritual"
-        ? t("categories.spiritual")
-        : t("categories.articles")
+  const backLink = "/articles"
+  const categoryName = t("categories.articles")
 
   return (
     <div className="container mx-auto px-4 py-12 md:py-20 max-w-3xl">
@@ -56,7 +47,7 @@ export function ArticleReader({ title, date, author, category, children }: Artic
         {children}
       </div>
 
-      {category === "lifestyle" && (
+      {(category === "lifestyle" || category === "spiritual" || category === "articles") && (
         <div className="mt-16 bg-muted/30 rounded-2xl p-8 border border-border/50">
           <h3 className="font-bold text-lg mb-2">{t("discussionTitle")}</h3>
           <ul className="list-disc pl-5 space-y-2 text-muted-foreground">

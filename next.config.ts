@@ -19,6 +19,40 @@ const nextConfig: NextConfig = {
     ],
     minimumCacheTTL: 60 * 60 * 24 * 7, // 7 days for optimized images
   },
+  async redirects() {
+    return [
+      {
+        source: '/spiritual',
+        destination: '/articles',
+        permanent: true,
+      },
+      {
+        source: '/:locale(en|zh-TW)/spiritual',
+        destination: '/:locale/articles',
+        permanent: true,
+      },
+      {
+        source: '/spiritual/:slug',
+        destination: '/articles/:slug',
+        permanent: true,
+      },
+      {
+        source: '/:locale(en|zh-TW)/spiritual/:slug',
+        destination: '/:locale/articles/:slug',
+        permanent: true,
+      },
+      {
+        source: '/lifestyle/:slug',
+        destination: '/articles/:slug',
+        permanent: true,
+      },
+      {
+        source: '/:locale(en|zh-TW)/lifestyle/:slug',
+        destination: '/:locale/articles/:slug',
+        permanent: true,
+      },
+    ];
+  },
   async headers() {
     return [
       {

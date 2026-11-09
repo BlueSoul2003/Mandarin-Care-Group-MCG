@@ -118,7 +118,7 @@ export const articleSchema = z.object({
   excerpt: requiredContentText,
   publishedAt: isoDate,
   authorName: requiredContentText,
-  section: z.enum(["lifestyle", "spiritual", "community", "news"]),
+  section: z.enum(["lifestyle", "spiritual", "community", "news", "articles"]),
   tags: z.array(z.string().trim().min(1)),
   eventIds: z.array(id),
   contentMarkdown: z.string().trim().min(1),

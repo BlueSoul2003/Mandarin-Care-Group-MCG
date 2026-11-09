@@ -89,7 +89,7 @@ export function Navbar() {
 
   const navLinks = [
     { href: "/gallery", label: t("gallery") },
-    { href: "/spiritual", label: t("spiritual") },
+    { href: "/articles", label: t("articles") },
     { href: "/taize", label: t("taize") },
     { href: "/rosary", label: t("rosary") },
     { href: "/lifestyle", label: t("lifestyle") },

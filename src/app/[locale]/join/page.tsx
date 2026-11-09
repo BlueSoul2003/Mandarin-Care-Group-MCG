@@ -15,11 +15,6 @@ export default function JoinPage() {
 
   return (
     <div className="relative min-h-screen">
-      {/* Atmospheric background blobs */}
-      <div className="pointer-events-none fixed inset-0 -z-10 overflow-hidden">
-        <div className="absolute -top-40 -left-40 w-[600px] h-[600px] rounded-full bg-primary/10 blur-[120px]" />
-      </div>
-
       <div className="container mx-auto px-4 py-16 md:py-24 max-w-5xl">
         {/* Header */}
         <div className="text-center mb-16">
